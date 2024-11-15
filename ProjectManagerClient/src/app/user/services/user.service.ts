@@ -25,11 +25,11 @@ export class UserService implements IUserService {
 
   baseUri = environment.apiBaseUri;
 
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   getUser(userId: number): Observable<ApiResponse<User>> {
 
-    var uri= `${this.baseUri}${environment.endpoint_user_get}/${userId}`;
+    const uri= `${this.baseUri}${environment.endpoint_user_get}/${userId}`;
 
     return this.http
       .get<ApiResponse<User>>(uri);
@@ -46,7 +46,7 @@ export class UserService implements IUserService {
     if (sortKey)
       params = params.append('sortKey', sortKey);
 
-    var uri = `${this.baseUri}${environment.endpoint_user_get}`;
+    const uri = `${this.baseUri}${environment.endpoint_user_get}`;
 
     return this.http
       .get<ApiResponse<User[]>>(uri, { params: params });
@@ -54,7 +54,7 @@ export class UserService implements IUserService {
 
   addUser(newUser: User): Observable<ApiResponse<User>> {
 
-    var uri = `${this.baseUri}${environment.endpoint_user_add}`;
+    const uri = `${this.baseUri}${environment.endpoint_user_add}`;
 
     return this.http
       .post<ApiResponse<User>>(uri, newUser);
@@ -62,7 +62,7 @@ export class UserService implements IUserService {
 
   editUser(updateUser: User): Observable<ApiResponse<User>> {
 
-    var uri = `${this.baseUri}${environment.endpoint_user_edit}/${updateUser.User_ID}`
+    const uri = `${this.baseUri}${environment.endpoint_user_edit}/${updateUser.User_ID}`
 
     return this.http
       .post<ApiResponse<User>>(uri, updateUser);
@@ -70,7 +70,7 @@ export class UserService implements IUserService {
 
   deleteUser(userId: number): Observable<ApiResponse<User>> {
 
-    var uri = `${this.baseUri}${environment.endpoint_user_delete}/${userId}`
+    const uri = `${this.baseUri}${environment.endpoint_user_delete}/${userId}`
 
     return this.http
       .get<ApiResponse<User>>(uri);

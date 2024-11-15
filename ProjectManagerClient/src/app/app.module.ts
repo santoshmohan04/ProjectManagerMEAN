@@ -23,11 +23,10 @@ import { UserService } from './user/services/user.service'
 import { ProjectService } from './project/services/project.service';
 import { ParentTaskService } from './task/services/parent-task.service';
 import { AlertService } from './shared/services/alert.service'
-import {SlimLoadingBarService } from 'ng2-slim-loading-bar';
+import {SlimLoadingBarModule, SlimLoadingBarService } from 'ng2-slim-loading-bar';
 
 //routing
 import { RouterModule, Routes } from '@angular/router';
-import { SlimLoadingBarModule } from 'ng2-slim-loading-bar';
 
 //directive
 import { DateCompareValidatorDirective } from './shared/directives/datecompare.directive';
