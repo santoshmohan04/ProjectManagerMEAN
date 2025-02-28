@@ -1,10 +1,10 @@
-import { NG_VALIDATORS, Validator, AbstractControl } from '@angular/forms';
-
+import { NG_VALIDATORS, Validator, AbstractControl, ValidationErrors } from '@angular/forms';
+import { Directive, Input } from '@angular/core';
 import moment from 'moment';
-import { Input, Directive } from '@angular/core';
 
 @Directive({
   selector: '[dateCompare]',
+  standalone: true,
   providers: [
     {
       provide: NG_VALIDATORS,
@@ -14,34 +14,33 @@ import { Input, Directive } from '@angular/core';
   ],
 })
 export class DateCompareValidatorDirective implements Validator {
-  @Input('dateCompare') compareDate!: string;
-  @Input('operation') operation!: string;
+  @Input() compareDate!: string; // Date to compare against
+  @Input() operation!: 'less than' | 'greater than'; // Comparison operation
 
-  validate(control: AbstractControl): { [key: string]: any } | null {
-    var source = moment(control.value).add(-1, 'months').toDate();
-    var target = moment(this.compareDate).add(-1, 'months').toDate();
-
-    console.log(control.value);
-    console.log(this.compareDate);
-
-    if (this.operation === 'less than') {
-      if (target < source) {
-        return {
-          dateCompare: {
-            valid: false,
-          },
-        };
-      }
-    } else {
-      if (target > source) {
-        return {
-          dateCompare: {
-            valid: false,
-          },
-        };
-      }
+  validate(control: AbstractControl): ValidationErrors | null {
+    // Validate inputs
+    if (!this.compareDate || !this.operation || !control.value) {
+      return null;
     }
 
-    return null;
+    const sourceDate = moment(control.value).toDate();
+    const targetDate = moment(this.compareDate).toDate();
+
+    // Check the comparison
+    const isValid = this.operation === 'less than' 
+      ? sourceDate < targetDate 
+      : sourceDate > targetDate;
+
+    // Return validation errors if the comparison fails
+    return isValid
+      ? null
+      : {
+          dateCompare: {
+            valid: false,
+            operation: this.operation,
+            sourceDate: control.value,
+            targetDate: this.compareDate,
+          },
+        };
   }
 }

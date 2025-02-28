@@ -1,36 +1,39 @@
-<div class="col-md-12">
-  <div class="row">
-    <div class="col-md-4">
-      <div class="row">
-        <div class="col-md-2">
-          <label for="projectName">Project:</label>
-        </div>
-        <div class="col-md-8">
-          <input type="text" class="form-control" name="projectName" aria-describedby="projectName" readonly [ngModel]="project?.Project">
-        </div>
-        <div class="col-md-2">
-          <button type="button" class="btn btn-default" data-toggle="modal" data-target="#projectSearchModel">
-            <span class="fa fa-search"></span> Search
-          </button>
+@if(project){
+  <div class="col-md-12">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="row">
+          <div class="col-md-2">
+            <label for="projectName">Project:</label>
+          </div>
+          <div class="col-md-8">
+            <input type="text" class="form-control" name="projectName" aria-describedby="projectName" readonly [ngModel]="project.Project">
+          </div>
+          <div class="col-md-2">
+            <button type="button" class="btn btn-default" data-bs-toggle="modal" data-bs-target="#projectSearchModel">
+              <span class="fa fa-search"></span> Search
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col-md-1"></div>
-    <div class="col-md-7">
-      <div class="row">
-        <div class="col-md-3" style="text-align:right">
-          <label>Sort Task By:</label>
-        </div>
-        <div class="col-md-9">
-          <button type="button" class="btn btn-secondary" [disabled]="!Tasks" (click)="sortTask('Start_Date')">Start Date</button> &nbsp;
-          <button type="button" class="btn btn-secondary" [disabled]="!Tasks" (click)="sortTask('End_Date')">End Date</button>&nbsp;
-          <button type="button" class="btn btn-secondary" [disabled]="!Tasks" (click)="sortTask('Priority')">Priority</button>&nbsp;
-          <button type="button" class="btn btn-secondary" [disabled]="!Tasks" (click)="sortTask('Status')">Completed</button>&nbsp;
+      <div class="col-md-1"></div>
+      <div class="col-md-7">
+        <div class="row">
+          <div class="col-md-3" style="text-align:right">
+            <label>Sort Task By:</label>
+          </div>
+          <div class="col-md-9">
+            <button type="button" class="btn btn-secondary" [disabled]="!Tasks" (click)="sortTask('Start_Date')">Start Date</button> &nbsp;
+            <button type="button" class="btn btn-secondary" [disabled]="!Tasks" (click)="sortTask('End_Date')">End Date</button>&nbsp;
+            <button type="button" class="btn btn-secondary" [disabled]="!Tasks" (click)="sortTask('Priority')">Priority</button>&nbsp;
+            <button type="button" class="btn btn-secondary" [disabled]="!Tasks" (click)="sortTask('Status')">Completed</button>&nbsp;
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+}
+
 <br>
 <hr style="width: 100%;" class="hrListItem" />
 

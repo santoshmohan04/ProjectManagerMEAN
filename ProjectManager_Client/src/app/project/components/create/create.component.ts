@@ -1,5 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormGroup,
+  FormBuilder,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { UserService } from '../../../user/services/user.service';
 import { ProjectService } from '../../services/project.service';
 import { AlertService } from '../../../shared/services/alert.service';
@@ -17,10 +22,14 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./create.component.css'],
   standalone: true,
   providers: [UserService, ProjectService, AlertService],
-  imports: [ReactiveFormsModule,NgbDatepickerModule, SearchComponent, CommonModule]
+  imports: [
+    ReactiveFormsModule,
+    NgbDatepickerModule,
+    SearchComponent,
+    CommonModule,
+  ],
 })
 export class CreateComponent implements OnInit {
-
   Projects!: Project[];
   projectForm!: FormGroup;
 
@@ -30,8 +39,12 @@ export class CreateComponent implements OnInit {
   SearchKey!: string;
   Manager!: User;
 
-  constructor(private projectService: ProjectService, private userService: UserService,
-    private formbuilder: FormBuilder, private alertService: AlertService) {
+  constructor(
+    private readonly projectService: ProjectService,
+    private readonly userService: UserService,
+    private readonly formbuilder: FormBuilder,
+    private readonly alertService: AlertService
+  ) {
     this.createForm();
   }
 
@@ -43,7 +56,7 @@ export class CreateComponent implements OnInit {
       endDate: [{ value: '', disabled: true }],
       priority: 0,
       manager: '',
-      projectId: ''
+      projectId: '',
     });
 
     this.userAction = 'Add';
@@ -63,19 +76,22 @@ export class CreateComponent implements OnInit {
   }
 
   refreshList() {
-    this.projectService.getProjects(this.SearchKey, this.SortKey)
-      .subscribe((response:any) => {
+    this.projectService
+      .getProjects(this.SearchKey, this.SortKey)
+      .subscribe((response: any) => {
         if (response.Success == true) {
           this.Projects = response.Data;
           console.log(response.Data);
-        }
-        else {
+        } else {
           this.Projects = response.Data;
-          this.alertService.error('Error occured while fetching products', 'Error', 3000);
+          this.alertService.error(
+            'Error occured while fetching products',
+            'Error',
+            3000
+          );
         }
       });
   }
-
 
   search(searchValue: Event) {
     this.SearchKey = (searchValue.target as HTMLInputElement).value;
@@ -86,8 +102,7 @@ export class CreateComponent implements OnInit {
     if (this.projectForm.valid) {
       if (this.userAction == 'Add') {
         this.addProject();
-      }
-      else {
+      } else {
         this.updateProject();
       }
     }
@@ -96,7 +111,7 @@ export class CreateComponent implements OnInit {
   addProject() {
     const newProject = <Project>{
       Project: this.projectForm.controls['projectName'].value,
-      Priority: this.projectForm.controls['priority'].value
+      Priority: this.projectForm.controls['priority'].value,
     };
 
     if (this.Manager) {
@@ -104,29 +119,36 @@ export class CreateComponent implements OnInit {
     }
 
     if (this.setDates) {
-      newProject.Start_Date = moment(this.projectForm.controls['startDate'].value).add(-1, 'months').toDate();
-      newProject.End_Date = moment(this.projectForm.controls['endDate'].value).add(-1, 'months').toDate();
+      newProject.Start_Date = moment(
+        this.projectForm.controls['startDate'].value
+      )
+        .add(-1, 'months')
+        .toDate();
+      newProject.End_Date = moment(this.projectForm.controls['endDate'].value)
+        .add(-1, 'months')
+        .toDate();
     }
 
-    this.projectService.addProject(newProject)
-      .subscribe((response:any) => {
-        if (response.Success == true) {
-          this.alertService.success('Project added successfully.', 'Success', 3000);
-          this.refreshList();
-          this.reset();
-        }
-        else {
-          this.alertService.error(response.Message, 'Error', 3000);
-        }
-      });
+    this.projectService.addProject(newProject).subscribe((response: any) => {
+      if (response.Success == true) {
+        this.alertService.success(
+          'Project added successfully.',
+          'Success',
+          3000
+        );
+        this.refreshList();
+        this.reset();
+      } else {
+        this.alertService.error(response.Message, 'Error', 3000);
+      }
+    });
   }
 
   updateProject() {
-
     const updateProject = <Project>{
       Project_ID: this.projectForm.controls['projectId'].value,
       Project: this.projectForm.controls['projectName'].value,
-      Priority: this.projectForm.controls['priority'].value
+      Priority: this.projectForm.controls['priority'].value,
     };
 
     if (this.Manager) {
@@ -134,86 +156,103 @@ export class CreateComponent implements OnInit {
     }
 
     if (this.setDates) {
-      updateProject.Start_Date = moment(this.projectForm.controls['startDate'].value).add(-1, 'months').toDate();
-      updateProject.End_Date = moment(this.projectForm.controls['endDate'].value).add(-1, 'months').toDate();
+      updateProject.Start_Date = moment(
+        this.projectForm.controls['startDate'].value
+      )
+        .add(-1, 'months')
+        .toDate();
+      updateProject.End_Date = moment(
+        this.projectForm.controls['endDate'].value
+      )
+        .add(-1, 'months')
+        .toDate();
     }
 
-    this.projectService.editProject(updateProject)
-      .subscribe((response:any) => {
+    this.projectService
+      .editProject(updateProject)
+      .subscribe((response: any) => {
         console.log(response);
         if (response.Success == true) {
-          this.alertService.success('Project updated successfully!', 'Success', 3000);
+          this.alertService.success(
+            'Project updated successfully!',
+            'Success',
+            3000
+          );
           this.refreshList();
           this.reset();
-        }
-        else
-          this.alertService.error(response.Message, 'Error', 3000);
+        } else this.alertService.error(response.Message, 'Error', 3000);
       });
   }
 
-  editProject(projectID:any) {
+  editProject(projectID: any) {
+    this.projectService.getProject(projectID).subscribe((response: any) => {
+      if (response.Success == true) {
+        this.projectForm.controls['projectName'].setValue(
+          response.Data.Project
+        );
+        this.projectForm.controls['projectName'].setValidators(
+          Validators.required
+        );
+        this.projectForm.controls['priority'].setValue(response.Data.Priority);
+        this.projectForm.controls['projectId'].setValue(
+          response.Data.Project_ID
+        );
 
-    this.projectService.getProject(projectID)
-      .subscribe((response:any) => {
-        if (response.Success == true) {
+        let startDate, endDate;
+        if (response.Data.Start_Date || response.Data.End_Date) {
+          this.projectForm.controls['setDates'].setValue(true);
 
-          this.projectForm.controls["projectName"].setValue(response.Data.Project);
-          this.projectForm.controls["projectName"].setValidators(Validators.required);
-          this.projectForm.controls["priority"].setValue(response.Data.Priority);
-          this.projectForm.controls["projectId"].setValue(response.Data.Project_ID);
+          startDate = <NgbDateStruct>{
+            year: response.Data.Start_Date.getFullYear(),
+            month: response.Data.Start_Date.getMonth() + 1,
+            day: response.Data.Start_Date.getDate(),
+          };
 
-          var startDate, endDate;
-          if (response.Data.Start_Date || response.Data.End_Date) {
-            this.projectForm.controls["setDates"].setValue(true);
+          endDate = <NgbDateStruct>{
+            year: response.Data.End_Date.getFullYear(),
+            month: response.Data.End_Date.getMonth() + 1,
+            day: response.Data.End_Date.getDate(),
+          };
 
-            startDate = <NgbDateStruct>{
-              year: response.Data.Start_Date.getFullYear(),
-              month: response.Data.Start_Date.getMonth() + 1, day: response.Data.Start_Date.getDate()
-            };
-
-            endDate = <NgbDateStruct>{
-              year: response.Data.End_Date.getFullYear(),
-              month: response.Data.End_Date.getMonth() + 1, day: response.Data.End_Date.getDate()
-            };
-
-            this.projectForm.controls["startDate"].setValue(startDate);
-            this.projectForm.controls["endDate"].setValue(endDate);
-
-          }
-          else {
-            this.projectForm.controls["setDates"].setValue(false);
-          }
-
-          if (response.Data.Manager_ID) {
-            this.userService.getUser(response.Data.Manager_ID)
-              .subscribe((response:any) => {
-                this.Manager = response.Data;
-                if (response.Data) {
-                  this.projectForm.controls["manager"].setValue(`${this.Manager.First_Name} ${this.Manager.Last_Name}`);
-                }
-              });
-          }
-          this.userAction = 'Update';
+          this.projectForm.controls['startDate'].setValue(startDate);
+          this.projectForm.controls['endDate'].setValue(endDate);
+        } else {
+          this.projectForm.controls['setDates'].setValue(false);
         }
-        else {
-          this.alertService.error(response.Message, 'Error', 3000);
+
+        if (response.Data.Manager_ID) {
+          this.userService
+            .getUser(response.Data.Manager_ID)
+            .subscribe((response: any) => {
+              this.Manager = response.Data;
+              if (response.Data) {
+                this.projectForm.controls['manager'].setValue(
+                  `${this.Manager.First_Name} ${this.Manager.Last_Name}`
+                );
+              }
+            });
         }
-      });
+        this.userAction = 'Update';
+      } else {
+        this.alertService.error(response.Message, 'Error', 3000);
+      }
+    });
   }
 
-  suspendProject(projectID:any) {
-    this.projectService.deleteProject(projectID)
-      .subscribe((response:any) => {
-        if (response.Success == true) {
-          this.alertService.success('Project suspended successfully!', 'Success', 3000);
-          this.refreshList();
-        }
-        else {
-          this.alertService.error(response.Message, 'Error', 3000);
-        }
-      });
+  suspendProject(projectID: any) {
+    this.projectService.deleteProject(projectID).subscribe((response: any) => {
+      if (response.Success == true) {
+        this.alertService.success(
+          'Project suspended successfully!',
+          'Success',
+          3000
+        );
+        this.refreshList();
+      } else {
+        this.alertService.error(response.Message, 'Error', 3000);
+      }
+    });
   }
-
 
   sort(sortKey: string) {
     this.SortKey = sortKey;
@@ -223,30 +262,41 @@ export class CreateComponent implements OnInit {
   //callback from User search popup
   onManagerSelected(manager: User) {
     this.Manager = manager;
-    this.projectForm.get('manager')?.setValue(`${this.Manager.First_Name} ${this.Manager.Last_Name}`);
+    this.projectForm
+      .get('manager')
+      ?.setValue(`${this.Manager.First_Name} ${this.Manager.Last_Name}`);
   }
 
   addValidations() {
     //date custom validators
-    this.projectForm.get('setDates')?.valueChanges.subscribe(
-      (setDate: boolean) => {
+    this.projectForm
+      .get('setDates')
+      ?.valueChanges.subscribe((setDate: boolean) => {
         this.setDates = setDate;
 
         if (setDate) {
-
           var today = new Date();
-          var startDate = <NgbDateStruct>{ year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() };
+          var startDate = <NgbDateStruct>{
+            year: today.getFullYear(),
+            month: today.getMonth() + 1,
+            day: today.getDate(),
+          };
 
-          this.projectForm.get('startDate')?.setValidators([Validators.required]);
+          this.projectForm
+            .get('startDate')
+            ?.setValidators([Validators.required]);
           this.projectForm.get('startDate')?.setValue(startDate);
           this.projectForm.get('startDate')?.enable({ emitEvent: true });
 
-          var endDate = <NgbDateStruct>{ year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() + 1 };
+          var endDate = <NgbDateStruct>{
+            year: today.getFullYear(),
+            month: today.getMonth() + 1,
+            day: today.getDate() + 1,
+          };
           this.projectForm.get('endDate')?.setValidators([Validators.required]);
           this.projectForm.get('endDate')?.setValue(endDate);
           this.projectForm.get('endDate')?.enable({ emitEvent: true });
-        }
-        else {
+        } else {
           this.projectForm.get('startDate')?.clearValidators();
           this.projectForm.get('startDate')?.setValue('');
           this.projectForm.get('startDate')?.disable({ emitEvent: true });
@@ -255,12 +305,11 @@ export class CreateComponent implements OnInit {
           this.projectForm.get('endDate')?.setValue('');
           this.projectForm.get('endDate')?.disable({ emitEvent: true });
         }
-
       });
 
-    this.projectForm.get('endDate')?.valueChanges.subscribe(
-      (endDatePicked: Date) => {
-
+    this.projectForm
+      .get('endDate')
+      ?.valueChanges.subscribe((endDatePicked: Date) => {
         var startDateSelected = this.projectForm.get('startDate')?.value;
 
         var endDate = moment(endDatePicked).add(-1, 'months').toDate();
@@ -268,15 +317,14 @@ export class CreateComponent implements OnInit {
 
         if (startDate && endDate) {
           if (endDate < startDate) {
-            this.projectForm.controls['endDate'].setErrors({ 'incorrect': true });
+            this.projectForm.controls['endDate'].setErrors({ incorrect: true });
           }
         }
-
       });
 
-    this.projectForm.get('startDate')?.valueChanges.subscribe(
-      (startDatePicked: Date) => {
-
+    this.projectForm
+      .get('startDate')
+      ?.valueChanges.subscribe((startDatePicked: Date) => {
         var endDateSelected = this.projectForm.get('endDate')?.value;
 
         var endDate = moment(endDateSelected).add(-1, 'months').toDate();
@@ -284,10 +332,11 @@ export class CreateComponent implements OnInit {
 
         if (endDate && startDate) {
           if (startDate > endDate) {
-            this.projectForm.controls['startDate'].setErrors({ 'incorrect': true });
+            this.projectForm.controls['startDate'].setErrors({
+              incorrect: true,
+            });
           }
         }
-
       });
   }
 }

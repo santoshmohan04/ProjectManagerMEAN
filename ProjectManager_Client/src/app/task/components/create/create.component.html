@@ -5,11 +5,11 @@
         <label for="projectName">Project:</label>
         <span class="astreik">*</span>
       </div>
-      <div class="col-md-8">
-        <input type="text" class="form-control" name="projectName" aria-describedby="projectName" readonly required [(ngModel)]="task.Project && task.Project.Project">
+      <div class="col-md-8" *ngIf="task.Project && task.Project.Project">
+        <input type="text" class="form-control" name="projectName" aria-describedby="projectName" [(ngModel)]="task.Project.Project">
       </div>
       <div class="col-md-2">
-        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#projectSearchModel" [disabled]="taskId>0">
+        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#projectSearchModel" [disabled]="taskId && taskId>0">
           <span class="fa fa-search"></span> Search
         </button>
       </div>
@@ -26,7 +26,7 @@
     <div class="row form-group">
       <div class="col-md-2">
       </div>
-      <div class="col-md-10">
+      <div class="col-md-10" *ngIf="taskId">
         <input type="checkbox" name="isParentTask" [(ngModel)]="isParentTask" [disabled]="taskId>0">
         <label for="iSParentTask" class="checkboxPadding">Parent Task</label>
       </div>
@@ -44,8 +44,8 @@
       <div class="col-md-2">
         <label for="parentTaskName">Parent Task:</label>
       </div>
-      <div class="col-md-8">
-        <input type="text" class="form-control" name="parentTaskName" aria-describedby="parentTaskName" readonly [(ngModel)]="task.Parent && task.Parent.Parent_Task">
+      <div class="col-md-8" *ngIf="task.Parent && task.Parent.Parent_Task">
+        <input type="text" class="form-control" name="parentTaskName" aria-describedby="parentTaskName" readonly [(ngModel)]="task.Parent.Parent_Task">
       </div>
       <div class="col-md-2">
         <button [disabled]="isParentTask || !task.Project" type="button" class="btn btn-default" data-toggle="modal" data-target="#parentSearchModel">
@@ -61,7 +61,7 @@
         <input class="form-control" placeholder="Start Date" name='startDate' aria-describedby="startDate"
           ngbDatepicker #startDatePicker="ngbDatepicker" (focus)="startDatePicker.toggle()" [disabled]="isParentTask" 
           [(ngModel)]="taskStartDate"
-          [required]="!isParentTask" [dateCompare]="taskEndDate" operation="less than">
+          [required]="!isParentTask" dateCompare="taskEndDate" operation="less than">
       </div>
       <div class="col-md-2">
         <label for="endDate">End Date:</label>
@@ -70,7 +70,7 @@
         <input class="form-control" placeholder="End Date" name='endDate' aria-describedby="endDate" ngbDatepicker
           #endDatePicker="ngbDatepicker" (focus)="endDatePicker.toggle()" [disabled]="isParentTask" 
           [(ngModel)]="taskEndDate"
-          [required]="!isParentTask" [dateCompare]="taskStartDate" operation="greater than">
+          [required]="!isParentTask" dateCompare="taskStartDate" operation="greater than">
 
       </div>
     </div>
@@ -80,8 +80,8 @@
       </div>
       <div class="col-md-10">
         <div class="row">
-          <div class="col-md-10">
-            <input type="text" class="form-control" name='user' aria-describedby='user' readonly [(ngModel)]="task.User && task.User.Full_Name"
+          <div class="col-md-10" *ngIf="task.User">
+            <input type="text" class="form-control" name='user' aria-describedby='user' readonly [(ngModel)]="task.User.Full_Name"
               [required]="!isParentTask">
           </div>
           <div class="col-md-2">
