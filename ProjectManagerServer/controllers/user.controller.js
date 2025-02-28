@@ -1,144 +1,118 @@
+import express from 'express';
+import User from '../data_models/user.js';
 
-/* user API routes */
+const userController = express.Router();
 
-const express = require('express'),
-    userController = express.Router(),
-    url = require('url');
+// List users
+userController.get('/', async (req, res) => {
+    try {
+        const userQuery = User.find();
+        const { searchKey, sortKey } = req.query;
 
-let User = require('../data_models/user');
+        if (searchKey) {
+            userQuery.or([
+                { 'First_Name': { $regex: searchKey, $options: 'i' } },
+                { 'Last_Name': { $regex: searchKey, $options: 'i' } }
+            ]);
+        }
 
-//list users
-userController.route('/').get(function (req, res) {
+        if (sortKey) {
+            userQuery.sort([[sortKey, 1]]);
+        }
 
-    var userQuery = User.find();
-
-    var queryparams = req.query;
-
-    if (queryparams.searchKey) {
-        userQuery.or([
-            { 'First_Name': { $regex: queryparams.searchKey, $options: 'i' } },
-            { 'Last_Name': { $regex: queryparams.searchKey, $options: 'i' } }]);
+        const users = await userQuery.exec();
+        res.json({ Success: true, Data: users });
+    } catch (err) {
+        res.json({ Success: false });
     }
+});
 
-    if (queryparams.sortKey) {
-        userQuery.sort([[queryparams.sortKey, 1]]);
+// Add new user
+userController.post('/add', async (req, res) => {
+    try {
+        const user = new User(req.body);
+        await user.save();
+        res.status(200).json({ Success: true });
+    } catch (err) {
+        res.status(400).json({ Success: false, Message: 'Error occurred while creating new user' });
     }
-
-    userQuery.exec(function (err, users) {
-
-        if (err) {
-            res.json({ 'Success': false })
-        }
-        else {
-            res.json({ 'Success': true, 'Data': users });
-        }
-    });
 });
 
-// add new user
-userController.route('/add').post(function (req, res) {
+// Update user
+userController.post('/edit/:id', async (req, res) => {
+    const userId = req.params.id;
 
-    let user = new User(req.body);
-    console.log(user);
-    user.save()
-        .then(user => {
-            res.status(200).json({ 'Success': true })
-        })
-        .catch(err => {
-            res.status(400).send({ 'Success': false, 'Message': 'Error occured while creating new user' });
-        });
+    try {
+        const user = await User.findOne({ User_ID: userId });
+        if (!user) return res.status(404).json({ Success: false, Message: 'User  not found' });
 
+        Object.assign(user, req.body);
+        await user.save();
+        res.json({ Success: true });
+    } catch (err) {
+        res.status(400).json({ Success: false });
+    }
 });
 
-// update user
-userController.route('/edit/:id').post(function (req, res) {
+// Delete user
+userController.delete('/delete/:id', async (req, res) => {
+    const userId = req.params.id;
 
-    let userId = req.params.id;
-
-    User.findOne({ User_ID: userId }, function (err, user) {
-        if (!user)
-            return next(new Error('user not found'));
-        else {
-            user.First_Name = req.body.First_Name;
-            user.Last_Name = req.body.Last_Name;
-            user.Employee_ID = req.body.Employee_ID;
-
-            user.save().then(user => {
-                res.json({ 'Success': true });
-            })
-                .catch(err => {
-                    res.status(400).json({ 'Success': false });
-                });
+    try {
+        const result = await User.deleteOne({ User_ID: userId });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ Success: false, Message: 'User  not found' });
         }
-    });
+        res.json({ Success: true });
+    } catch (err) {
+        res.status(500).json({ Success: false, Message: 'Error occurred while deleting user' });
+    }
 });
 
+// Get user
+userController.get('/:id', async (req, res) => {
+    const userId = req.params.id;
 
-//delete user
-userController.route('/delete/:id').get(function (req, res) {
+    try {
+        const user = await User.findOne({ User_ID: userId });
+        if (!user) return res.status(404).json({ Success: false, Message: 'User  not found' });
 
-    let userId = req.params.id;
-
-    User.find({ User_ID: userId }).remove(function (err, user) {
-        if (err)
-            res.json({ 'Success': false, 'Message': 'User not found' });
-        else
-            res.json({ 'Success': true });
-    });
+        res.json({ Success: true, Data: user });
+    } catch (err) {
+        res.status(500).json({ Success: false, Message: 'Error occurred while fetching user' });
+    }
 });
 
-//get user
-userController.route('/:id').get(function (req, res) {
+// Assign project as Manager
+userController.post('/assign/project/:id', async (req, res) => {
+    const userId = req.params.id;
 
-    let userId = req.params.id;
+    try {
+        const user = await User.findOne({ User_ID: userId });
+        if (!user) return res.status(404).json({ Success: false, Message: 'User  not found' });
 
-    User.findOne({ User_ID: userId }, function (err, user) {
-        if (err) {
-            res.json({ 'Success': false, 'Message': 'User not found' })
-        }
-        else {
-            res.json({ 'Success': true, 'Data': user });
-        }
-    });
+        user.Project_ID = req.body.Project_ID;
+        await user.save();
+        res.json({ Success: true });
+    } catch (err) {
+        res.status(400).json({ Success: false });
+    }
 });
 
-// assign project as Manager
-userController.route('/edit/:id').post(function (req, res) {
+// Assign new task
+userController.post('/assign/task/:id', async (req, res) => {
+    const userId = req.params.id;
 
-    let userId = req.params.id;
+    try {
+        const user = await User.findOne({ User_ID: userId });
+        if (!user) return res.status(404).json({ Success: false, Message: 'User  not found' });
 
-    User.findOne({ User_ID: userId }, function (err, user) {
-        if (!user)
-            return next(new Error('user not found'));
-        else {
-            user.update({ 'Project_ID': req.body.Project_ID }).then(user => {
-                res.json({ 'Success': true });
-            })
-                .catch(err => {
-                    res.status(400).json({ 'Success': false });
-                });
-        }
-    });
+        user.Task_ID = req.body.Task_ID;
+        await user.save();
+        res.json({ Success: true });
+    } catch (err) {
+        res.status(400).json({ Success: false });
+    }
 });
 
-// assign new task
-userController.route('/edit/:id').post(function (req, res) {
-
-    let userId = req.params.id;
-
-    User.findOne({ User_ID: userId }, function (err, user) {
-        if (!user)
-            return next(new Error('user not found'));
-        else {
-            user.update({ 'Task_ID': req.body.Task_ID }).then(user => {
-                res.json({ 'Success': true });
-            })
-                .catch(err => {
-                    res.status(400).json({ 'Success': false });
-                });
-        }
-    });
-});
-
-
-module.exports = userController;
+export default userController;
