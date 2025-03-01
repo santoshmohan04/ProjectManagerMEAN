@@ -1,8 +1,17 @@
-import { Component, OnInit, EventEmitter, Input, Output } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  EventEmitter,
+  Input,
+  Output,
+  signal,
+  OnDestroy,
+} from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user';
 import { CommonModule } from '@angular/common';
-declare var $ :any;
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'user-search',
@@ -10,54 +19,58 @@ declare var $ :any;
   styleUrls: ['./search.component.css'],
   standalone: true,
   providers: [UserService],
-  imports: [CommonModule]
+  imports: [CommonModule],
 })
-export class SearchComponent implements OnInit {
-  @Input()  name!: string;
-  @Output() userSelected = new EventEmitter<User>();
+export class SearchComponent implements OnInit, OnDestroy {
+  @Input() name!: string;
 
   Users!: User[];
   SortKey!: string;
   SearchKey!: string;
-  SelectedUserID!: number;
-  enableAdd!:boolean;
-
-  constructor(private userService: UserService) { }
+  SelectedUser = signal<User | null>(null);
+  enableAdd!: boolean;
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  constructor(
+    private readonly userService: UserService,
+    private readonly activeModal: NgbActiveModal
+  ) {}
 
   ngOnInit() {
     this.refreshList();
   }
 
-  refreshList(){
-    this.userService.getUsersList(this.SearchKey, this.SortKey)
-      .subscribe((response:any) => {
+  refreshList() {
+    this.userService
+      .getUsersList(this.SearchKey, this.SortKey)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((response: any) => {
         if (response.Success) {
           this.Users = response.Data;
         }
       });
-      this.enableAdd = false;
+    this.enableAdd = false;
   }
 
-  
   searchUser(searchValue: Event) {
     this.SearchKey = (searchValue.target as HTMLInputElement).value;
     this.refreshList();
   }
 
-  selectUser(userID: Event){
-    this.SelectedUserID = Number((userID.target as HTMLInputElement).value);
+  selectUser(user: User) {
+    this.SelectedUser.set(user);
     this.enableAdd = true;
   }
 
-  addUser(){
+  addUser() {
+    this.activeModal.close(this.SelectedUser());
+  }
 
-    this.userService.getUser(this.SelectedUserID)
-      .subscribe((response:any) =>{
-          if(response.Success)
-          {
-            this.userSelected.emit(response.Data);
-            $('#userSearchModel').modal('toggle');
-          }
-      });
+  closeModal() {
+    this.activeModal.dismiss();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next(true);
+    this.destroy$.complete();
   }
 }

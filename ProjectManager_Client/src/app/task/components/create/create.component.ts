@@ -1,20 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ParentTaskService } from '../../services/parent-task.service';
 import { TaskService } from '../../services/task.service';
 import { AlertService } from '../../../shared/services/alert.service';
-import { Task, ParentTask } from '../../models/task';
+import { ParentTask } from '../../models/task';
 import { Project } from '../../../project/models/project';
 import { User } from '../../../user/models/user';
 
 import moment from 'moment';
 import { NgbDatepickerModule, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
-import { FormsModule } from '@angular/forms';
-import { SearchComponent as ProjectSearchComponent } from '../../../project/components/search/search.component';
-import { SearchComponent as UserSearchComponent } from '../../../user/components/search/search.component';
-import { ParentSearchComponent } from '../search/parent-search/parent-search.component';
 import { CommonModule } from '@angular/common';
 import { DateCompareValidatorDirective } from '../../../shared/directives/datecompare.directive';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'create-task',
@@ -22,26 +20,21 @@ import { DateCompareValidatorDirective } from '../../../shared/directives/dateco
   styleUrls: ['./create.component.css'],
   standalone: true,
   imports: [
-    FormsModule,
+    ReactiveFormsModule,
     NgbDatepickerModule,
-    ProjectSearchComponent,
-    UserSearchComponent,
-    ParentSearchComponent,
     CommonModule,
     DateCompareValidatorDirective,
   ],
   providers: [ParentTaskService, TaskService, AlertService],
 })
-export class CreateComponent implements OnInit {
+export class CreateComponent implements OnInit, OnDestroy {
   taskId: number | null = null;
-
-  taskStartDate: NgbDateStruct = this.initializeDateStruct();
-  taskEndDate: NgbDateStruct = this.initializeDateStruct(1);
-
-  task: Task = this.initializeTask();
+  taskForm!: FormGroup;
   isParentTask = false;
+  destroy$: Subject<boolean> = new Subject<boolean>();
 
   constructor(
+    private readonly fb: FormBuilder,
     private readonly parentTaskService: ParentTaskService,
     private readonly taskService: TaskService,
     private readonly alertService: AlertService,
@@ -49,10 +42,47 @@ export class CreateComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.initializeForm();
+
     this.route.queryParams.subscribe((params) => {
       this.taskId = params['taskId'] || null;
       if (this.taskId) this.loadTaskForUpdate(this.taskId);
     });
+    this.initializeSlider();
+  }
+
+  private initializeForm() {
+    this.taskForm = this.fb.group({
+      TaskName: [null, Validators.required],
+      Priority: [0, [Validators.min(0), Validators.max(30)]],
+      Start_Date: [this.initializeDateStruct(), Validators.required],
+      End_Date: [this.initializeDateStruct(1), Validators.required],
+      isParentTask: [false],
+      Project: [null, Validators.required],
+      ProjectName: [{value:null, disabled: true}, Validators.required, ],
+      ParentTask: [null],
+      ParentTaskName: [null],
+      User: [null],
+      UserName: [null],
+    });
+  }
+
+  updateRange(event: any) {
+    const rangeInput = event.target;
+    const percent =
+      ((rangeInput.value - rangeInput.min) /
+        (rangeInput.max - rangeInput.min)) *
+      100;
+    rangeInput.style.setProperty('--progress', percent + '%');
+  }
+
+  private initializeSlider() {
+    const rangeInput = document.querySelector(
+      'input[type="range"]'
+    ) as HTMLInputElement;
+    if (rangeInput) {
+      rangeInput.style.setProperty('--progress', '0%');
+    }
   }
 
   private initializeDateStruct(offsetDays = 0): NgbDateStruct {
@@ -60,34 +90,19 @@ export class CreateComponent implements OnInit {
     return { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
   }
 
-  private initializeTask(): Task {
-    return {
-      Task: '',
-      Priority: 0,
-      Start_Date: moment().format('DD/MM/YYYY'),
-      End_Date: moment().add(1, 'days').format('DD/MM/YYYY'),
-      Project: {
-        Project_ID: undefined,
-        Project: '',
-        Start_Date: undefined,
-        End_Date: undefined,
-        Priority: 0,
-        Manager_ID: undefined,
-        Tasks: [],
-        CompletedTasks: null,
-        NoOfTasks: null,
-      },
-    };
-  }
-
   private loadTaskForUpdate(taskId: number): void {
-    this.taskService.getTask(taskId).subscribe((response) => {
-      this.task = response.Data;
-      if (this.task.Start_Date) {
-        this.taskStartDate = this.convertToStruct(this.task.Start_Date);
-      }
-      if (this.task.End_Date) {
-        this.taskEndDate = this.convertToStruct(this.task.End_Date);
+    this.taskService.getTask(taskId).pipe(takeUntil(this.destroy$)).subscribe((response) => {
+      if (response.Success) {
+        const taskData = response.Data;
+        this.taskForm.patchValue({
+          Task: taskData.Task,
+          Priority: taskData.Priority,
+          Start_Date: this.convertToStruct(taskData.Start_Date ?? ''),
+          End_Date: this.convertToStruct(taskData.End_Date ?? ''),
+          Project: taskData.Project,
+          Parent: taskData.Parent,
+          User: taskData.User,
+        });
       }
     });
   }
@@ -102,11 +117,18 @@ export class CreateComponent implements OnInit {
   }
 
   reset(): void {
-    this.taskStartDate = this.initializeDateStruct();
-    this.taskEndDate = this.initializeDateStruct(1);
-    this.task = this.initializeTask();
+    this.taskForm.reset({
+      Task: '',
+      Priority: 0,
+      Start_Date: this.initializeDateStruct(),
+      End_Date: this.initializeDateStruct(1),
+      Project: null,
+      Parent: null,
+      User: null,
+    });
     this.isParentTask = false;
     this.taskId = null;
+    this.initializeSlider();
   }
 
   private formatDateStruct(date: NgbDateStruct): string {
@@ -114,38 +136,40 @@ export class CreateComponent implements OnInit {
   }
 
   addTask(): void {
-    this.task.Start_Date = this.formatDateStruct(this.taskStartDate);
-    this.task.End_Date = this.formatDateStruct(this.taskEndDate);
+    const formValue = this.taskForm.value;
+    formValue.Start_Date = this.formatDateStruct(formValue.Start_Date);
+    formValue.End_Date = this.formatDateStruct(formValue.End_Date);
 
     if (this.isParentTask) {
-      this.addParentTask();
+      this.addParentTask(formValue);
     } else {
-      this.addIndividualTask();
+      this.addIndividualTask(formValue);
     }
   }
 
-  private addParentTask(): void {
+  private addParentTask(formValue: any): void {
     const newParent: ParentTask = {
-      Parent_Task: this.task.Task,
-      Project_ID: this.task.Project?.Project_ID ?? undefined,
+      Parent_Task: formValue.Task,
+      Project_ID: formValue.Project?.Project_ID ?? undefined,
     };
 
-    this.parentTaskService.addParentTask(newParent).subscribe((response) => {
+    this.parentTaskService.addParentTask(newParent).pipe(takeUntil(this.destroy$)).subscribe((response) => {
       this.handleResponse(response, 'Task added successfully!');
     });
   }
 
-  private addIndividualTask(): void {
-    this.taskService.addTask(this.task).subscribe((response) => {
+  private addIndividualTask(formValue: any): void {
+    this.taskService.addTask(formValue).pipe(takeUntil(this.destroy$)).subscribe((response) => {
       this.handleResponse(response, 'Task added successfully!');
     });
   }
 
   updateTask(): void {
-    this.task.Start_Date = this.formatDateStruct(this.taskStartDate);
-    this.task.End_Date = this.formatDateStruct(this.taskEndDate);
+    const formValue = this.taskForm.value;
+    formValue.Start_Date = this.formatDateStruct(formValue.Start_Date);
+    formValue.End_Date = this.formatDateStruct(formValue.End_Date);
 
-    this.taskService.editTask(this.task).subscribe((response) => {
+    this.taskService.editTask(formValue).pipe(takeUntil(this.destroy$)).subscribe((response) => {
       this.handleResponse(response, 'Task updated successfully!');
     });
   }
@@ -160,14 +184,19 @@ export class CreateComponent implements OnInit {
   }
 
   onProjectSelected(project: Project): void {
-    this.task.Project = project;
+    this.taskForm.patchValue({ Project: project, ProjectName: project.Project });
   }
 
   onParentSelected(parent: ParentTask): void {
-    this.task.Parent = parent;
+    this.taskForm.patchValue({ Parent: parent });
   }
 
   onUserSelected(user: User): void {
-    this.task.User = user;
+    this.taskForm.patchValue({ User: user });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next(true);
+    this.destroy$.complete();
   }
 }
