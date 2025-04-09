@@ -9,13 +9,28 @@ import { UserService } from '../../services/user.service';
 import { AlertService } from '../../../shared/services/alert.service';
 import { User } from '../../models/user';
 import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDividerModule } from '@angular/material/divider';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
-    selector: 'user-add',
-    templateUrl: './create.component.html',
-    styleUrls: ['./create.component.css'],
-    imports: [ReactiveFormsModule, CommonModule],
-    providers: [UserService, AlertService]
+  selector: 'user-add',
+  templateUrl: './create.component.html',
+  styleUrls: ['./create.component.css'],
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    CommonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatDividerModule,
+  ],
+  providers: [UserService, AlertService],
 })
 export class CreateComponent implements OnInit {
   Users!: User[];
@@ -23,6 +38,7 @@ export class CreateComponent implements OnInit {
   userAction!: string;
   SortKey!: string;
   SearchKey!: string;
+  selectedUser!: User | null;
 
   constructor(
     private userService: UserService,
@@ -43,7 +59,6 @@ export class CreateComponent implements OnInit {
           Validators.pattern('^[0-9]{1,6}$'),
         ]),
       ],
-      userId: '',
     });
     this.userAction = 'Add';
   }
@@ -73,6 +88,7 @@ export class CreateComponent implements OnInit {
 
   addUser() {
     const newUser = <User>{
+      User_ID: Math.floor(1000 + Math.random() * 9000),
       First_Name: this.userForm.controls['firstName'].value,
       Last_Name: this.userForm.controls['lastName'].value,
       Employee_ID: this.userForm.controls['employeeId'].value,
@@ -85,6 +101,7 @@ export class CreateComponent implements OnInit {
         this.alertService.success('User added successfully!', 'Success', 3000);
 
         this.refreshList();
+        this.userForm.reset();
       } else this.alertService.error(response.Message, 'Error', 3000);
     });
   }
@@ -92,6 +109,7 @@ export class CreateComponent implements OnInit {
   editUser(userID: any) {
     this.userService.getUser(userID).subscribe((response: any) => {
       if (response.Success == true) {
+        this.selectedUser = response.Data;
         this.userForm = this.formbuilder.group({
           firstName: [response.Data.First_Name, Validators.required],
           lastName: [response.Data.Last_Name, Validators.required],
@@ -114,10 +132,11 @@ export class CreateComponent implements OnInit {
 
   updateUser() {
     const updateUser = <User>{
-      User_ID: this.userForm.controls['userId'].value,
+      User_ID: this.selectedUser?.User_ID,
       First_Name: this.userForm.controls['firstName'].value,
       Last_Name: this.userForm.controls['lastName'].value,
       Employee_ID: this.userForm.controls['employeeId'].value,
+      id: this.selectedUser?.id
     };
 
     this.userService.editUser(updateUser).subscribe((response: any) => {
@@ -132,6 +151,7 @@ export class CreateComponent implements OnInit {
         this.refreshList();
 
         this.reset();
+        this.selectedUser = null;
       } else this.alertService.error(response.Message, 'Error', 3000);
     });
   }

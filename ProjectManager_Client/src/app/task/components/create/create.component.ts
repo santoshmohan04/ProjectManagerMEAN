@@ -11,18 +11,17 @@ import { User } from '../../../user/models/user';
 import moment from 'moment';
 import { NgbDatepickerModule, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { CommonModule } from '@angular/common';
-import { DateCompareValidatorDirective } from '../../../shared/directives/datecompare.directive';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'create-task',
     templateUrl: './create.component.html',
     styleUrls: ['./create.component.css'],
+    standalone:true,
     imports: [
         ReactiveFormsModule,
         NgbDatepickerModule,
         CommonModule,
-        DateCompareValidatorDirective,
     ],
     providers: [ParentTaskService, TaskService, AlertService]
 })

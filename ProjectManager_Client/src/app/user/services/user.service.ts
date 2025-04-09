@@ -59,7 +59,7 @@ export class UserService implements IUserService {
 
   editUser(updateUser: User): Observable<ApiResponse<User>> {
 
-    const uri = `${this.baseUri}${environment.endpoint_user_edit}/${updateUser.User_ID}`
+    const uri = `${this.baseUri}${environment.endpoint_user_edit}/${updateUser.id}`
 
     return this.http
       .post<ApiResponse<User>>(uri, updateUser);
@@ -70,6 +70,6 @@ export class UserService implements IUserService {
     const uri = `${this.baseUri}${environment.endpoint_user_delete}/${userId}`
 
     return this.http
-      .get<ApiResponse<User>>(uri);
+      .delete<ApiResponse<User>>(uri);
   }
 }

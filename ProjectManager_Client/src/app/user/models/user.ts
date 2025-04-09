@@ -5,5 +5,6 @@ export interface User {
     Employee_ID: number;
     Project_ID?: number,
     Task_ID?: number,
-    Full_Name?:string
+    Full_Name?:string,
+    id?:string
 }

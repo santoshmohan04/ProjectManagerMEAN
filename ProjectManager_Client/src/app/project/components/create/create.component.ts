@@ -27,6 +27,7 @@ import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
     templateUrl: './create.component.html',
     styleUrls: ['./create.component.css'],
     providers: [UserService, ProjectService, AlertService],
+    standalone: true,
     imports: [ReactiveFormsModule, NgbDatepickerModule, CommonModule, NgbModule]
 })
 export class CreateComponent implements OnInit, OnDestroy {

@@ -1,0 +1,18 @@
+.custom-toolbar {
+  background: linear-gradient(135deg, #0143a3, #0273d4);
+  color: white; // Ensures text is readable
+}
+
+.custom-toolbar mat-icon {
+  color: white;
+}
+
+.example-spacer {
+  flex: 1 1 auto;
+}
+
+.nav-link {
+  margin-left: 12px;
+  color: white;
+  text-decoration: none;
+}

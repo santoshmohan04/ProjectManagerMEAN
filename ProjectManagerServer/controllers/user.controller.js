@@ -1,5 +1,6 @@
 import express from 'express';
 import User from '../data_models/user.js';
+import mongoose from 'mongoose';
 
 const userController = express.Router();
 
@@ -43,7 +44,7 @@ userController.post('/edit/:id', async (req, res) => {
     const userId = req.params.id;
 
     try {
-        const user = await User.findOne({ User_ID: userId });
+        const user = await User.findOne({ _id: new mongoose.Types.ObjectId(userId) });
         if (!user) return res.status(404).json({ Success: false, Message: 'User  not found' });
 
         Object.assign(user, req.body);
@@ -59,7 +60,7 @@ userController.delete('/delete/:id', async (req, res) => {
     const userId = req.params.id;
 
     try {
-        const result = await User.deleteOne({ User_ID: userId });
+        const result = await User.deleteOne({ _id: new mongoose.Types.ObjectId(userId) });
         if (result.deletedCount === 0) {
             return res.status(404).json({ Success: false, Message: 'User  not found' });
         }
@@ -74,7 +75,7 @@ userController.get('/:id', async (req, res) => {
     const userId = req.params.id;
 
     try {
-        const user = await User.findOne({ User_ID: userId });
+        const user = await User.findOne({ _id: new mongoose.Types.ObjectId(userId) });
         if (!user) return res.status(404).json({ Success: false, Message: 'User  not found' });
 
         res.json({ Success: true, Data: user });

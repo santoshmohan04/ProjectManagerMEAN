@@ -1,10 +1,5 @@
-/* You can add global styles to this file, and also import other style files */
-@import "../node_modules/ng2-slim-loading-bar/style.css";
-@import "../node_modules/ngx-toastr/toastr.css";
-@import "../node_modules/font-awesome/css/font-awesome.css";
-
 /* Importing Bootstrap SCSS file. */
-@import 'bootstrap/scss/bootstrap';
+@use 'bootstrap/scss/bootstrap' as *;
 
 
 .ng-dirty.ng-valid[required], .ng-dirty.ng-valid.required  {
@@ -81,3 +76,6 @@ label, .controlTopPadding
     border: none;
 }
 
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

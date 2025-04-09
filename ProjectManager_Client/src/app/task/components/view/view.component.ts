@@ -15,6 +15,7 @@ import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
     templateUrl: './view.component.html',
     styleUrls: ['./view.component.css'],
     providers: [TaskService, AlertService],
+    standalone: true,
     imports: [CommonModule, FormsModule, NgbModule]
 })
 export class ViewComponent implements OnDestroy {
