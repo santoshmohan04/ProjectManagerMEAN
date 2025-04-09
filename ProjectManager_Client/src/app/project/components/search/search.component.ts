@@ -6,12 +6,11 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
-  selector: 'project-search',
-  templateUrl: './search.component.html',
-  styleUrls: ['./search.component.css'],
-  standalone: true,
-  imports: [CommonModule],
-  providers: [ProjectService],
+    selector: 'project-search',
+    templateUrl: './search.component.html',
+    styleUrls: ['./search.component.css'],
+    imports: [CommonModule],
+    providers: [ProjectService]
 })
 export class SearchComponent implements OnInit, OnDestroy {
   @Input() name!: string;

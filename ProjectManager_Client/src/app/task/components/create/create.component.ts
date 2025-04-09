@@ -15,17 +15,16 @@ import { DateCompareValidatorDirective } from '../../../shared/directives/dateco
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
-  selector: 'create-task',
-  templateUrl: './create.component.html',
-  styleUrls: ['./create.component.css'],
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    NgbDatepickerModule,
-    CommonModule,
-    DateCompareValidatorDirective,
-  ],
-  providers: [ParentTaskService, TaskService, AlertService],
+    selector: 'create-task',
+    templateUrl: './create.component.html',
+    styleUrls: ['./create.component.css'],
+    imports: [
+        ReactiveFormsModule,
+        NgbDatepickerModule,
+        CommonModule,
+        DateCompareValidatorDirective,
+    ],
+    providers: [ParentTaskService, TaskService, AlertService]
 })
 export class CreateComponent implements OnInit, OnDestroy {
   taskId: number | null = null;

@@ -23,12 +23,11 @@ import { CommonModule } from '@angular/common';
 import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 
 @Component({
-  selector: 'project-add',
-  templateUrl: './create.component.html',
-  styleUrls: ['./create.component.css'],
-  standalone: true,
-  providers: [UserService, ProjectService, AlertService],
-  imports: [ReactiveFormsModule, NgbDatepickerModule, CommonModule, NgbModule],
+    selector: 'project-add',
+    templateUrl: './create.component.html',
+    styleUrls: ['./create.component.css'],
+    providers: [UserService, ProjectService, AlertService],
+    imports: [ReactiveFormsModule, NgbDatepickerModule, CommonModule, NgbModule]
 })
 export class CreateComponent implements OnInit, OnDestroy {
   Projects!: Project[];

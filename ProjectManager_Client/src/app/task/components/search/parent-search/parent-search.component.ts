@@ -6,12 +6,11 @@ import { CommonModule } from '@angular/common';
 declare var $: any;
 
 @Component({
-  selector: 'parent-task-search',
-  templateUrl: './parent-search.component.html',
-  styleUrls: ['./parent-search.component.css'],
-  standalone: true,
-  providers: [ParentTaskService],
-  imports: [CommonModule],
+    selector: 'parent-task-search',
+    templateUrl: './parent-search.component.html',
+    styleUrls: ['./parent-search.component.css'],
+    providers: [ParentTaskService],
+    imports: [CommonModule]
 })
 export class ParentSearchComponent implements OnInit {
   @Input() name!: string;

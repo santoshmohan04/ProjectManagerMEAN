@@ -11,12 +11,11 @@ import { User } from '../../models/user';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'user-add',
-  templateUrl: './create.component.html',
-  styleUrls: ['./create.component.css'],
-  standalone: true,
-  imports: [ReactiveFormsModule, CommonModule],
-  providers: [UserService, AlertService],
+    selector: 'user-add',
+    templateUrl: './create.component.html',
+    styleUrls: ['./create.component.css'],
+    imports: [ReactiveFormsModule, CommonModule],
+    providers: [UserService, AlertService]
 })
 export class CreateComponent implements OnInit {
   Users!: User[];

@@ -11,12 +11,11 @@ import { Subject, takeUntil } from 'rxjs';
 import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-  selector: 'app-view',
-  templateUrl: './view.component.html',
-  styleUrls: ['./view.component.css'],
-  standalone: true,
-  providers: [TaskService, AlertService],
-  imports: [CommonModule, FormsModule, NgbModule],
+    selector: 'app-view',
+    templateUrl: './view.component.html',
+    styleUrls: ['./view.component.css'],
+    providers: [TaskService, AlertService],
+    imports: [CommonModule, FormsModule, NgbModule]
 })
 export class ViewComponent implements OnDestroy {
   Tasks!: Task[];
