@@ -1,16 +1,17 @@
 <mat-toolbar class="custom-toolbar">
-  <button
-    mat-icon-button
-    aria-label="Menu"
-  >
+  <span class="title">Project Manager</span>
+  <span class="example-spacer"></span>
+
+  <!-- Menu icon only shown on small screens -->
+  <button mat-icon-button class="menu-button" (click)="toggleMenu()" aria-label="Toggle navigation">
     <mat-icon>menu</mat-icon>
   </button>
 
-  <span>Project Manager</span>
-  <span class="example-spacer"></span>
-
-  <a mat-button routerLink="/project/add" class="nav-link">Add Project</a>
-  <a mat-button routerLink="/task/add" class="nav-link">Add Task</a>
-  <a mat-button routerLink="/user/add" class="nav-link">Add User</a>
-  <a mat-button routerLink="/task/view" class="nav-link">View Task</a>
+  <!-- Desktop links -->
+  <div class="nav-links" [class.hidden]="isMobile && !menuOpen">
+    <a mat-button routerLink="/project/add" class="nav-link">Add Project</a>
+    <a mat-button routerLink="/task/add" class="nav-link">Add Task</a>
+    <a mat-button routerLink="/user/add" class="nav-link">Add User</a>
+    <a mat-button routerLink="/task/view" class="nav-link">View Task</a>
+  </div>
 </mat-toolbar>

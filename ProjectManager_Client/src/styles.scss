@@ -1,6 +1,14 @@
 /* Importing Bootstrap SCSS file. */
 @use 'bootstrap/scss/bootstrap' as *;
 
+/* Ensure body takes full width and removes margin */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
 
 .ng-dirty.ng-valid[required], .ng-dirty.ng-valid.required  {
     border-left: 5px solid #42A948;
