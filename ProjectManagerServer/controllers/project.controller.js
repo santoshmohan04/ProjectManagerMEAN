@@ -1,112 +1,92 @@
+import express from 'express';
+import Project from '../data_models/project.js';
 
-/* project API routes */
+const projectController = express.Router();
 
-const express = require('express'),
-    projectController = express.Router(),
-    url = require('url');
+// List projects
+projectController.get('/', async (req, res) => {
+    try {
+        const { searchKey, sortKey } = req.query;
+        const projectQuery = Project.find();
 
-let Project = require('../data_models/project');
+        if (searchKey) {
+            projectQuery.or([{ Project: { $regex: searchKey, $options: 'i' } }]);
+        }
 
-let User = require('../data_models/user');
+        if (sortKey) {
+            projectQuery.sort([[sortKey, 1]]);
+        }
 
-//list projects
-projectController.route('/').get(function (req, res) {
-
-    var projectQuery = Project.find();
-
-    var queryparams = req.query;
-
-    if (queryparams.searchKey) {
-        projectQuery.or([
-            { 'Project': { $regex: queryparams.searchKey, $options: 'i' } }]);
+        const projects = await projectQuery.populate('Tasks', ['Task_ID', 'Status']).exec();
+        res.json({ Success: true, Data: projects });
+        console.log(projects);
+    } catch (err) {
+        res.status(500).json({ Success: false, Message: 'An error occurred', Error: err.message });
     }
+});
 
-    if (queryparams.sortKey) {
-        projectQuery.sort([[queryparams.sortKey, 1]]);
+// Add new project
+projectController.post('/add', async (req, res) => {
+    try {
+        const project = new Project(req.body);
+        await project.save();
+        res.status(200).json({ Success: true });
+    } catch (err) {
+        res.status(400).json({ Success: false, Message: 'Error occurred while creating new project', Error: err.message });
     }
-
-    projectQuery
-    .populate('Tasks', ['Task_ID', 'Status'])
-    .exec(function (err, projects) {
-
-        if (err) {
-            res.json({ 'Success': false })
-        }
-        else {
-          
-            res.json({ 'Success': true, 'Data': projects });
-            console.log(projects);
-        }
-    });
 });
 
-// add new project
-projectController.route('/add').post(function (req, res) {
+// Update project
+projectController.post('/edit/:id', async (req, res) => {
+    const projectId = req.params.id;
 
-    let project = new Project(req.body);
+    try {
+        const project = await Project.findOne({ Project_ID: projectId });
 
-    project.save()
-        .then(project => {
-            res.status(200).json({ 'Success': true })
-        })
-        .catch(err => {
-            res.status(400).send({ 'Success': false, 'Message': 'Error occured while creating new user' });
-        });
-});
-
-// update project
-projectController.route('/edit/:id').post(function (req, res) {
-
-    let projectId = req.params.id;
-
-    Project.findOne({ Project_ID: projectId }, function (err, project) {
-        if (!project)
-            return next(new Error('project not found'));
-        else {
-            project.Project = req.body.Project;
-            project.Priority = req.body.Priority;
-            project.Manager_ID = req.body.Manager_ID;
-            project.Start_Date = req.body.Start_Date;
-            project.End_Date = req.body.End_Date;
-
-            project.save().then(project => {
-                res.json({ 'Success': true });
-            })
-                .catch(err => {
-                    res.status(400).json({ 'Success': false });
-                });
+        if (!project) {
+            return res.status(404).json({ Success: false, Message: 'Project not found' });
         }
-    });
+
+        Object.assign(project, req.body);
+        await project.save();
+        res.json({ Success: true });
+    } catch (err) {
+        res.status(400).json({ Success: false, Message: 'Error occurred while updating project', Error: err.message });
+    }
 });
 
-//delete project
-projectController.route('/delete/:id').get(function (req, res) {
+// Delete project
+projectController.delete('/delete/:id', async (req, res) => {
+    const projectId = req.params.id;
 
-    let projectId = req.params.id;
+    try {
+        const result = await Project.deleteOne({ Project_ID: projectId });
 
-    Project.find({ Project_ID: projectId }).remove(function (err, user) {
-        if (err)
-            res.json({ 'Success': false, 'Message': 'Project not found' });
-        else
-            res.json({ 'Success': true });
-    });
-});
-
-
-//get project
-projectController.route('/:id').get(function (req, res) {
-
-    let projectId = req.params.id;
-
-    Project
-    .findOne({ Project_ID: projectId }, function (err, project) {
-        if (err) {
-            res.json({ 'Success': false, 'Message': 'Project not found' })
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ Success: false, Message: 'Project not found' });
         }
-        else {
-            res.json({ 'Success': true, 'Data': project });
-        }
-    });
+
+        res.json({ Success: true });
+    } catch (err) {
+        res.status(500).json({ Success: false, Message: 'An error occurred', Error: err.message });
+    }
 });
 
-module.exports = projectController;
+// Get project
+projectController.get('/:id', async (req, res) => {
+    const projectId = req.params.id;
+
+    try {
+        const project = await Project.findOne({ Project_ID: projectId });
+
+        if (!project) {
+            return res.status(404).json({ Success: false, Message: 'Project not found' });
+        }
+
+        res.json({ Success: true, Data: project });
+    } catch (err) {
+        res.status(500).json({ Success: false, Message: 'An error occurred', Error: err.message });
+    }
+});
+
+export default projectController;

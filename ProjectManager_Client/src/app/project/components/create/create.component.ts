@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormBuilder,
@@ -12,40 +12,46 @@ import { User } from '../../../user/models/user';
 import { Project } from '../../models/project';
 
 import moment from 'moment';
-import { NgbDateStruct, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbDateStruct,
+  NgbDatepickerModule,
+  NgbModal,
+  NgbModule,
+} from '@ng-bootstrap/ng-bootstrap';
 import { SearchComponent } from '../../../user/components/search/search.component';
 import { CommonModule } from '@angular/common';
+import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 
 @Component({
-  selector: 'project-add',
-  templateUrl: './create.component.html',
-  styleUrls: ['./create.component.css'],
-  standalone: true,
-  providers: [UserService, ProjectService, AlertService],
-  imports: [
-    ReactiveFormsModule,
-    NgbDatepickerModule,
-    SearchComponent,
-    CommonModule,
-  ],
+    selector: 'project-add',
+    templateUrl: './create.component.html',
+    styleUrls: ['./create.component.css'],
+    providers: [UserService, ProjectService, AlertService],
+    standalone: true,
+    imports: [ReactiveFormsModule, NgbDatepickerModule, CommonModule, NgbModule]
 })
-export class CreateComponent implements OnInit {
+export class CreateComponent implements OnInit, OnDestroy {
   Projects!: Project[];
   projectForm!: FormGroup;
-
-  setDates!: boolean;
   userAction!: string;
   SortKey!: string;
   SearchKey!: string;
   Manager!: User;
+  destroy$: Subject<boolean> = new Subject<boolean>();
 
   constructor(
     private readonly projectService: ProjectService,
     private readonly userService: UserService,
     private readonly formbuilder: FormBuilder,
-    private readonly alertService: AlertService
-  ) {
+    private readonly alertService: AlertService,
+    private readonly modalService: NgbModal
+  ) {}
+
+  ngOnInit() {
     this.createForm();
+    this.refreshList();
+    this.addValidations();
+    this.initializeSlider();
   }
 
   createForm() {
@@ -55,11 +61,21 @@ export class CreateComponent implements OnInit {
       startDate: [{ value: '', disabled: true }],
       endDate: [{ value: '', disabled: true }],
       priority: 0,
-      manager: '',
+      manager: null,
+      managername: '',
       projectId: '',
     });
 
     this.userAction = 'Add';
+  }
+
+  updateRange(event: any) {
+    const rangeInput = event.target;
+    const percent =
+      ((rangeInput.value - rangeInput.min) /
+        (rangeInput.max - rangeInput.min)) *
+      100;
+    rangeInput.style.setProperty('--progress', percent + '%');
   }
 
   reset() {
@@ -67,21 +83,26 @@ export class CreateComponent implements OnInit {
     this.projectForm.get('priority')?.setValue(0);
     this.userAction = 'Add';
     this.Manager = <User>{};
-    this.setDates = false;
+    this.initializeSlider();
   }
 
-  ngOnInit() {
-    this.refreshList();
-    this.addValidations();
+  // Reset range input progress
+  initializeSlider() {
+    const rangeInput = document.querySelector(
+      'input[type="range"]'
+    ) as HTMLInputElement;
+    if (rangeInput) {
+      rangeInput.style.setProperty('--progress', '0%');
+    }
   }
 
   refreshList() {
     this.projectService
       .getProjects(this.SearchKey, this.SortKey)
+      .pipe(takeUntil(this.destroy$))
       .subscribe((response: any) => {
-        if (response.Success == true) {
+        if (response.Success === true) {
           this.Projects = response.Data;
-          console.log(response.Data);
         } else {
           this.Projects = response.Data;
           this.alertService.error(
@@ -100,7 +121,7 @@ export class CreateComponent implements OnInit {
 
   addorUpdateProject() {
     if (this.projectForm.valid) {
-      if (this.userAction == 'Add') {
+      if (this.userAction === 'Add') {
         this.addProject();
       } else {
         this.updateProject();
@@ -109,40 +130,50 @@ export class CreateComponent implements OnInit {
   }
 
   addProject() {
-    const newProject = <Project>{
+    const newProject: Project = {
       Project: this.projectForm.controls['projectName'].value,
       Priority: this.projectForm.controls['priority'].value,
     };
-
+  
     if (this.Manager) {
-      newProject.Manager_ID = this.Manager.User_ID;
+      newProject.Manager_ID = this.projectForm.controls['manager'].value?.User_ID;
     }
-
-    if (this.setDates) {
-      newProject.Start_Date = moment(
-        this.projectForm.controls['startDate'].value
-      )
-        .add(-1, 'months')
-        .toDate();
-      newProject.End_Date = moment(this.projectForm.controls['endDate'].value)
-        .add(-1, 'months')
-        .toDate();
-    }
-
-    this.projectService.addProject(newProject).subscribe((response: any) => {
-      if (response.Success == true) {
-        this.alertService.success(
-          'Project added successfully.',
-          'Success',
-          3000
-        );
-        this.refreshList();
-        this.reset();
-      } else {
-        this.alertService.error(response.Message, 'Error', 3000);
+  
+    if (this.projectForm.controls['setDates'].value === true) {
+      // Convert NgbDateStruct to JavaScript Date
+      const startDate = this.convertToDate(this.projectForm.controls['startDate'].value);
+      const endDate = this.convertToDate(this.projectForm.controls['endDate'].value);
+  
+      if (startDate) {
+        newProject.Start_Date = moment(startDate).add(-1, 'months').toDate();
       }
-    });
+      if (endDate) {
+        newProject.End_Date = moment(endDate).add(-1, 'months').toDate();
+      }
+    }
+  
+    this.projectService
+      .addProject(newProject)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((response: any) => {
+        if (response.Success === true) {
+          this.alertService.success('Project added successfully.', 'Success', 3000);
+          this.refreshList();
+          this.reset();
+        } else {
+          this.alertService.error(response.Message, 'Error', 3000);
+        }
+      });
   }
+  
+  /**
+   * Converts NgbDateStruct {year, month, day} to a JavaScript Date
+   */
+  private convertToDate(dateStruct: NgbDateStruct | null): Date | null {
+    if (!dateStruct) return null;
+    return new Date(dateStruct.year, dateStruct.month - 1, dateStruct.day);
+  }
+  
 
   updateProject() {
     const updateProject = <Project>{
@@ -155,24 +186,25 @@ export class CreateComponent implements OnInit {
       updateProject.Manager_ID = this.Manager.User_ID;
     }
 
-    if (this.setDates) {
-      updateProject.Start_Date = moment(
-        this.projectForm.controls['startDate'].value
-      )
-        .add(-1, 'months')
-        .toDate();
-      updateProject.End_Date = moment(
-        this.projectForm.controls['endDate'].value
-      )
-        .add(-1, 'months')
-        .toDate();
+    if (this.projectForm.controls['setDates'].value === true) {
+      // Convert NgbDateStruct to JavaScript Date
+      const startDate = this.convertToDate(this.projectForm.controls['startDate'].value);
+      const endDate = this.convertToDate(this.projectForm.controls['endDate'].value);
+  
+      if (startDate) {
+        updateProject.Start_Date = moment(startDate).add(-1, 'months').toDate();
+      }
+      if (endDate) {
+        updateProject.End_Date = moment(endDate).add(-1, 'months').toDate();
+      }
     }
 
     this.projectService
       .editProject(updateProject)
+      .pipe(takeUntil(this.destroy$))
       .subscribe((response: any) => {
         console.log(response);
-        if (response.Success == true) {
+        if (response.Success === true) {
           this.alertService.success(
             'Project updated successfully!',
             'Success',
@@ -185,73 +217,84 @@ export class CreateComponent implements OnInit {
   }
 
   editProject(projectID: any) {
-    this.projectService.getProject(projectID).subscribe((response: any) => {
-      if (response.Success == true) {
-        this.projectForm.controls['projectName'].setValue(
-          response.Data.Project
-        );
-        this.projectForm.controls['projectName'].setValidators(
-          Validators.required
-        );
-        this.projectForm.controls['priority'].setValue(response.Data.Priority);
-        this.projectForm.controls['projectId'].setValue(
-          response.Data.Project_ID
-        );
+    this.projectService
+      .getProject(projectID)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((response: any) => {
+        if (response.Success === true) {
+          const data = response.Data;
+          this.projectForm.patchValue({
+            projectName: data.Project,
+            priority: data.Priority,
+            projectId: data.Project_ID,
+          });
 
-        let startDate, endDate;
-        if (response.Data.Start_Date || response.Data.End_Date) {
-          this.projectForm.controls['setDates'].setValue(true);
+          this.projectForm.controls['projectName'].setValidators(
+            Validators.required
+          );
+          this.projectForm.controls['projectName'].updateValueAndValidity();
 
-          startDate = <NgbDateStruct>{
-            year: response.Data.Start_Date.getFullYear(),
-            month: response.Data.Start_Date.getMonth() + 1,
-            day: response.Data.Start_Date.getDate(),
-          };
+          if (data.Start_Date || data.End_Date) {
+            this.projectForm.controls['setDates'].setValue(true);
+            const startDate = this.convertToNgbDate(data.Start_Date);
+            const endDate = this.convertToNgbDate(data.End_Date);
+            this.projectForm.patchValue({ startDate, endDate });
+          } else {
+            this.projectForm.controls['setDates'].setValue(false);
+          }
 
-          endDate = <NgbDateStruct>{
-            year: response.Data.End_Date.getFullYear(),
-            month: response.Data.End_Date.getMonth() + 1,
-            day: response.Data.End_Date.getDate(),
-          };
+          if (data.Manager_ID) {
+            this.userService
+              .getUser(data.Manager_ID)
+              .subscribe((userResponse: any) => {
+                this.Manager = userResponse.Data;
+                if (this.Manager) {
+                  this.projectForm.patchValue({
+                    manager: this.Manager,
+                    managername: `${this.Manager.First_Name} ${this.Manager.Last_Name}`,
+                  });
+                }
+              });
+          }
 
-          this.projectForm.controls['startDate'].setValue(startDate);
-          this.projectForm.controls['endDate'].setValue(endDate);
+          this.userAction = 'Update';
         } else {
-          this.projectForm.controls['setDates'].setValue(false);
+          this.alertService.error(response.Message, 'Error', 3000);
         }
+      });
+  }
 
-        if (response.Data.Manager_ID) {
-          this.userService
-            .getUser(response.Data.Manager_ID)
-            .subscribe((response: any) => {
-              this.Manager = response.Data;
-              if (response.Data) {
-                this.projectForm.controls['manager'].setValue(
-                  `${this.Manager.First_Name} ${this.Manager.Last_Name}`
-                );
-              }
-            });
-        }
-        this.userAction = 'Update';
-      } else {
-        this.alertService.error(response.Message, 'Error', 3000);
-      }
-    });
+  /**
+   * Converts a string or Date object to NgbDateStruct
+   */
+  private convertToNgbDate(date: string | Date | null): NgbDateStruct | null {
+    if (!date) return null;
+    const parsedDate = typeof date === 'string' ? new Date(date) : date;
+    return isNaN(parsedDate.getTime())
+      ? null
+      : {
+          year: parsedDate.getFullYear(),
+          month: parsedDate.getMonth() + 1,
+          day: parsedDate.getDate(),
+        };
   }
 
   suspendProject(projectID: any) {
-    this.projectService.deleteProject(projectID).subscribe((response: any) => {
-      if (response.Success == true) {
-        this.alertService.success(
-          'Project suspended successfully!',
-          'Success',
-          3000
-        );
-        this.refreshList();
-      } else {
-        this.alertService.error(response.Message, 'Error', 3000);
-      }
-    });
+    this.projectService
+      .deleteProject(projectID)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((response: any) => {
+        if (response.Success === true) {
+          this.alertService.success(
+            'Project suspended successfully!',
+            'Success',
+            3000
+          );
+          this.refreshList();
+        } else {
+          this.alertService.error(response.Message, 'Error', 3000);
+        }
+      });
   }
 
   sort(sortKey: string) {
@@ -259,84 +302,109 @@ export class CreateComponent implements OnInit {
     this.refreshList();
   }
 
-  //callback from User search popup
-  onManagerSelected(manager: User) {
-    this.Manager = manager;
-    this.projectForm
-      .get('manager')
-      ?.setValue(`${this.Manager.First_Name} ${this.Manager.Last_Name}`);
-  }
-
   addValidations() {
-    //date custom validators
+    // Subscribe to "setDates" checkbox value changes
     this.projectForm
       .get('setDates')
-      ?.valueChanges.subscribe((setDate: boolean) => {
-        this.setDates = setDate;
-
-        if (setDate) {
-          var today = new Date();
-          var startDate = <NgbDateStruct>{
-            year: today.getFullYear(),
-            month: today.getMonth() + 1,
-            day: today.getDate(),
-          };
-
-          this.projectForm
-            .get('startDate')
-            ?.setValidators([Validators.required]);
-          this.projectForm.get('startDate')?.setValue(startDate);
-          this.projectForm.get('startDate')?.enable({ emitEvent: true });
-
-          var endDate = <NgbDateStruct>{
-            year: today.getFullYear(),
-            month: today.getMonth() + 1,
-            day: today.getDate() + 1,
-          };
-          this.projectForm.get('endDate')?.setValidators([Validators.required]);
-          this.projectForm.get('endDate')?.setValue(endDate);
-          this.projectForm.get('endDate')?.enable({ emitEvent: true });
-        } else {
-          this.projectForm.get('startDate')?.clearValidators();
-          this.projectForm.get('startDate')?.setValue('');
-          this.projectForm.get('startDate')?.disable({ emitEvent: true });
-
-          this.projectForm.get('endDate')?.clearValidators();
-          this.projectForm.get('endDate')?.setValue('');
-          this.projectForm.get('endDate')?.disable({ emitEvent: true });
-        }
+      ?.valueChanges.pipe(distinctUntilChanged()) // Avoid unnecessary execution if value is unchanged
+      .subscribe((setDate: boolean) => {
+        this.toggleDateFields(setDate);
       });
+
+    // Subscribe to "startDate" & "endDate" value changes for validation
+    this.projectForm
+      .get('startDate')
+      ?.valueChanges.pipe(distinctUntilChanged())
+      .subscribe(() => this.validateDateRange());
 
     this.projectForm
       .get('endDate')
-      ?.valueChanges.subscribe((endDatePicked: Date) => {
-        var startDateSelected = this.projectForm.get('startDate')?.value;
+      ?.valueChanges.pipe(distinctUntilChanged())
+      .subscribe(() => this.validateDateRange());
+  }
 
-        var endDate = moment(endDatePicked).add(-1, 'months').toDate();
-        var startDate = moment(startDateSelected).add(-1, 'months').toDate();
+  // Toggle Date Fields Based on "setDates"
+  private toggleDateFields(setDate: boolean) {
+    const today = moment();
+    const startDate: NgbDateStruct = {
+      year: today.year(),
+      month: today.month() + 1,
+      day: today.date(),
+    };
+    const endDate: NgbDateStruct = {
+      year: today.year(),
+      month: today.month() + 1,
+      day: today.date() + 1,
+    };
 
-        if (startDate && endDate) {
-          if (endDate < startDate) {
-            this.projectForm.controls['endDate'].setErrors({ incorrect: true });
-          }
+    this.setFieldState('startDate', setDate, startDate);
+    this.setFieldState('endDate', setDate, endDate);
+  }
+
+  // Enable/Disable & Set Validators for a Field
+  private setFieldState(
+    field: string,
+    enable: boolean,
+    value: NgbDateStruct | string = ''
+  ) {
+    const control = this.projectForm.get(field);
+    if (!control) return;
+
+    if (enable) {
+      control.setValidators([Validators.required]);
+      control.setValue(value);
+      control.enable({ emitEvent: false });
+    } else {
+      control.clearValidators();
+      control.setValue('');
+      control.disable({ emitEvent: false });
+    }
+
+    control.updateValueAndValidity({ emitEvent: false });
+  }
+
+  // Validate Date Range Between Start & End Dates
+  private validateDateRange() {
+    const startDate = this.projectForm.get('startDate')?.value;
+    const endDate = this.projectForm.get('endDate')?.value;
+
+    if (startDate && endDate) {
+      const start = moment(startDate).subtract(1, 'months').toDate();
+      const end = moment(endDate).subtract(1, 'months').toDate();
+
+      this.projectForm
+        .get('endDate')
+        ?.setErrors(end < start ? { incorrect: true } : null);
+      this.projectForm
+        .get('startDate')
+        ?.setErrors(start > end ? { incorrect: true } : null);
+    }
+  }
+
+  openUsersModal() {
+    const modalRef = this.modalService.open(SearchComponent, {
+      backdrop: 'static',
+      keyboard: false,
+    });
+    modalRef.result.then(
+      (selectedUser) => {
+        if (selectedUser) {
+          this.Manager = selectedUser;
+          this.projectForm.get('manager')?.setValue(selectedUser);
+          this.projectForm
+            .get('managername')
+            ?.setValue(`${selectedUser.First_Name} ${selectedUser.Last_Name}`);
+          this.refreshList();
         }
-      });
+      },
+      (reason) => {
+        console.log('Modal dismissed', reason); // Handle dismiss action if needed
+      }
+    );
+  }
 
-    this.projectForm
-      .get('startDate')
-      ?.valueChanges.subscribe((startDatePicked: Date) => {
-        var endDateSelected = this.projectForm.get('endDate')?.value;
-
-        var endDate = moment(endDateSelected).add(-1, 'months').toDate();
-        var startDate = moment(startDatePicked).add(-1, 'months').toDate();
-
-        if (endDate && startDate) {
-          if (startDate > endDate) {
-            this.projectForm.controls['startDate'].setErrors({
-              incorrect: true,
-            });
-          }
-        }
-      });
+  ngOnDestroy(): void {
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
   }
 }

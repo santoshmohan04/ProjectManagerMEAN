@@ -1,77 +1,62 @@
-//project
+import mongoose from 'mongoose';
+import mongooseSequence from 'mongoose-sequence';
 
-const mongoose = require('mongoose');
-const autoIncrement = require('mongoose-sequence')(mongoose);
-const Schema = mongoose.Schema;
-const Task = require('./task')
+const autoIncrement = mongooseSequence(mongoose);
+const { Schema } = mongoose;
 
-var schemaOptions = {
-  toObject: {
-    virtuals: false
-  }
-  , toJSON: {
-    virtuals: true
-  }
+const schemaOptions = {
+  toObject: { virtuals: false },
+  toJSON: { virtuals: true },
 };
 
 // Project Schema
-let Project = new Schema({
-  Project_ID: {
-    type: Number
-  },
-  Project: {
-    type: String,
-    required: true
-  },
-  Start_Date: {
-    type: Date,
-    default: null,
-  },
-  End_Date: {
-    type: Date,
-    default: null,
-  },
-  Priority: {
-    type: Number
-  },
-  Manager_ID: {
-    type: Number,
-    default: null,
-  }
-},
-  schemaOptions,
+const projectSchema = new Schema(
   {
-    collection: 'projects'
-  });
+    Project_ID: {
+      type: Number,
+    },
+    Project: {
+      type: String,
+      required: true,
+    },
+    Start_Date: {
+      type: Date,
+      default: null,
+    },
+    End_Date: {
+      type: Date,
+      default: null,
+    },
+    Priority: {
+      type: Number,
+    },
+    Manager_ID: {
+      type: Number,
+      default: null,
+    },
+  },
+  schemaOptions,
+  { collection: 'projects' }
+);
 
-Project
-  .virtual('Tasks', {
-    ref: 'Task',
-    localField: '_id',
-    foreignField: 'Project'
-  });
+// Virtual for related tasks
+projectSchema.virtual('Tasks', {
+  ref: 'Task',
+  localField: '_id',
+  foreignField: 'Project',
+});
 
-Project
-  .virtual('NoOfTasks').get(function () {
-    return this.get('Tasks') ? this.get('Tasks').length : 0;
-  });
+// Virtual for number of tasks
+projectSchema.virtual('NoOfTasks').get(function () {
+  return this.get('Tasks') ? this.get('Tasks').length : 0;
+});
 
-Project
-  .virtual('CompletedTasks').get(function () {
-    if (this.get('Tasks') && this.get('Tasks').length > 0) {
-      var tasks = this.get('Tasks').filter(function (task) {
-        return task.Status == 1;
-      });
+// Virtual for completed tasks
+projectSchema.virtual('CompletedTasks').get(function () {
+  const tasks = this.get('Tasks') || [];
+  return tasks.filter(task => task.Status === 1).length;
+});
 
-      return tasks.length;
-    }
-    else {
-      return 0;
-    }
-  });
+projectSchema.plugin(autoIncrement, { inc_field: 'Project_ID' }); // auto increment value
 
-
-Project.plugin(autoIncrement, { inc_field: 'Project_ID' }); //auto increment value
-
-module.exports = mongoose.model('Project', Project);
-
+export default mongoose.model('Project', projectSchema);

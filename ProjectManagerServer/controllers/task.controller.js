@@ -1,131 +1,108 @@
+import express from 'express';
+import Task from '../data_models/task.js';
+import Project from '../data_models/project.js';
 
-/* Task API routes */
+const taskController = express.Router();
 
-const express = require('express'),
-    taskController = express.Router(),
-    url = require('url');
+// List tasks of a specific project
+taskController.get('/', async (req, res) => {
+    try {
+        const { projectId, sortKey } = req.query;
+        const taskQuery = Task.find();
 
-let Task = require('../data_models/task');
-let Project = require('../data_models/project');
+        if (projectId) {
+            const project = await Project.findOne({ Project_ID: projectId });
 
-//list tasks of that project
-taskController.route('/').get(function (req, res) {
+            if (project) {
+                taskQuery.or([{ Project: project._id }]);
 
-    var taskQuery = Task.find();
-
-    var queryparams = req.query;
-
-    if (queryparams.projectId) {
-
-        Project.findOne({ Project_ID: queryparams.projectId }, function (err, project) {
-
-            taskQuery.or([
-                { Project: project._id }
-            ]);
-
-            if (queryparams.sortKey) {
-                var sortdirection = 1;
-                if(queryparams.sortKey=="Status"){
-                    sortdirection = -1;
+                if (sortKey) {
+                    const sortDirection = sortKey === "Status" ? -1 : 1;
+                    taskQuery.sort([[sortKey, sortDirection]]);
                 }
-                taskQuery.sort([[queryparams.sortKey, sortdirection]]);
+
+                const tasks = await taskQuery
+                    .populate('Project')
+                    .populate('User')
+                    .populate('Parent')
+                    .exec();
+
+                return res.json({ Success: true, Data: tasks });
+            } else {
+                return res.status(404).json({ Success: false, Message: 'Project not found' });
             }
-
-            taskQuery
-                .populate('Project')
-                .populate('User')
-                .populate('Parent');
-
-            taskQuery.exec(function (err, tasks) {
-
-                if (err) {
-                    res.json({ 'Success': false })
-                }
-                else {
-                    res.json({ 'Success': true, 'Data': tasks });
-                }
-            });
-        });
+        } else {
+            return res.status(400).json({ Success: false, Message: 'Project ID is required' });
+        }
+    } catch (err) {
+        return res.status(500).json({ Success: false, Message: 'An error occurred', Error: err.message });
     }
 });
 
-// add new task
-taskController.route('/add').post(function (req, res) {
-
-    let newTask = new Task(req.body);
-
-    newTask.save()
-        .then(newTask => {
-            res.status(200).json({ 'Success': true })
-        })
-        .catch(err => {
-            res.status(400).send({ 'Success': false, 'Message': err });
-        });
+// Add new task
+taskController.post('/add', async (req, res) => {
+    try {
+        const newTask = new Task(req.body);
+        await newTask.save();
+        return res.status(200).json({ Success: true });
+    } catch (err) {
+        return res.status(400).json({ Success: false, Message: err.message });
+    }
 });
 
-//get single task
-taskController.route('/:id').get(function (req, res) {
+// Get single task
+taskController.get('/:id', async (req, res) => {
+    try {
+        const taskId = req.params.id;
+        const task = await Task.findOne({ Task_ID: taskId })
+            .populate('Project')
+            .populate('User')
+            .populate('Parent');
 
-    let taskId = req.params.id;
-
-    var taskQuery = Task.findOne({ Task_ID: taskId })
-        .populate('Project')
-        .populate('User')
-        .populate('Parent');
-
-    taskQuery.exec(function (err, task) {
-        if (err) {
-            res.json({ 'Success': false, 'Message': 'task not found' })
+        if (!task) {
+            return res.status(404).json({ Success: false, Message: 'Task not found' });
         }
-        else {
-            res.json({ 'Success': true, 'Data': task });
+
+        return res.json({ Success: true, Data: task });
+    } catch (err) {
+        return res.status(500).json({ Success: false, Message: 'An error occurred', Error: err.message });
+    }
+});
+
+// Update task
+taskController.post('/edit', async (req, res) => {
+    try {
+        const updateTask = req.body;
+        const task = await Task.findOne({ Task_ID: updateTask.Task_ID });
+
+        if (!task) {
+            return res.status(404).json({ Success: false, Message: 'Task not found' });
         }
-    });
+
+        Object.assign(task, updateTask);
+        await task.save();
+        return res.status(200).json({ Success: true });
+    } catch (err) {
+        return res.status(400).json({ Success: false, Message: 'Error occurred while updating task', Error: err.message });
+    }
 });
 
-// udate task
-taskController.route('/edit').post(function (req, res) {
+// End task
+taskController.delete('/delete/:id', async (req, res) => {
+    try {
+        const taskId = req.params.id;
+        const task = await Task.findOne({ Task_ID: taskId });
 
-    let updateTask = new Task(req.body);
+        if (!task) {
+            return res.status(404).json({ Success: false, Message: 'Task not found' });
+        }
 
-    Task.findOne({ Task_ID: updateTask.Task_ID }, function (err, task) {
-       
-        task.Task = updateTask.Task;
-        task.Priority = updateTask.Priority;
-        task.Start_Date = updateTask.Start_Date;
-        task.End_Date = updateTask.End_Date;
-        task.Parent = updateTask.Parent;
-
-        task.save().then(updateTask => {
-            res.status(200).json({ 'Success': true })
-        })
-        .catch(err => {
-            res.status(400).send({ 'Success': false, 'Message': 'Error occured while updating doc' });
-        });
-
-    });
+        task.Status = 1; // Mark as completed
+        await task.save();
+        return res.status(200).json({ Success: true });
+    } catch (err) {
+        return res.status(400).json({ Success: false, Message: 'Error occurred while updating task', Error: err.message });
+    }
 });
 
-
-//end task
-taskController.route('/delete/:id').get(function (req, res) {
-
-    let taskId = req.params.id;
-
-    Task.findOne({ Task_ID: taskId }, function (err, task) {
-       
-        task.Status = 1;
-        
-        task.save().then(updateTask => {
-            res.status(200).json({ 'Success': true })
-        })
-        .catch(err => {
-            res.status(400).send({ 'Success': false, 'Message': 'Error occured while updating doc' });
-        });
-
-    });
-});
-
-
-
-module.exports = taskController;
+export default taskController;

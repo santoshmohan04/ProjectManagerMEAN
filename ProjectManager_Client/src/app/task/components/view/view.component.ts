@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, signal } from '@angular/core';
 import { Project } from '../../../project/models/project';
 import { Task } from '../../models/task';
 import { TaskService } from '../../services/task.service';
@@ -7,30 +7,32 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SearchComponent } from '../../../project/components/search/search.component';
 import { FormsModule } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
+import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-  selector: 'app-view',
-  templateUrl: './view.component.html',
-  styleUrls: ['./view.component.css'],
-  standalone: true,
-  providers: [TaskService, AlertService],
-  imports: [CommonModule, SearchComponent, FormsModule],
+    selector: 'app-view',
+    templateUrl: './view.component.html',
+    styleUrls: ['./view.component.css'],
+    providers: [TaskService, AlertService],
+    standalone: true,
+    imports: [CommonModule, FormsModule, NgbModule]
 })
-export class ViewComponent implements OnInit {
-  project!: Project;
+export class ViewComponent implements OnDestroy {
   Tasks!: Task[];
   SortKey!: string;
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  selectedProject = signal<Project | null>(null)
 
   constructor(
-    private taskService: TaskService,
-    private alertService: AlertService,
-    private router: Router
+    private readonly taskService: TaskService,
+    private readonly alertService: AlertService,
+    private readonly router: Router,
+    private readonly modalService: NgbModal
   ) {}
 
-  ngOnInit() {}
-
   editTask(taskId: number) {
-    this.taskService.getTask(taskId).subscribe((response: any) => {
+    this.taskService.getTask(taskId).pipe(takeUntil(this.destroy$)).subscribe((response: any) => {
       if (response.Success) {
         this.router.navigate(['/task/add'], {
           queryParams: { taskId: taskId },
@@ -42,7 +44,7 @@ export class ViewComponent implements OnInit {
   }
 
   endTask(taskId: number) {
-    this.taskService.endTask(taskId).subscribe((response: any) => {
+    this.taskService.endTask(taskId).pipe(takeUntil(this.destroy$)).subscribe((response: any) => {
       if (response.Success) {
         this.refreshList();
         this.alertService.success('Task ended successfully!', 'Success', 3000);
@@ -55,7 +57,8 @@ export class ViewComponent implements OnInit {
   sortTask(sortKey: string) {
     this.SortKey = sortKey;
     this.taskService
-      .getTasksList(this.project.Project_ID, sortKey)
+      .getTasksList(this.selectedProject()?.Project_ID, sortKey)
+      .pipe(takeUntil(this.destroy$))
       .subscribe((response: any) => {
         if (response.Success) {
           this.Tasks = response.Data;
@@ -68,12 +71,13 @@ export class ViewComponent implements OnInit {
   refreshList() {
     //fetch all tasks associated to this project and display
     this.taskService
-      .getTasksList(this.project.Project_ID, this.SortKey)
+      .getTasksList(this.selectedProject()?.Project_ID, this.SortKey)
+      .pipe(takeUntil(this.destroy$))
       .subscribe((response: any) => {
         if (response.Success) {
           if (response.Data.length == 0) {
             this.alertService.warn(
-              'No taks found for the project:' + this.project.Project,
+              'No taks found for the project:' + this.selectedProject()?.Project,
               'Warning',
               3000
             );
@@ -83,7 +87,7 @@ export class ViewComponent implements OnInit {
         } else {
           this.alertService.error(
             'Error occured while fetching tasks for the project:' +
-              this.project.Project,
+            this.selectedProject()?.Project,
             'Error',
             3000
           );
@@ -91,9 +95,22 @@ export class ViewComponent implements OnInit {
       });
   }
 
-  //callback from Project search popup
-  onProjectSelected(project: Project) {
-    this.project = project;
-    this.refreshList();
+  openProjectsModal(){
+    this.modalService.open(SearchComponent, {backdrop:'static', keyboard:false}).result.then(
+			(selectedProject) => {
+        if (selectedProject) {
+          this.selectedProject.set(selectedProject);
+          this.refreshList();
+        }
+      },
+      (reason) => {
+        console.log('Modal dismissed', reason); // Handle dismiss action if needed
+      }
+		);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next(true);
+    this.destroy$.complete();
   }
 }

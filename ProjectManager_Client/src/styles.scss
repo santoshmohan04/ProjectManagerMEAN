@@ -1,76 +1,72 @@
-/* You can add global styles to this file, and also import other style files */
-@import "../node_modules/ng2-slim-loading-bar/style.css";
-@import "../node_modules/ngx-toastr/toastr.css";
-@import "../node_modules/font-awesome/css/font-awesome.css";
-
 /* Importing Bootstrap SCSS file. */
-@import 'bootstrap/scss/bootstrap';
+@use "bootstrap/scss/bootstrap" as bs;
 
-
-.ng-dirty.ng-valid[required], .ng-dirty.ng-valid.required  {
-    border-left: 5px solid #42A948;
-  }
-  
-  .ng-dirty.ng-invalid:not(form)  {
-    border-left: 5px solid #a94442;
-  }
-
-.astreik
-{
-
-color: red;}
-.alert
-{
-    padding-top: 1px;
-    padding-left: 2px;
-    padding-bottom: 10px;
-    margin: 0px;
+/* Ensure body takes full width and removes margin */
+body,
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
-.hrLine{
-    border-top: 2px solid darkblue;
+.ng-dirty.ng-valid[required],
+.ng-dirty.ng-valid.required {
+  border-left: 5px solid #42a948;
 }
 
-.hrListItem
-{
-    border-top: 2px dotted gray;
+.ng-dirty.ng-invalid:not(form) {
+  border-left: 5px solid #a94442;
 }
 
-.sortlbl
-{
-   padding-top: 5px;
+.astreik {
+  color: red;
+}
+.alert {
+  padding-top: 1px;
+  padding-left: 2px;
+  padding-bottom: 10px;
+  margin: 0px;
 }
 
-.list-group-item
-{
-    padding: 0px;
+.hrLine {
+  border-top: 2px solid darkblue;
 }
 
-.checkboxPadding
-{
-    padding: 5px !important;
-    
+.hrListItem {
+  border-top: 2px dotted gray;
 }
 
-label, .controlTopPadding
-{
-    padding-top: 5px;
+.sortlbl {
+  padding-top: 5px;
 }
 
-.rangeControl
-{
-    padding-top: 5px;
-    width: 100%;
+.list-group-item {
+  padding: 0px;
 }
 
-.searchTable{
-    width:30%;
-    overflow-x: auto;
+.checkboxPadding {
+  padding: 5px !important;
 }
 
-.searchTable thead, .taskTable thead
-{
-    font-weight:bold;
+label,
+.controlTopPadding {
+  padding-top: 5px;
+}
+
+.rangeControl {
+  width: 100%;
+}
+
+.searchTable {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.searchTable thead,
+.taskTable thead {
+  font-weight: bold;
 }
 
 .table-borderless > tbody > tr > td,
@@ -79,6 +75,14 @@ label, .controlTopPadding
 .table-borderless > tfoot > tr > th,
 .table-borderless > thead > tr > td,
 .table-borderless > thead > tr > th {
-    border: none;
+  border: none;
 }
 
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}

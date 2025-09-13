@@ -1,4 +1,4 @@
-@if(project){
+
   <div class="col-md-12">
     <div class="row">
       <div class="col-md-4">
@@ -7,10 +7,10 @@
             <label for="projectName">Project:</label>
           </div>
           <div class="col-md-8">
-            <input type="text" class="form-control" name="projectName" aria-describedby="projectName" readonly [ngModel]="project.Project">
+            <input type="text" class="form-control" name="projectName" aria-describedby="projectName" readonly [value]="selectedProject()?.Project">
           </div>
           <div class="col-md-2">
-            <button type="button" class="btn btn-default" data-bs-toggle="modal" data-bs-target="#projectSearchModel">
+            <button type="button" class="btn btn-default" (click)="openProjectsModal()">
               <span class="fa fa-search"></span> Search
             </button>
           </div>
@@ -20,7 +20,7 @@
       <div class="col-md-7">
         <div class="row">
           <div class="col-md-3" style="text-align:right">
-            <label>Sort Task By:</label>
+            <p>Sort Task By:</p>
           </div>
           <div class="col-md-9">
             <button type="button" class="btn btn-secondary" [disabled]="!Tasks" (click)="sortTask('Start_Date')">Start Date</button> &nbsp;
@@ -32,11 +32,12 @@
       </div>
     </div>
   </div>
-}
+
 
 <br>
 <hr style="width: 100%;" class="hrListItem" />
 
+@if(selectedProject()){
 <div *ngIf="Tasks && Tasks.length>0" class="col-md-12">
   <table *ngFor="let task of Tasks" class="table table-borderless taskTable">
     <thead>
@@ -73,5 +74,5 @@
     </tbody>
   </table>
 </div>
+}
 
-<project-search (projectSelected)="onProjectSelected($event)"></project-search>

@@ -1,13 +1,34 @@
-.pullRight
-{
-    text-align: right !important;
+input[type="range"] {
+  accent-color: #007bff;
 }
 
-.usersTable{
-    overflow-x: scroll;
+input[type="range"]::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    #007bff var(--progress),
+    #ddd var(--progress)
+  );
+  height: 5px;
+  border-radius: 5px;
 }
 
-.modal-dialog {
-    min-width: 30% !important;
-    margin: 30px auto;
+input[type="range"]::-moz-range-track {
+  background: linear-gradient(
+    to right,
+    #007bff var(--progress),
+    #ddd var(--progress)
+  );
+  height: 5px;
+  border-radius: 5px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  background: #007bff;
+  border: 2px solid #fff;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -5px;
+  position: relative;
 }

@@ -1,0 +1,60 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.custom-toolbar {
+  width: 100%;
+  padding: 0 16px;
+  background-color: #0052cc;
+  color: white;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.example-spacer {
+  flex: 1 1 auto;
+}
+
+.menu-button {
+  display: none;
+  color: white;
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+
+  a.nav-link {
+    color: white;
+    font-size: 14px;
+    text-transform: none;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .menu-button {
+    display: block;
+  }
+
+  .nav-links {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 8px;
+  }
+}

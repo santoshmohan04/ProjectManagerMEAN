@@ -1,15 +1,14 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { HeaderComponent } from './shared/header/header.component';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [NgbNavModule, RouterModule],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+    selector: 'app-root',
+    standalone: true,
+    imports: [RouterModule, HeaderComponent],
+    templateUrl: './app.component.html',
+    styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  title = 'ProjectManager Tool';
   active = 1;
 }

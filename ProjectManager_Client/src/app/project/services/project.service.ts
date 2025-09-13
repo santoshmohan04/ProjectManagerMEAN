@@ -51,6 +51,6 @@ export class ProjectService {
   deleteProject(projectID: number): Observable<ApiResponse<Project>> {
     const uri = `${this.baseUri}${environment.endpoint_project_delete}/${projectID}`;
 
-    return this.http.get<ApiResponse<Project>>(uri);
+    return this.http.delete<ApiResponse<Project>>(uri);
   }
 }
