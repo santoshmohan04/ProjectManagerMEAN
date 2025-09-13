@@ -1,8 +1,9 @@
 /* Importing Bootstrap SCSS file. */
-@use 'bootstrap/scss/bootstrap' as *;
+@use "bootstrap/scss/bootstrap" as bs;
 
 /* Ensure body takes full width and removes margin */
-body, html {
+body,
+html {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -10,69 +11,62 @@ body, html {
   overflow-x: hidden;
 }
 
-.ng-dirty.ng-valid[required], .ng-dirty.ng-valid.required  {
-    border-left: 5px solid #42A948;
-  }
-  
-  .ng-dirty.ng-invalid:not(form)  {
-    border-left: 5px solid #a94442;
-  }
-
-.astreik
-{
-
-color: red;}
-.alert
-{
-    padding-top: 1px;
-    padding-left: 2px;
-    padding-bottom: 10px;
-    margin: 0px;
+.ng-dirty.ng-valid[required],
+.ng-dirty.ng-valid.required {
+  border-left: 5px solid #42a948;
 }
 
-.hrLine{
-    border-top: 2px solid darkblue;
+.ng-dirty.ng-invalid:not(form) {
+  border-left: 5px solid #a94442;
 }
 
-.hrListItem
-{
-    border-top: 2px dotted gray;
+.astreik {
+  color: red;
+}
+.alert {
+  padding-top: 1px;
+  padding-left: 2px;
+  padding-bottom: 10px;
+  margin: 0px;
 }
 
-.sortlbl
-{
-   padding-top: 5px;
+.hrLine {
+  border-top: 2px solid darkblue;
 }
 
-.list-group-item
-{
-    padding: 0px;
+.hrListItem {
+  border-top: 2px dotted gray;
 }
 
-.checkboxPadding
-{
-    padding: 5px !important;
-    
+.sortlbl {
+  padding-top: 5px;
 }
 
-label, .controlTopPadding
-{
-    padding-top: 5px;
+.list-group-item {
+  padding: 0px;
 }
 
-.rangeControl
-{
-    width: 100%;
+.checkboxPadding {
+  padding: 5px !important;
 }
 
-.searchTable{
-    width:100%;
-    overflow-x: auto;
+label,
+.controlTopPadding {
+  padding-top: 5px;
 }
 
-.searchTable thead, .taskTable thead
-{
-    font-weight:bold;
+.rangeControl {
+  width: 100%;
+}
+
+.searchTable {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.searchTable thead,
+.taskTable thead {
+  font-weight: bold;
 }
 
 .table-borderless > tbody > tr > td,
@@ -81,9 +75,14 @@ label, .controlTopPadding
 .table-borderless > tfoot > tr > th,
 .table-borderless > thead > tr > td,
 .table-borderless > thead > tr > th {
-    border: none;
+  border: none;
 }
 
-
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
