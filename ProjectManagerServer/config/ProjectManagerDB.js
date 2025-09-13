@@ -1,2 +1,6 @@
-const ConnectionString = 'mongodb://127.0.0.1:27017/projectmanager';
+import dotenv from "dotenv";
+dotenv.config();
+
+const ConnectionString = process.env.MONGODB_CONNECTION_STRING;
+
 export default { ConnectionString };
