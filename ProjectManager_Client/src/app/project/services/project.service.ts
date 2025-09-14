@@ -18,7 +18,6 @@ export class ProjectService {
     searchKey: string,
     sortKey: string
   ): Observable<ApiResponse<Project[]>> {
-    //add query string params to search and sort
     let params = new HttpParams();
 
     if (searchKey) params = params.append('searchKey', searchKey);
