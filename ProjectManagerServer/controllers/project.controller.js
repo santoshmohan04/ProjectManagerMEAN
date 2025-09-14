@@ -22,13 +22,11 @@ projectController.get("/", async (req, res) => {
       .exec();
     res.json({ Success: true, Data: projects });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        Success: false,
-        Message: "An error occurred",
-        Error: err.message,
-      });
+    res.status(500).json({
+      Success: false,
+      Message: "An error occurred",
+      Error: err.message,
+    });
   }
 });
 
@@ -39,13 +37,11 @@ projectController.post("/add", async (req, res) => {
     await project.save();
     res.status(200).json({ Success: true });
   } catch (err) {
-    res
-      .status(400)
-      .json({
-        Success: false,
-        Message: "Error occurred while creating new project",
-        Error: err.message,
-      });
+    res.status(400).json({
+      Success: false,
+      Message: "Error occurred while creating new project",
+      Error: err.message,
+    });
   }
 });
 
@@ -66,13 +62,11 @@ projectController.post("/edit/:id", async (req, res) => {
     await project.save();
     res.json({ Success: true });
   } catch (err) {
-    res
-      .status(400)
-      .json({
-        Success: false,
-        Message: "Error occurred while updating project",
-        Error: err.message,
-      });
+    res.status(400).json({
+      Success: false,
+      Message: "Error occurred while updating project",
+      Error: err.message,
+    });
   }
 });
 
@@ -91,13 +85,11 @@ projectController.delete("/delete/:id", async (req, res) => {
 
     res.json({ Success: true });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        Success: false,
-        Message: "An error occurred",
-        Error: err.message,
-      });
+    res.status(500).json({
+      Success: false,
+      Message: "An error occurred",
+      Error: err.message,
+    });
   }
 });
 
@@ -116,13 +108,11 @@ projectController.get("/:id", async (req, res) => {
 
     res.json({ Success: true, Data: project });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        Success: false,
-        Message: "An error occurred",
-        Error: err.message,
-      });
+    res.status(500).json({
+      Success: false,
+      Message: "An error occurred",
+      Error: err.message,
+    });
   }
 });
 

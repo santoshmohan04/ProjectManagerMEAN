@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import mongooseSequence from 'mongoose-sequence';
+import mongoose from "mongoose";
+import mongooseSequence from "mongoose-sequence";
 
 const autoIncrement = mongooseSequence(mongoose);
 const { Schema } = mongoose;
@@ -37,13 +37,13 @@ const userSchema = new Schema(
     },
   },
   schemaOptions,
-  { collection: 'users' }
+  { collection: "users" }
 );
 
-userSchema.virtual('Full_Name').get(function () {
+userSchema.virtual("Full_Name").get(function () {
   return `${this.First_Name} ${this.Last_Name}`;
 });
 
-userSchema.plugin(autoIncrement, { inc_field: 'User _ID' }); // Corrected
+userSchema.plugin(autoIncrement, { inc_field: "User _ID" }); // Corrected
 
-export default mongoose.model('User', userSchema); // Corrected
+export default mongoose.model("User", userSchema); // Corrected

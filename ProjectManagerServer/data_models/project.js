@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import mongooseSequence from 'mongoose-sequence';
+import mongoose from "mongoose";
+import mongooseSequence from "mongoose-sequence";
 
 const autoIncrement = mongooseSequence(mongoose);
 const { Schema } = mongoose;
@@ -36,27 +36,27 @@ const projectSchema = new Schema(
     },
   },
   schemaOptions,
-  { collection: 'projects' }
+  { collection: "projects" }
 );
 
 // Virtual for related tasks
-projectSchema.virtual('Tasks', {
-  ref: 'Task',
-  localField: '_id',
-  foreignField: 'Project',
+projectSchema.virtual("Tasks", {
+  ref: "Task",
+  localField: "_id",
+  foreignField: "Project",
 });
 
 // Virtual for number of tasks
-projectSchema.virtual('NoOfTasks').get(function () {
-  return this.get('Tasks') ? this.get('Tasks').length : 0;
+projectSchema.virtual("NoOfTasks").get(function () {
+  return this.get("Tasks") ? this.get("Tasks").length : 0;
 });
 
 // Virtual for completed tasks
-projectSchema.virtual('CompletedTasks').get(function () {
-  const tasks = this.get('Tasks') || [];
-  return tasks.filter(task => task.Status === 1).length;
+projectSchema.virtual("CompletedTasks").get(function () {
+  const tasks = this.get("Tasks") || [];
+  return tasks.filter((task) => task.Status === 1).length;
 });
 
-projectSchema.plugin(autoIncrement, { inc_field: 'Project_ID' }); // auto increment value
+projectSchema.plugin(autoIncrement, { inc_field: "Project_ID" }); // auto increment value
 
-export default mongoose.model('Project', projectSchema);
+export default mongoose.model("Project", projectSchema);
