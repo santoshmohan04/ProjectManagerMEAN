@@ -1,4 +1,10 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -9,23 +15,30 @@ import { ProjectService } from '../../services/project.service';
 import { AlertService } from '../../../shared/services/alert.service';
 import { Subject, takeUntil } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { AddprojectComponent } from '../addproject/addproject.component';
 
 @Component({
   selector: 'app-projectslist',
   imports: [
+    CommonModule,
     MatFormFieldModule,
     MatInputModule,
     MatTableModule,
     MatSortModule,
     MatPaginatorModule,
     MatIconModule,
+    MatButtonModule,
+    MatDialogModule,
   ],
   standalone: true,
   providers: [AlertService],
   templateUrl: './projectslist.component.html',
   styleUrl: './projectslist.component.scss',
 })
-export class ProjectslistComponent implements OnInit, AfterViewInit {
+export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
   displayedColumns: string[] = [
     'id',
     'name',
@@ -46,7 +59,8 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
 
   constructor(
     private readonly projectService: ProjectService,
-    private readonly alertService: AlertService
+    private readonly alertService: AlertService,
+    private readonly dialogService: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -67,10 +81,11 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
       .subscribe((response: any) => {
         if (response.Success === true) {
           this.dataSource = new MatTableDataSource(response.Data);
+          this.dataSource.paginator = this.paginator;
+          this.dataSource.sort = this.sort;
         } else {
-          this.dataSource = new MatTableDataSource(response.Data);
           this.alertService.error(
-            'Error occured while fetching products',
+            'Error occurred while fetching projects',
             'Error',
             3000
           );
@@ -92,7 +107,6 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
   }
 
   deleteProject(row: Project) {
-    console.log('Delete Project', row);
     if (row.Project_ID === undefined) return;
     this.projectService
       .deleteProject(row.Project_ID)
@@ -109,5 +123,21 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
           this.alertService.error(response.Message, 'Error', 3000);
         }
       });
+  }
+
+  addProject() {
+    const dialogRef = this.dialogService.open(AddprojectComponent, {
+      width: '600px',
+      maxHeight: '90vh',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      console.log(`Dialog result: ${result}`);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
   }
 }

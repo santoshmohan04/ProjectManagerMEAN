@@ -23,10 +23,13 @@ import { map, Observable, startWith, Subject, takeUntil } from 'rxjs';
 import { UserService } from '../../../user/services/user.service';
 import { ProjectService } from '../../services/project.service';
 import { AlertService } from '../../../shared/services/alert.service';
+import { CommonModule } from '@angular/common';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-addproject',
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -35,9 +38,10 @@ import { AlertService } from '../../../shared/services/alert.service';
     MatButtonModule,
     MatSliderModule,
     MatAutocompleteModule,
+    MatDialogModule,
   ],
   standalone: true,
-  providers: [provideNativeDateAdapter()],
+  providers: [provideNativeDateAdapter(), AlertService],
   templateUrl: './addproject.component.html',
   styleUrl: './addproject.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -85,7 +89,7 @@ export class AddprojectComponent implements OnInit, OnDestroy {
       projectName: ['', Validators.required],
       startDate: [{ value: '', disabled: true }],
       endDate: [{ value: '', disabled: true }],
-      priority: 0,
+      priority: [0],
       manager: [''],
       projectId: '',
     });
