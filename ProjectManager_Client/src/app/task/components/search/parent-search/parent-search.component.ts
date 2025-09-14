@@ -1,7 +1,7 @@
 import { Component, OnInit, EventEmitter, Input, Output } from '@angular/core';
 import { ParentTaskService } from '../../../services/parent-task.service';
 import { ParentTask } from '../../../models/task';
-import { CommonModule } from '@angular/common';
+
 
 declare var $: any;
 
@@ -10,7 +10,7 @@ declare var $: any;
     templateUrl: './parent-search.component.html',
     styleUrls: ['./parent-search.component.css'],
     providers: [ParentTaskService],
-    imports: [CommonModule]
+    imports: []
 })
 export class ParentSearchComponent implements OnInit {
   @Input() name!: string;

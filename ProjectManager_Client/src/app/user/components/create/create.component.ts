@@ -8,7 +8,7 @@ import {
 import { UserService } from '../../services/user.service';
 import { AlertService } from '../../../shared/services/alert.service';
 import { User } from '../../models/user';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -23,13 +23,12 @@ import { v4 as uuidv4 } from 'uuid';
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    CommonModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatDividerModule,
-  ],
+    MatDividerModule
+],
   providers: [UserService, AlertService],
 })
 export class CreateComponent implements OnInit {

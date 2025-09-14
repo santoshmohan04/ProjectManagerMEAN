@@ -9,30 +9,38 @@
           <mat-form-field appearance="fill" class="form-field">
             <mat-label>First Name</mat-label>
             <input matInput formControlName="firstName" />
-            <mat-error *ngIf="userForm.controls['firstName'].hasError('required') && userForm.controls['firstName'].dirty">
-              First Name is required.
-            </mat-error>
+            @if (userForm.controls['firstName'].hasError('required') && userForm.controls['firstName'].dirty) {
+              <mat-error>
+                First Name is required.
+              </mat-error>
+            }
           </mat-form-field>
 
           <!-- Last Name -->
           <mat-form-field appearance="fill" class="form-field">
             <mat-label>Last Name</mat-label>
             <input matInput formControlName="lastName" />
-            <mat-error *ngIf="userForm.controls['lastName'].hasError('required') && userForm.controls['lastName'].dirty">
-              Last Name is required.
-            </mat-error>
+            @if (userForm.controls['lastName'].hasError('required') && userForm.controls['lastName'].dirty) {
+              <mat-error>
+                Last Name is required.
+              </mat-error>
+            }
           </mat-form-field>
 
           <!-- Employee ID -->
           <mat-form-field appearance="fill" class="form-field">
             <mat-label>Employee ID</mat-label>
             <input matInput formControlName="employeeId" maxlength="6" />
-            <mat-error *ngIf="userForm.controls['employeeId'].hasError('required') && userForm.controls['employeeId'].dirty">
-              Employee ID is required.
-            </mat-error>
-            <mat-error *ngIf="(userForm.controls['employeeId'].hasError('minlength') || userForm.controls['employeeId'].hasError('pattern')) && userForm.controls['employeeId'].dirty">
-              Employee ID must be 6 digits long.
-            </mat-error>
+            @if (userForm.controls['employeeId'].hasError('required') && userForm.controls['employeeId'].dirty) {
+              <mat-error>
+                Employee ID is required.
+              </mat-error>
+            }
+            @if ((userForm.controls['employeeId'].hasError('minlength') || userForm.controls['employeeId'].hasError('pattern')) && userForm.controls['employeeId'].dirty) {
+              <mat-error>
+                Employee ID must be 6 digits long.
+              </mat-error>
+            }
           </mat-form-field>
 
           <!-- Buttons -->
@@ -75,18 +83,22 @@
     </mat-card>
 
     <!-- User List -->
-    <div class="user-cards-container" *ngIf="Users && Users.length > 0">
-      <mat-card class="user-card" *ngFor="let user of Users">
-        <mat-card-content>
-          <p><strong>First Name:</strong> {{ user.First_Name }}</p>
-          <p><strong>Last Name:</strong> {{ user.Last_Name }}</p>
-          <p><strong>Employee ID:</strong> {{ user.Employee_ID }}</p>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-button color="accent" (click)="editUser(user.id)">Edit</button>
-          <button mat-button color="warn" (click)="deleteUser(user.id)">Delete</button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
+    @if (Users && Users.length > 0) {
+      <div class="user-cards-container">
+        @for (user of Users; track user) {
+          <mat-card class="user-card">
+            <mat-card-content>
+              <p><strong>First Name:</strong> {{ user.First_Name }}</p>
+              <p><strong>Last Name:</strong> {{ user.Last_Name }}</p>
+              <p><strong>Employee ID:</strong> {{ user.Employee_ID }}</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button color="accent" (click)="editUser(user.id)">Edit</button>
+              <button mat-button color="warn" (click)="deleteUser(user.id)">Delete</button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
   </div>
 </div>

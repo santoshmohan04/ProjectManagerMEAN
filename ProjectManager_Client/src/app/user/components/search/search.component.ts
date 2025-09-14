@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user';
-import { CommonModule } from '@angular/common';
+
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -18,7 +18,7 @@ import { Subject, takeUntil } from 'rxjs';
     templateUrl: './search.component.html',
     styleUrls: ['./search.component.css'],
     providers: [UserService],
-    imports: [CommonModule]
+    imports: []
 })
 export class SearchComponent implements OnInit, OnDestroy {
   @Input() name!: string;

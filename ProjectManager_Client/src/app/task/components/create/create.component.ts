@@ -10,7 +10,7 @@ import { User } from '../../../user/models/user';
 
 import moment from 'moment';
 import { NgbDatepickerModule, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
-import { CommonModule } from '@angular/common';
+
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -19,10 +19,9 @@ import { Subject, takeUntil } from 'rxjs';
     styleUrls: ['./create.component.css'],
     standalone:true,
     imports: [
-        ReactiveFormsModule,
-        NgbDatepickerModule,
-        CommonModule,
-    ],
+    ReactiveFormsModule,
+    NgbDatepickerModule
+],
     providers: [ParentTaskService, TaskService, AlertService]
 })
 export class CreateComponent implements OnInit, OnDestroy {

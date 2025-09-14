@@ -16,58 +16,63 @@
         placeholder="Search.."
         name="ProjectSearch"
         (input)="searchProject($event)"
-      />
-      <br />
-      <div class="row">
-        <div class="col-md-12 searchTable">
-          <table
-            class="table table-striped table-hover table-bordered"
-            *ngIf="Projects?.length"
-          >
-            <thead class="table-primary">
-              <tr>
-                <th></th>
-                <th>Project</th>
-                <th>Priority</th>
-                <th>Tasks</th>
-                <th>Completed</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let project of Projects">
-                <td>
-                  <input
-                    type="radio"
-                    name="projectID"
-                    [value]="project.Project_ID"
-                    (change)="selectProject(project)"
-                  />
-                </td>
-                <td>{{ project.Project }}</td>
-                <td>{{ project.Priority }}</td>
-                <td>{{ project.NoOfTasks }}</td>
-                <td>{{ project.CompletedTasks }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p *ngIf="Projects && Projects.length === 0">
-            No projects found for search criteria.
-          </p>
+        />
+        <br />
+        <div class="row">
+          <div class="col-md-12 searchTable">
+            @if (Projects?.length) {
+              <table
+                class="table table-striped table-hover table-bordered"
+                >
+                <thead class="table-primary">
+                  <tr>
+                    <th></th>
+                    <th>Project</th>
+                    <th>Priority</th>
+                    <th>Tasks</th>
+                    <th>Completed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (project of Projects; track project) {
+                    <tr>
+                      <td>
+                        <input
+                          type="radio"
+                          name="projectID"
+                          [value]="project.Project_ID"
+                          (change)="selectProject(project)"
+                          />
+                        </td>
+                        <td>{{ project.Project }}</td>
+                        <td>{{ project.Priority }}</td>
+                        <td>{{ project.NoOfTasks }}</td>
+                        <td>{{ project.CompletedTasks }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+              @if (Projects && Projects.length === 0) {
+                <p>
+                  No projects found for search criteria.
+                </p>
+              }
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-<div class="modal-footer">
-  <button
-    type="button"
-    class="btn btn-primary"
-    [disabled]="!enableAdd"
-    (click)="addProject()"
-  >
-    Add
-  </button>
-  <button type="button" class="btn btn-secondary" (click)="closeModal()">
-    Close
-  </button>
-</div>
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="!enableAdd"
+        (click)="addProject()"
+        >
+        Add
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="closeModal()">
+        Close
+      </button>
+    </div>

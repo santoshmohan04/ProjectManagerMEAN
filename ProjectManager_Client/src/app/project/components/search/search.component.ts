@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, OnDestroy, signal } from '@angular/core';
 import { ProjectService } from '../../services/project.service';
 import { Project } from '../../models/project';
-import { CommonModule } from '@angular/common';
+
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -9,7 +9,7 @@ import { Subject, takeUntil } from 'rxjs';
     selector: 'project-search',
     templateUrl: './search.component.html',
     styleUrls: ['./search.component.css'],
-    imports: [CommonModule],
+    imports: [],
     providers: [ProjectService]
 })
 export class SearchComponent implements OnInit, OnDestroy {
