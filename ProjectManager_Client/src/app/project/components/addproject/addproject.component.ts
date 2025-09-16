@@ -3,6 +3,7 @@ import {
   Component,
   OnDestroy,
   OnInit,
+  inject,
 } from '@angular/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
@@ -21,10 +22,8 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { User } from '../../../user/models/user';
 import { map, Observable, startWith, Subject, takeUntil } from 'rxjs';
 import { UserService } from '../../../user/services/user.service';
-import { ProjectService } from '../../services/project.service';
-import { AlertService } from '../../../shared/services/alert.service';
 import { CommonModule } from '@angular/common';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-addproject',
@@ -41,7 +40,7 @@ import { MatDialogModule } from '@angular/material/dialog';
     MatDialogModule,
   ],
   standalone: true,
-  providers: [provideNativeDateAdapter(), AlertService],
+  providers: [provideNativeDateAdapter()],
   templateUrl: './addproject.component.html',
   styleUrl: './addproject.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,12 +55,11 @@ export class AddprojectComponent implements OnInit, OnDestroy {
   usersList: User[] = [];
   filteredOptions: Observable<User[]> | undefined;
   destroy$: Subject<boolean> = new Subject<boolean>();
+  data = inject(MAT_DIALOG_DATA);
 
   constructor(
     private readonly formbuilder: FormBuilder,
-    private readonly userService: UserService,
-    private readonly projectService: ProjectService,
-    private readonly alertService: AlertService
+    private readonly userService: UserService
   ) {}
 
   ngOnInit(): void {
@@ -78,7 +76,6 @@ export class AddprojectComponent implements OnInit, OnDestroy {
     if (typeof value === 'string') {
       filterValue = value.toLowerCase();
     } else if (value && typeof value === 'object') {
-      // If value is a User object, filter by its Full_Name or First_Name
       filterValue = value.Full_Name
         ? value.Full_Name.toLowerCase()
         : `${value.First_Name} ${value.Last_Name}`.toLowerCase();
@@ -107,6 +104,16 @@ export class AddprojectComponent implements OnInit, OnDestroy {
       manager: [''],
       projectId: '',
     });
+    if (this.data?.projectdetails && this.data?.edit === true) {
+      this.projectForm.patchValue({
+        projectName: this.data.projectdetails.Project,
+        startDate: new Date(this.data.projectdetails.Start_Date),
+        endDate: new Date(this.data.projectdetails.End_Date),
+        priority: this.data.projectdetails.Priority,
+        manager: this.data.projectdetails.Manager_ID,
+        projectId: this.data.projectdetails.Project_ID,
+      });
+    }
   }
 
   getUsersList() {

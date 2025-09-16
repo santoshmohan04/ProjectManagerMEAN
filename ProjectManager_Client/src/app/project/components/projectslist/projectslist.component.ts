@@ -55,6 +55,7 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
   SortKey!: string;
   SearchKey!: string;
   destroy$: Subject<boolean> = new Subject<boolean>();
+  isEditAction: boolean = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -105,7 +106,18 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   editProject(row: Project) {
-    console.log('Edit Project', row);
+    this.isEditAction = true;
+    const editdialogRef = this.dialogService.open(AddprojectComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      data: { projectdetails: row, edit: true },
+    });
+
+    editdialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.onSubmit(result);
+      }
+    });
   }
 
   deleteProject(row: Project) {
@@ -149,38 +161,42 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  onSubmit(form: FormGroup) {
-    if (form.invalid) {
-      return;
-    }
+  onSubmit(form: FormGroup): void {
+    if (form.invalid) return;
 
-    const newProject = {
-      Project: form.value.projectName,
-      Priority: form.value.priority,
-      Manager_ID: form.value.manager?.User_ID,
-      Start_Date: form.value.startDate
-        ? new Date(form.value.startDate).toISOString()
+    const formValues = form.value;
+    const projectPayload = {
+      Project: formValues.projectName,
+      Priority: formValues.priority,
+      Manager_ID: formValues.manager?.User_ID,
+      Start_Date: formValues.startDate
+        ? new Date(formValues.startDate).toISOString()
         : '',
-      End_Date: form.value.endDate
-        ? new Date(form.value.endDate).toISOString()
+      End_Date: formValues.endDate
+        ? new Date(formValues.endDate).toISOString()
         : '',
+      ...(this.isEditAction && { Project_ID: formValues.projectId }),
     };
 
-    this.projectService
-      .addProject(newProject)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((response: any) => {
-        if (response.Success === true) {
-          this.alertService.success(
-            'Project added successfully.',
-            'Success',
-            3000
-          );
-          this.refreshList();
-        } else {
-          this.alertService.error(response.Message, 'Error', 3000);
-        }
-      });
+    const request$ = this.isEditAction
+      ? this.projectService.editProject(projectPayload)
+      : this.projectService.addProject(projectPayload);
+
+    request$.pipe(takeUntil(this.destroy$)).subscribe((response: any) => {
+      this.isEditAction = false;
+
+      if (response.Success) {
+        const action = this.isEditAction ? 'updated' : 'added';
+        this.alertService.success(
+          `Project ${action} successfully.`,
+          'Success',
+          3000
+        );
+        this.refreshList();
+      } else {
+        this.alertService.error(response.Message, 'Error', 3000);
+      }
+    });
   }
 
   ngOnDestroy(): void {
