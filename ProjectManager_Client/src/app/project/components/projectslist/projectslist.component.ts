@@ -19,6 +19,8 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AddprojectComponent } from '../addproject/addproject.component';
+import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
+import { FormGroup } from '@angular/forms';
 
 @Component({
   selector: 'app-projectslist',
@@ -108,13 +110,69 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
 
   deleteProject(row: Project) {
     if (row.Project_ID === undefined) return;
+    console.log('Delete Project', row);
+    const dialogRef = this.dialogService.open(ConfirmationDialogComponent, {
+      data: { projectName: row.Project },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result === true && row.Project_ID !== undefined) {
+        this.projectService
+          .deleteProject(row.Project_ID)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe((response: any) => {
+            if (response.Success === true) {
+              this.alertService.success(
+                'Project suspended successfully!',
+                'Success',
+                3000
+              );
+              this.refreshList();
+            } else {
+              this.alertService.error(response.Message, 'Error', 3000);
+            }
+          });
+      }
+    });
+  }
+
+  addProject() {
+    const dialogRef = this.dialogService.open(AddprojectComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.onSubmit(result);
+      }
+    });
+  }
+
+  onSubmit(form: FormGroup) {
+    if (form.invalid) {
+      return;
+    }
+
+    const newProject = {
+      Project: form.value.projectName,
+      Priority: form.value.priority,
+      Manager_ID: form.value.manager?.User_ID,
+      Start_Date: form.value.startDate
+        ? new Date(form.value.startDate).toISOString()
+        : '',
+      End_Date: form.value.endDate
+        ? new Date(form.value.endDate).toISOString()
+        : '',
+    };
+
     this.projectService
-      .deleteProject(row.Project_ID)
+      .addProject(newProject)
       .pipe(takeUntil(this.destroy$))
       .subscribe((response: any) => {
         if (response.Success === true) {
           this.alertService.success(
-            'Project suspended successfully!',
+            'Project added successfully.',
             'Success',
             3000
           );
@@ -123,17 +181,6 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
           this.alertService.error(response.Message, 'Error', 3000);
         }
       });
-  }
-
-  addProject() {
-    const dialogRef = this.dialogService.open(AddprojectComponent, {
-      width: '600px',
-      maxHeight: '90vh',
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      console.log(`Dialog result: ${result}`);
-    });
   }
 
   ngOnDestroy(): void {

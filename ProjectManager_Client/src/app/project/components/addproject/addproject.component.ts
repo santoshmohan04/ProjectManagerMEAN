@@ -49,7 +49,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 export class AddprojectComponent implements OnInit, OnDestroy {
   projectForm!: FormGroup;
   userAction: string = 'Add';
-  max = 100;
+  max = 10;
   min = 0;
   step = 1;
   thumbLabel = true;
@@ -73,22 +73,36 @@ export class AddprojectComponent implements OnInit, OnDestroy {
     );
   }
 
-  private _filter(value: string): User[] {
-    const filterValue = value.toLowerCase();
+  private _filter(value: string | User): User[] {
+    let filterValue = '';
+    if (typeof value === 'string') {
+      filterValue = value.toLowerCase();
+    } else if (value && typeof value === 'object') {
+      // If value is a User object, filter by its Full_Name or First_Name
+      filterValue = value.Full_Name
+        ? value.Full_Name.toLowerCase()
+        : `${value.First_Name} ${value.Last_Name}`.toLowerCase();
+    }
 
     return this.usersList.filter(
       (option) =>
         option.First_Name.toLowerCase().includes(filterValue) ||
         option.Last_Name.toLowerCase().includes(filterValue) ||
+        (option.Full_Name &&
+          option.Full_Name.toLowerCase().includes(filterValue)) ||
         option.Employee_ID.toString().includes(filterValue)
     );
+  }
+
+  displayUserFn(user: any): string {
+    return user && user.Full_Name ? user.Full_Name : '';
   }
 
   createForm() {
     this.projectForm = this.formbuilder.group({
       projectName: ['', Validators.required],
-      startDate: [{ value: '', disabled: true }],
-      endDate: [{ value: '', disabled: true }],
+      startDate: [null],
+      endDate: [null],
       priority: [0],
       manager: [''],
       projectId: '',
@@ -101,41 +115,6 @@ export class AddprojectComponent implements OnInit, OnDestroy {
         this.usersList = response.Data;
       }
     });
-  }
-
-  onSubmit(form: FormGroup) {
-    if (form.invalid) {
-      return;
-    }
-
-    const newProject = {
-      Project: form.value.projectName,
-      Priority: form.value.priority,
-      Manager_ID: form.value.manager?.User_ID,
-      Start_Date: form.value.startDate
-        ? new Date(form.value.startDate).toISOString()
-        : '',
-      End_Date: form.value.endDate
-        ? new Date(form.value.endDate).toISOString()
-        : '',
-    };
-
-    console.log(newProject);
-
-    // this.projectService
-    //   .addProject(newProject)
-    //   .pipe(takeUntil(this.destroy$))
-    //   .subscribe((response: any) => {
-    //     if (response.Success === true) {
-    //       this.alertService.success(
-    //         'Project added successfully.',
-    //         'Success',
-    //         3000
-    //       );
-    //     } else {
-    //       this.alertService.error(response.Message, 'Error', 3000);
-    //     }
-    //   });
   }
 
   ngOnDestroy() {

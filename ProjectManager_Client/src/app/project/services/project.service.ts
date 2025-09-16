@@ -15,8 +15,8 @@ export class ProjectService {
   constructor(private http: HttpClient) {}
 
   getProjects(
-    searchKey: string,
-    sortKey: string
+    searchKey?: string,
+    sortKey?: string
   ): Observable<ApiResponse<Project[]>> {
     let params = new HttpParams();
 

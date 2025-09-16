@@ -1,26 +1,34 @@
+<h2 mat-dialog-title>Add Project</h2>
 <mat-dialog-content class="container">
-  <h3 mat-dialog-title>Add Project</h3>
-  <form [formGroup]="projectForm" (ngSubmit)="onSubmit(projectForm)" class="d-flex flex-column gap-3">
-    <mat-form-field appearance="outline">
+  <form [formGroup]="projectForm" class="d-flex flex-column gap-3">
+    <mat-form-field appearance="outline" class="mt-2">
       <mat-label>Project Name</mat-label>
       <input matInput type="text" formControlName="projectName" />
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Set Start and End Date</mat-label>
-      <mat-date-range-input [rangePicker]="rangePicker">
-        <input matStartDate placeholder="Start date" formControlName="startDate" />
-        <input matEndDate placeholder="End date" formControlName="endDate" />
-      </mat-date-range-input>
-      <mat-hint>MM/DD/YYYY - MM/DD/YYYY</mat-hint>
-      <mat-datepicker-toggle matIconSuffix [for]="rangePicker"></mat-datepicker-toggle>
-      <mat-date-range-picker #rangePicker>
-        <mat-date-range-picker-actions>
-          <button matButton matDateRangePickerCancel>Cancel</button>
-          <button matButton="elevated" matDateRangePickerApply>Apply</button>
-        </mat-date-range-picker-actions>
-      </mat-date-range-picker>
-    </mat-form-field>
+  <mat-label>Set Start and End Date</mat-label>
+  <mat-date-range-input [rangePicker]="rangePicker">
+    <input
+      matStartDate
+      placeholder="Start date"
+      formControlName="startDate"
+    />
+    <input
+      matEndDate
+      placeholder="End date"
+      formControlName="endDate"
+    />
+  </mat-date-range-input>
+  <mat-hint>MM/DD/YYYY - MM/DD/YYYY</mat-hint>
+  <mat-datepicker-toggle matIconSuffix [for]="rangePicker"></mat-datepicker-toggle>
+  <mat-date-range-picker #rangePicker>
+    <mat-date-range-picker-actions>
+      <button matButton matDateRangePickerCancel>Cancel</button>
+      <button matButton="elevated" matDateRangePickerApply>Apply</button>
+    </mat-date-range-picker-actions>
+  </mat-date-range-picker>
+</mat-form-field>
 
     <div>
       <label class="d-block mb-2 w-100">Priority</label>
@@ -29,10 +37,10 @@
         [min]="min"
         [step]="step"
         [discrete]="thumbLabel"
-        class="w-100"
+        class="w-90"
       >
-      <input matSliderThumb formControlName="priority">
-    </mat-slider>
+        <input matSliderThumb formControlName="priority" />
+      </mat-slider>
     </div>
 
     <mat-form-field appearance="outline">
@@ -45,18 +53,24 @@
         formControlName="manager"
         [matAutocomplete]="auto"
       />
-      <mat-autocomplete #auto="matAutocomplete">
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayUserFn">
         @for (user of (filteredOptions | async); track user) {
-        <mat-option [value]="user?.User_ID">
-          {{ user?.First_Name }} {{ user?.Last_Name }}
+        <mat-option [value]="user">
+          {{ user?.Full_Name }}
         </mat-option>
         }
       </mat-autocomplete>
     </mat-form-field>
-
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close type="button">Close</button>
-      <button mat-raised-button color="primary" type="submit" [disabled]="projectForm.invalid">Submit</button>
-    </mat-dialog-actions>
   </form>
 </mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button mat-dialog-close type="button">Close</button>
+  <button
+    mat-raised-button
+    color="primary"
+    [mat-dialog-close]="projectForm"
+    [disabled]="projectForm.invalid"
+  >
+    Submit
+  </button>
+</mat-dialog-actions>
