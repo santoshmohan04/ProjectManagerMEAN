@@ -48,6 +48,7 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
     'name',
     'tasks',
     'completed',
+    'user',
     'priority',
     'startDate',
     'endDate',
@@ -89,6 +90,18 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe((response: any) => {
         if (response.Success === true) {
           this.dataSource = new MatTableDataSource(response.Data);
+          // Custom filter to include assigned user's name
+          this.dataSource.filterPredicate = (data: Project, filter: string) => {
+            const assignedUser = this.getAssignedUser(data).toLowerCase();
+            const projectName = data.Project?.toLowerCase() || '';
+            const priority = (data.Priority ?? '').toString();
+            // Add more fields as needed
+            return (
+              projectName.includes(filter) ||
+              assignedUser.includes(filter) ||
+              priority.includes(filter)
+            );
+          };
           this.dataSource.paginator = this.paginator;
           this.dataSource.sort = this.sort;
         } else {
@@ -209,6 +222,16 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       this.isEditAction = false;
     });
+  }
+
+  getAssignedUser(row: Project): string {
+    if (row.Manager_ID && this.usersList.length > 0) {
+      const user = this.usersList.find((u) => u.User_ID === row.Manager_ID);
+      return user
+        ? user.Full_Name || `${user.First_Name} ${user.Last_Name}`
+        : 'N/A';
+    }
+    return 'N/A';
   }
 
   ngOnDestroy(): void {
