@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpParams, HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { Project } from '../models/project';
+import { ProjectPayload, Project } from '../models/project';
 import { ApiResponse } from '../../shared/models/shared';
 
 import { Observable } from 'rxjs';
@@ -29,25 +29,28 @@ export class ProjectService {
     return this.http.get<ApiResponse<Project[]>>(uri, { params: params });
   }
 
-  getProject(projectId: number): Observable<ApiResponse<Project>> {
+  getProject(projectId: string): Observable<ApiResponse<Project>> {
     const uri = `${this.baseUri}${environment.endpoint_project_get}/${projectId}`;
 
     return this.http.get<ApiResponse<Project>>(uri);
   }
 
-  addProject(newProject: Project): Observable<ApiResponse<Project>> {
+  addProject(newProject: ProjectPayload): Observable<ApiResponse<Project>> {
     const uri = `${this.baseUri}${environment.endpoint_project_add}`;
 
     return this.http.post<ApiResponse<Project>>(uri, newProject);
   }
 
-  editProject(updateProject: Project): Observable<ApiResponse<Project>> {
-    const uri = `${this.baseUri}${environment.endpoint_project_edit}/${updateProject.Project_ID}`;
+  editProject(
+    updateProject: ProjectPayload,
+    id: string
+  ): Observable<ApiResponse<Project>> {
+    const uri = `${this.baseUri}${environment.endpoint_project_edit}/${id}`;
 
     return this.http.post<ApiResponse<Project>>(uri, updateProject);
   }
 
-  deleteProject(projectID: number): Observable<ApiResponse<Project>> {
+  deleteProject(projectID: string): Observable<ApiResponse<Project>> {
     const uri = `${this.baseUri}${environment.endpoint_project_delete}/${projectID}`;
 
     return this.http.delete<ApiResponse<Project>>(uri);

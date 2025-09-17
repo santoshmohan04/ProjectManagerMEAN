@@ -47,7 +47,6 @@ import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 })
 export class AddprojectComponent implements OnInit, OnDestroy {
   projectForm!: FormGroup;
-  userAction: string = 'Add';
   max = 10;
   min = 0;
   step = 1;
@@ -57,14 +56,11 @@ export class AddprojectComponent implements OnInit, OnDestroy {
   destroy$: Subject<boolean> = new Subject<boolean>();
   data = inject(MAT_DIALOG_DATA);
 
-  constructor(
-    private readonly formbuilder: FormBuilder,
-    private readonly userService: UserService
-  ) {}
+  constructor(private readonly formbuilder: FormBuilder) {}
 
   ngOnInit(): void {
+    this.usersList = this.data?.usersList || [];
     this.createForm();
-    this.getUsersList();
     this.filteredOptions = this.projectForm.get('manager')?.valueChanges.pipe(
       startWith(''),
       map((value) => this._filter(value || ''))
@@ -101,7 +97,7 @@ export class AddprojectComponent implements OnInit, OnDestroy {
       startDate: [null],
       endDate: [null],
       priority: [0],
-      manager: [''],
+      manager: [null],
       projectId: '',
     });
     if (this.data?.projectdetails && this.data?.edit === true) {
@@ -110,18 +106,12 @@ export class AddprojectComponent implements OnInit, OnDestroy {
         startDate: new Date(this.data.projectdetails.Start_Date),
         endDate: new Date(this.data.projectdetails.End_Date),
         priority: this.data.projectdetails.Priority,
-        manager: this.data.projectdetails.Manager_ID,
-        projectId: this.data.projectdetails.Project_ID,
+        manager: this.usersList.find(
+          (t) => t.User_ID === this.data.projectdetails.Manager_ID
+        ),
+        projectId: this.data.projectdetails._id,
       });
     }
-  }
-
-  getUsersList() {
-    this.userService.getUsersList().subscribe((response) => {
-      if (response && response.Success) {
-        this.usersList = response.Data;
-      }
-    });
   }
 
   ngOnDestroy() {

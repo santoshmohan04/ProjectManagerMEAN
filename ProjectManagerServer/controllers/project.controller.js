@@ -1,5 +1,6 @@
 import express from "express";
 import Project from "../data_models/project.js";
+import mongoose from "mongoose";
 
 const projectController = express.Router();
 
@@ -20,6 +21,7 @@ projectController.get("/", async (req, res) => {
     const projects = await projectQuery
       .populate("Tasks", ["Task_ID", "Status"])
       .exec();
+
     res.json({ Success: true, Data: projects });
   } catch (err) {
     res.status(500).json({
@@ -50,7 +52,9 @@ projectController.post("/edit/:id", async (req, res) => {
   const projectId = req.params.id;
 
   try {
-    const project = await Project.findOne({ Project_ID: projectId });
+    const project = await Project.findByIdAndUpdate(projectId, req.body, {
+      new: true,
+    });
 
     if (!project) {
       return res
@@ -58,9 +62,7 @@ projectController.post("/edit/:id", async (req, res) => {
         .json({ Success: false, Message: "Project not found" });
     }
 
-    Object.assign(project, req.body);
-    await project.save();
-    res.json({ Success: true });
+    res.json({ Success: true, Data: project });
   } catch (err) {
     res.status(400).json({
       Success: false,
@@ -75,9 +77,9 @@ projectController.delete("/delete/:id", async (req, res) => {
   const projectId = req.params.id;
 
   try {
-    const result = await Project.deleteOne({ Project_ID: projectId });
+    const result = await Project.findByIdAndDelete(projectId);
 
-    if (result.deletedCount === 0) {
+    if (!result) {
       return res
         .status(404)
         .json({ Success: false, Message: "Project not found" });
@@ -98,7 +100,7 @@ projectController.get("/:id", async (req, res) => {
   const projectId = req.params.id;
 
   try {
-    const project = await Project.findOne({ Project_ID: projectId });
+    const project = await Project.findById(projectId).populate("Tasks");
 
     if (!project) {
       return res

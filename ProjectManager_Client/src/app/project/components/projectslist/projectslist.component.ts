@@ -21,6 +21,8 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AddprojectComponent } from '../addproject/addproject.component';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { FormGroup } from '@angular/forms';
+import { UserService } from '../../../user/services/user.service';
+import { User } from '../../../user/models/user';
 
 @Component({
   selector: 'app-projectslist',
@@ -56,6 +58,7 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
   SearchKey!: string;
   destroy$: Subject<boolean> = new Subject<boolean>();
   isEditAction: boolean = false;
+  usersList: User[] = [];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -63,11 +66,13 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private readonly projectService: ProjectService,
     private readonly alertService: AlertService,
-    private readonly dialogService: MatDialog
+    private readonly dialogService: MatDialog,
+    private readonly userService: UserService
   ) {}
 
   ngOnInit(): void {
     this.refreshList();
+    this.getUsersList();
   }
 
   ngAfterViewInit() {
@@ -96,6 +101,14 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
+  getUsersList() {
+    this.userService.getUsersList().subscribe((response) => {
+      if (response && response.Success) {
+        this.usersList = response.Data;
+      }
+    });
+  }
+
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.dataSource.filter = filterValue.trim().toLowerCase();
@@ -110,7 +123,7 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
     const editdialogRef = this.dialogService.open(AddprojectComponent, {
       width: '800px',
       maxHeight: '90vh',
-      data: { projectdetails: row, edit: true },
+      data: { projectdetails: row, edit: true, usersList: this.usersList },
     });
 
     editdialogRef.afterClosed().subscribe((result) => {
@@ -122,15 +135,14 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
 
   deleteProject(row: Project) {
     if (row.Project_ID === undefined) return;
-    console.log('Delete Project', row);
     const dialogRef = this.dialogService.open(ConfirmationDialogComponent, {
       data: { projectName: row.Project },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result === true && row.Project_ID !== undefined) {
+      if (result === true && row._id !== undefined) {
         this.projectService
-          .deleteProject(row.Project_ID)
+          .deleteProject(row._id)
           .pipe(takeUntil(this.destroy$))
           .subscribe((response: any) => {
             if (response.Success === true) {
@@ -149,9 +161,11 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   addProject() {
+    this.isEditAction = false;
     const dialogRef = this.dialogService.open(AddprojectComponent, {
       width: '800px',
       maxHeight: '90vh',
+      data: { projectdetails: null, edit: false, usersList: this.usersList },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -175,16 +189,13 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
       End_Date: formValues.endDate
         ? new Date(formValues.endDate).toISOString()
         : '',
-      ...(this.isEditAction && { Project_ID: formValues.projectId }),
     };
 
     const request$ = this.isEditAction
-      ? this.projectService.editProject(projectPayload)
+      ? this.projectService.editProject(projectPayload, formValues.projectId)
       : this.projectService.addProject(projectPayload);
 
     request$.pipe(takeUntil(this.destroy$)).subscribe((response: any) => {
-      this.isEditAction = false;
-
       if (response.Success) {
         const action = this.isEditAction ? 'updated' : 'added';
         this.alertService.success(
@@ -196,6 +207,7 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
       } else {
         this.alertService.error(response.Message, 'Error', 3000);
       }
+      this.isEditAction = false;
     });
   }
 

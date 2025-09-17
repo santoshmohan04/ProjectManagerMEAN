@@ -5,8 +5,15 @@ const autoIncrement = mongooseSequence(mongoose);
 const { Schema } = mongoose;
 
 const schemaOptions = {
-  toObject: { virtuals: false },
-  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+  toJSON: {
+    virtuals: true,
+    versionKey: false,
+    transform: (_, ret) => {
+      delete ret.id; // remove duplicate id
+      return ret;
+    },
+  },
 };
 
 // Project Schema
@@ -57,6 +64,6 @@ projectSchema.virtual("CompletedTasks").get(function () {
   return tasks.filter((task) => task.Status === 1).length;
 });
 
-projectSchema.plugin(autoIncrement, { inc_field: "Project_ID" }); // auto increment value
+projectSchema.plugin(autoIncrement, { inc_field: "Project_ID" });
 
 export default mongoose.model("Project", projectSchema);
