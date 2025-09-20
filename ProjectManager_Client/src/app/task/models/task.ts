@@ -11,10 +11,12 @@ export interface Task {
     Parent?:ParentTask,
     Project?:Project,
     Status?:number,
+    _id?:string
 }
 
 export interface ParentTask {
     Parent_ID?: number,
     Parent_Task: string,
-    Project_ID?:number
+    Project_ID?:number,
+    _id?:string
 }

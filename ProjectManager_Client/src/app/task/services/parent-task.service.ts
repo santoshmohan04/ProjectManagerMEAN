@@ -8,7 +8,7 @@ import { ApiResponse } from '../../shared/models/shared';
 import { Observable } from 'rxjs';
 
 export interface IParentTaskService {
-  getParentTask(parentId: number): Observable<ApiResponse<ParentTask>>;
+  getParentTask(parentId: string): Observable<ApiResponse<ParentTask>>;
   getParentTaskList(searchKey?: string): Observable<ApiResponse<ParentTask[]>>;
   addParentTask(newParent: ParentTask): Observable<ApiResponse<ParentTask>>;
 }
@@ -21,7 +21,7 @@ export class ParentTaskService implements IParentTaskService {
 
   constructor(private http: HttpClient) {}
 
-  getParentTask(parentId: number): Observable<ApiResponse<ParentTask>> {
+  getParentTask(parentId: string): Observable<ApiResponse<ParentTask>> {
     const uri = `${this.baseUri}${environment.endpoint_parentTask_get}/${parentId}`;
 
     return this.http.get<ApiResponse<ParentTask>>(uri);

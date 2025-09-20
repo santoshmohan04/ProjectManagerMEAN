@@ -2,9 +2,11 @@ import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { ProjectService } from '../project/services/project.service';
 import { catchError, map, of, switchMap } from 'rxjs';
-import { ProjectDataActions, UsersDataActions } from './actions';
+import { ParentTasksDataActions, ProjectDataActions, TasksDataActions, UsersDataActions } from './actions';
 import { AlertService } from '../shared/services/alert.service';
 import { UserService } from '../user/services/user.service';
+import { TaskService } from '../task/services/task.service';
+import { ParentTaskService } from '../task/services/parent-task.service';
 
 @Injectable()
 export class ProjectManagementEffects {
@@ -12,6 +14,8 @@ export class ProjectManagementEffects {
   private projectservice = inject(ProjectService);
   private alertService = inject(AlertService);
   private userService = inject(UserService);
+  private taskService = inject(TaskService);
+  private parentTaskService = inject(ParentTaskService);
 
 // Effect to load projects
   loadProjects$ = createEffect(() =>
@@ -183,6 +187,130 @@ export class ProjectManagementEffects {
         this.userService.getUser(action.userId).pipe(
           map(data => UsersDataActions.getUserSuccess({ data })),
           catchError(error => of(UsersDataActions.getUserFailure({ error })))
+        )
+      )
+    )
+  );
+
+  //Effects for Tasks
+  loadTasks$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TasksDataActions.loadTasks),
+      switchMap(action =>
+        this.taskService
+          .getTasksList(action.projectId, action.sortKey)
+          .pipe(
+            map(data => TasksDataActions.loadTasksSuccess({ data })),
+            catchError(error => {
+              this.alertService.error(error.Message, 'Error', 3000);
+              return of(TasksDataActions.loadTasksFailure({ error }));
+            })
+          )
+      )
+    )
+  );
+
+  addTask$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TasksDataActions.addTask),
+      switchMap(action =>
+        this.taskService.addTask(action.newTask).pipe(
+          map(data => TasksDataActions.addTaskSuccess({ data })),
+          catchError(error => {
+            this.alertService.error(error.Message, 'Error', 3000);
+            return of(TasksDataActions.addTaskFailure({ error }));
+          })
+        )
+      )
+    )
+  );
+
+  updateTask$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TasksDataActions.updateTask),
+      switchMap(action =>
+        this.taskService.editTask(action.updateTask).pipe(
+          map(data => TasksDataActions.updateTaskSuccess({ data })),
+          catchError(error => {
+            this.alertService.error(error.Message, 'Error', 3000);
+            return of(TasksDataActions.updateTaskFailure({ error }));
+          })
+        )
+      )
+    )
+  );
+
+  endTask$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TasksDataActions.endTask),
+      switchMap(action =>
+        this.taskService.endTask(action.taskId).pipe(
+          map(data => TasksDataActions.endTaskSuccess({ data })),
+          catchError(error => {
+            this.alertService.error(error.Message, 'Error', 3000);
+            return of(TasksDataActions.endTaskFailure({ error }));
+          })
+        )
+      )
+    )
+  );
+
+  getTask$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TasksDataActions.getTask),
+      switchMap(action =>
+        this.taskService.getTask(action.taskId).pipe(
+          map(data => TasksDataActions.getTaskSuccess({ data })),
+          catchError(error => {
+            this.alertService.error(error.Message, 'Error', 3000);
+            return of(TasksDataActions.getTaskFailure({ error }));
+          })
+        )
+      )
+    )
+  );
+
+  // Effects for Parent Tasks
+  loadParentTasks$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ParentTasksDataActions.loadParentTasks),
+      switchMap(action =>
+        this.parentTaskService.getParentTaskList(action.searchKey).pipe(
+          map(data => ParentTasksDataActions.loadParentTasksSuccess({ data })),
+          catchError(error => {
+            this.alertService.error(error.Message, 'Error', 3000);
+            return of(ParentTasksDataActions.loadParentTasksFailure({ error }));
+          })
+        )
+      )
+    )
+  );
+
+  addParentTask$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ParentTasksDataActions.addParentTask),
+      switchMap(action =>
+        this.parentTaskService.addParentTask(action.newParentTask).pipe(
+          map(data => ParentTasksDataActions.addParentTaskSuccess({ data })),
+          catchError(error => {
+            this.alertService.error(error.Message, 'Error', 3000);
+            return of(ParentTasksDataActions.addParentTaskFailure({ error }));
+          })
+        )
+      )
+    )
+  );
+
+  getParentTask$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ParentTasksDataActions.getParentTask),
+      switchMap(action =>
+        this.parentTaskService.getParentTask(action.taskId).pipe(
+          map(data => ParentTasksDataActions.getParentTaskSuccess({ data })),
+          catchError(error => {
+            this.alertService.error(error.Message, 'Error', 3000);
+            return of(ParentTasksDataActions.getParentTaskFailure({ error }));
+          })
         )
       )
     )

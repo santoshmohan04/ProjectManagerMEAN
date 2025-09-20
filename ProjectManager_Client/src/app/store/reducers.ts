@@ -1,17 +1,22 @@
 import { createReducer, on } from '@ngrx/store';
-import { ProjectDataActions, UsersDataActions } from './actions';
+import { ParentTasksDataActions, ProjectDataActions, TasksDataActions, UsersDataActions } from './actions';
 import { Project } from '../project/models/project';
 import { User } from '../user/models/user';
+import { ParentTask, Task } from '../task/models/task';
 
 export interface ProjectState {
   projects: Project[];
   users: User[];
+  tasks: Task[];
+  parentTasks: ParentTask[];
   error: any;
 }
 
 export const initialState: ProjectState = {
   projects: [],
   users: [],
+  tasks: [],
+  parentTasks: [],
   error: null,
 };
 
@@ -115,6 +120,91 @@ export const projectReducer = createReducer(
     error,
   })),
   on(UsersDataActions.clearUsers, () => ({
+    ...initialState,
+  })),
+  on(TasksDataActions.loadTasksSuccess, (state, { data }) => ({
+    ...state,
+    tasks: data.Data,
+    error: null,
+  })),
+  on(TasksDataActions.loadTasksFailure, (state, { error }) => ({
+    ...state,
+    error,
+  })),
+  on(TasksDataActions.clearTasks, () => ({
+    ...initialState,
+  })),
+  on(TasksDataActions.addTaskSuccess, (state, { data }) => ({
+    ...state,
+    tasks: [...state.tasks, data.Data],
+  })),
+  on(TasksDataActions.addTaskFailure, (state, { error }) => ({
+    ...state,
+    error,
+  })),
+  on(TasksDataActions.updateTaskSuccess, (state, { data }) => ({
+    ...state,
+    tasks: state.tasks.map((task) =>
+      task._id === data.Data._id ? data.Data : task
+    ),
+  })),
+  on(TasksDataActions.updateTaskFailure, (state, { error }) => ({
+    ...state,
+    error,
+  })),
+  on(TasksDataActions.endTaskSuccess, (state, { data }) => ({
+    ...state,
+    tasks: state.tasks.filter((task) => task._id !== data.Data._id),
+    error: null,
+  })),
+  on(TasksDataActions.endTaskFailure, (state, { error }) => ({
+    ...state,
+    error,
+  })),
+  on(TasksDataActions.getTaskSuccess, (state, { data }) => ({
+    ...state,
+    tasks: state.tasks.map((task) =>
+      task._id === data.Data._id ? data.Data : task
+    ),
+    error: null,
+  })),
+  on(TasksDataActions.getTaskFailure, (state, { error }) => ({
+    ...state,
+    error,
+  })),
+  on(TasksDataActions.clearTasks, () => ({
+    ...initialState,
+  })),
+  on(ParentTasksDataActions.loadParentTasksSuccess, (state, { data }) => ({
+    ...state,
+    parentTasks: data.Data,
+    error: null,
+  })),
+  on(ParentTasksDataActions.loadParentTasksFailure, (state, { error }) => ({
+    ...state,
+    error,
+  })),
+  on(ParentTasksDataActions.addParentTaskSuccess, (state, { data }) => ({
+    ...state,
+    parentTasks: [...state.parentTasks, data.Data],
+    error: null,
+  })),
+  on(ParentTasksDataActions.addParentTaskFailure, (state, { error }) => ({
+    ...state,
+    error,
+  })),
+  on(ParentTasksDataActions.getParentTaskSuccess, (state, { data }) => ({
+    ...state,
+    parentTasks: state.parentTasks.map((parentTask) =>
+      parentTask.Parent_ID === data.Data.Parent_ID ? data.Data : parentTask
+    ),
+    error: null,
+  })),
+  on(ParentTasksDataActions.getParentTaskFailure, (state, { error }) => ({
+    ...state,
+    error,
+  })),
+  on(ParentTasksDataActions.clearParentTasks, () => ({
     ...initialState,
   }))
 );

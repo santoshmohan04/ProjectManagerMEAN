@@ -32,3 +32,33 @@ export const selectUserError = createSelector(
   selectProjectState,
   (state: ProjectState) => state.error
 );
+
+export const selectAllTasks = createSelector(
+  selectProjectState,
+  (state: ProjectState) => state.tasks
+);
+
+export const selectTaskById = (taskId: string) => createSelector(
+  selectAllTasks,
+  (tasks) => tasks.find((task) => task._id === taskId)
+);
+
+export const selectTaskError = createSelector(
+  selectProjectState,
+  (state: ProjectState) => state.error
+);
+
+export const selectAllParentTasks = createSelector(
+  selectProjectState,
+  (state: ProjectState) => state.parentTasks
+);
+
+export const selectParentTaskById = (parentTaskId: string) => createSelector(
+  selectAllParentTasks,
+  (parentTasks) => parentTasks.find((parentTask) => parentTask._id === parentTaskId)
+);
+
+export const selectParentTaskError = createSelector(
+  selectProjectState,
+  (state: ProjectState) => state.error
+);
