@@ -21,9 +21,10 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { User } from '../../../user/models/user';
 import { map, Observable, startWith, Subject, takeUntil } from 'rxjs';
-import { UserService } from '../../../user/services/user.service';
 import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { Store } from '@ngrx/store';
+import { selectAllUsers } from '../../../store/selectors';
 
 @Component({
   selector: 'app-addproject',
@@ -56,15 +57,23 @@ export class AddprojectComponent implements OnInit, OnDestroy {
   destroy$: Subject<boolean> = new Subject<boolean>();
   data = inject(MAT_DIALOG_DATA);
 
-  constructor(private readonly formbuilder: FormBuilder) {}
+  constructor(
+    private readonly formbuilder: FormBuilder,
+    private readonly store: Store
+  ) {}
 
   ngOnInit(): void {
-    this.usersList = this.data?.usersList || [];
     this.createForm();
     this.filteredOptions = this.projectForm.get('manager')?.valueChanges.pipe(
       startWith(''),
       map((value) => this._filter(value || ''))
     );
+    this.store
+      .select(selectAllUsers)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((users) => {
+        this.usersList = users;
+      });
   }
 
   private _filter(value: string | User): User[] {

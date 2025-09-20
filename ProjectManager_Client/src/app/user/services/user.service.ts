@@ -8,11 +8,11 @@ import { ApiResponse } from '../../shared/models/shared';
 import { Observable } from 'rxjs';
 
 export interface IUserService {
-  getUser(userId: number): Observable<ApiResponse<User>>;
+  getUser(userId: string): Observable<ApiResponse<User>>;
   getUsersList(searchKey?: string, sortKey?: string): Observable<ApiResponse<User[]>>;
   addUser(newUser: User): Observable<ApiResponse<User>>;
   editUser(updateUser: User): Observable<ApiResponse<User>>;
-  deleteUser(userId: number): Observable<ApiResponse<User>>;
+  deleteUser(userId: string): Observable<ApiResponse<User>>;
 }
 
 @Injectable({
@@ -24,7 +24,7 @@ export class UserService implements IUserService {
 
   constructor(private readonly http: HttpClient) { }
 
-  getUser(userId: number): Observable<ApiResponse<User>> {
+  getUser(userId: string): Observable<ApiResponse<User>> {
 
     const uri= `${this.baseUri}${environment.endpoint_user_get}/${userId}`;
 
@@ -59,13 +59,13 @@ export class UserService implements IUserService {
 
   editUser(updateUser: User): Observable<ApiResponse<User>> {
 
-    const uri = `${this.baseUri}${environment.endpoint_user_edit}/${updateUser.id}`
+    const uri = `${this.baseUri}${environment.endpoint_user_edit}/${updateUser._id}`
 
     return this.http
       .post<ApiResponse<User>>(uri, updateUser);
   }
 
-  deleteUser(userId: number): Observable<ApiResponse<User>> {
+  deleteUser(userId: string): Observable<ApiResponse<User>> {
 
     const uri = `${this.baseUri}${environment.endpoint_user_delete}/${userId}`
 

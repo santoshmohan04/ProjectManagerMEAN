@@ -11,7 +11,6 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { Project } from '../../models/project';
-import { ProjectService } from '../../services/project.service';
 import { AlertService } from '../../../shared/services/alert.service';
 import { Subject, takeUntil } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,8 +20,10 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AddprojectComponent } from '../addproject/addproject.component';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { FormGroup } from '@angular/forms';
-import { UserService } from '../../../user/services/user.service';
 import { User } from '../../../user/models/user';
+import { Store } from '@ngrx/store';
+import { ProjectDataActions, UsersDataActions } from '../../../store/actions';
+import { selectAllProjects, selectAllUsers } from '../../../store/selectors';
 
 @Component({
   selector: 'app-projectslist',
@@ -58,22 +59,20 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
   SortKey!: string;
   SearchKey!: string;
   destroy$: Subject<boolean> = new Subject<boolean>();
-  isEditAction: boolean = false;
-  usersList: User[] = [];
+  usersList!: User[];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
-    private readonly projectService: ProjectService,
-    private readonly alertService: AlertService,
     private readonly dialogService: MatDialog,
-    private readonly userService: UserService
+    private readonly store: Store
   ) {}
 
   ngOnInit(): void {
-    this.refreshList();
-    this.getUsersList();
+    this.store.dispatch(ProjectDataActions.loadProjects({ searchKey: this.SearchKey, sortKey: this.SortKey }));
+    this.store.dispatch(UsersDataActions.loadUsers({ searchKey: this.SearchKey , sortKey: this.SortKey }));
+    this.initialiseSubscriptions();
   }
 
   ngAfterViewInit() {
@@ -83,19 +82,13 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  refreshList() {
-    this.projectService
-      .getProjects(this.SearchKey, this.SortKey)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((response: any) => {
-        if (response.Success === true) {
-          this.dataSource = new MatTableDataSource(response.Data);
-          // Custom filter to include assigned user's name
-          this.dataSource.filterPredicate = (data: Project, filter: string) => {
+ initialiseSubscriptions() {
+    this.store.select(selectAllProjects).pipe(takeUntil(this.destroy$)).subscribe((projects) => {
+      this.dataSource = new MatTableDataSource(projects);
+      this.dataSource.filterPredicate = (data: Project, filter: string) => {
             const assignedUser = this.getAssignedUser(data).toLowerCase();
             const projectName = data.Project?.toLowerCase() || '';
             const priority = (data.Priority ?? '').toString();
-            // Add more fields as needed
             return (
               projectName.includes(filter) ||
               assignedUser.includes(filter) ||
@@ -104,21 +97,10 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
           };
           this.dataSource.paginator = this.paginator;
           this.dataSource.sort = this.sort;
-        } else {
-          this.alertService.error(
-            'Error occurred while fetching projects',
-            'Error',
-            3000
-          );
-        }
-      });
-  }
+    });
 
-  getUsersList() {
-    this.userService.getUsersList().subscribe((response) => {
-      if (response && response.Success) {
-        this.usersList = response.Data;
-      }
+    this.store.select(selectAllUsers).pipe(takeUntil(this.destroy$)).subscribe((users) => {
+      this.usersList = users;
     });
   }
 
@@ -132,16 +114,15 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   editProject(row: Project) {
-    this.isEditAction = true;
     const editdialogRef = this.dialogService.open(AddprojectComponent, {
       width: '800px',
       maxHeight: '90vh',
-      data: { projectdetails: row, edit: true, usersList: this.usersList },
+      data: { projectdetails: row, edit: true },
     });
 
     editdialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.onSubmit(result);
+        this.onSubmit(result, 'edit');
       }
     });
   }
@@ -154,41 +135,26 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result === true && row._id !== undefined) {
-        this.projectService
-          .deleteProject(row._id)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe((response: any) => {
-            if (response.Success === true) {
-              this.alertService.success(
-                'Project suspended successfully!',
-                'Success',
-                3000
-              );
-              this.refreshList();
-            } else {
-              this.alertService.error(response.Message, 'Error', 3000);
-            }
-          });
+        this.store.dispatch(ProjectDataActions.deleteProject({ projectId: row._id }));
       }
     });
   }
 
   addProject() {
-    this.isEditAction = false;
     const dialogRef = this.dialogService.open(AddprojectComponent, {
       width: '800px',
       maxHeight: '90vh',
-      data: { projectdetails: null, edit: false, usersList: this.usersList },
+      data: { projectdetails: null, edit: false},
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.onSubmit(result);
+        this.onSubmit(result, 'add');
       }
     });
   }
 
-  onSubmit(form: FormGroup): void {
+  onSubmit(form: FormGroup, action: 'add' | 'edit'): void {
     if (form.invalid) return;
 
     const formValues = form.value;
@@ -204,35 +170,20 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
         : '',
     };
 
-    const request$ = this.isEditAction
-      ? this.projectService.editProject(projectPayload, formValues.projectId)
-      : this.projectService.addProject(projectPayload);
-
-    request$.pipe(takeUntil(this.destroy$)).subscribe((response: any) => {
-      if (response.Success) {
-        const action = this.isEditAction ? 'updated' : 'added';
-        this.alertService.success(
-          `Project ${action} successfully.`,
-          'Success',
-          3000
-        );
-        this.refreshList();
+      if(action === 'edit' && formValues.projectId) {
+        this.store.dispatch(ProjectDataActions.updateProject({updateProject: projectPayload, id: formValues.projectId}));
       } else {
-        this.alertService.error(response.Message, 'Error', 3000);
+        this.store.dispatch(ProjectDataActions.addProject({newProject: projectPayload}));
       }
-      this.isEditAction = false;
-    });
   }
 
   getAssignedUser(row: Project): string {
-    if (row.Manager_ID && this.usersList.length > 0) {
-      const user = this.usersList.find((u) => u.User_ID === row.Manager_ID);
-      return user
-        ? user.Full_Name || `${user.First_Name} ${user.Last_Name}`
-        : 'N/A';
-    }
-    return 'N/A';
-  }
+  if (!this.usersList || !row.Manager_ID) return 'N/A';
+  const user = this.usersList.find(u => u.User_ID === row.Manager_ID);
+  return user
+    ? user.Full_Name || `${user.First_Name} ${user.Last_Name}`
+    : 'N/A';
+}
 
   ngOnDestroy(): void {
     this.destroy$.next(true);
