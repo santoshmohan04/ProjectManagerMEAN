@@ -1,18 +1,21 @@
 import mongoose from 'mongoose';
-
 const { Schema } = mongoose;
 
 const schemaOptions = {
-  toObject: { virtuals: false }, // no "id" virtual
-  toJSON: { virtuals: false },   // no "id" virtual
+  toObject: { virtuals: false },
+  toJSON: { virtuals: false },
 };
 
 // Task Schema
 const taskSchema = new Schema(
   {
-    Task: {
+    Title: {
       type: String,
       required: true,
+    },
+    Description: {
+      type: String,
+      default: '',
     },
     Start_Date: {
       type: Date,
@@ -27,11 +30,12 @@ const taskSchema = new Schema(
       default: 0,
     },
     Status: {
-      type: Number, // 0 - Open, 1 - Complete
-      default: 0,
+      type: String,
+      enum: ['Open', 'In Progress', 'Completed', 'Blocked'], // more flexible than numbers
+      default: 'Open',
     },
-    Parent: { type: Schema.Types.ObjectId, ref: 'ParentTask', default: null },
-    Project: { type: Schema.Types.ObjectId, ref: 'Project', default: null },
+    Parent: { type: Schema.Types.ObjectId, ref: 'Task', default: null }, // parent task or null
+    Project: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
     User: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },
   {

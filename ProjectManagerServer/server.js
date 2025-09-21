@@ -5,7 +5,6 @@ import mongoose from "mongoose";
 import DBconfig from "./config/ProjectManagerDB.js";
 import userController from "./controllers/user.controller.js";
 import projectController from "./controllers/project.controller.js";
-import parentTaskController from "./controllers/parentTask.controller.js";
 import taskController from "./controllers/task.controller.js";
 
 const app = express();
@@ -29,7 +28,6 @@ mongoose.set("debug", true);
 
 app.use("/users", userController);
 app.use("/projects", projectController);
-app.use("/parenttasks", parentTaskController);
 app.use("/tasks", taskController);
 
 app.listen(port, () => {

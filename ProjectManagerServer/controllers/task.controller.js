@@ -1,68 +1,68 @@
 import express from 'express';
 import Task from '../data_models/task.js';
-import Project from '../data_models/project.js';
-import ParentTask from '../data_models/parenttask.js';
 
 const taskController = express.Router();
 
-// List tasks (and parent tasks) for a specific project
+/**
+ * GET /tasks
+ * - List tasks
+ * - Optional query params:
+ *    projectId = filter by project
+ *    parentId  = filter by parent task (subtasks)
+ *    searchKey = search by title
+ *    sortKey   = sort by any field (default asc)
+ */
 taskController.get('/', async (req, res) => {
     try {
-        const { projectId, sortKey } = req.query;
+        const { projectId, parentId, searchKey, sortKey } = req.query;
+        const query = Task.find();
 
-        if (!projectId) {
-            return res.status(400).json({ Success: false, Message: 'Project ID is required' });
-        }
-
-        const project = await Project.findById(projectId);
-        if (!project) {
-            return res.status(404).json({ Success: false, Message: 'Project not found' });
-        }
-
-        // Find all tasks linked to the project
-        const taskQuery = Task.find({ Project: project._id })
-            .populate('Project')
-            .populate('User')
-            .populate('Parent');
+        if (projectId) query.where('Project').equals(projectId);
+        if (parentId) query.where('Parent').equals(parentId);
+        if (searchKey) query.where('Title', new RegExp(searchKey, 'i'));
 
         if (sortKey) {
-            const sortDirection = sortKey === 'Status' ? -1 : 1;
-            taskQuery.sort([[sortKey, sortDirection]]);
+            query.sort({ [sortKey]: 1 });
         }
 
-        const tasks = await taskQuery.exec();
+        const tasks = await query
+            .populate('Project')
+            .populate('User')
+            .populate('Parent')
+            .exec();
 
-        // Find parent tasks for this project
-        const parentTasks = await ParentTask.find({ Project_ID: project._id });
-
-        return res.json({
-            Success: true,
-            Data: {
-                Tasks: tasks,
-                ParentTasks: parentTasks
-            }
-        });
+        res.json({ Success: true, Data: tasks });
     } catch (err) {
-        return res.status(500).json({
+        res.status(500).json({
             Success: false,
-            Message: 'An error occurred',
-            Error: err.message
+            Message: 'Error while fetching tasks',
+            Error: err.message,
         });
     }
 });
 
-// Add new task
+/**
+ * POST /tasks/add
+ * - Create a new task (or subtask if Parent is provided)
+ */
 taskController.post('/add', async (req, res) => {
     try {
-        const newTask = new Task(req.body);
-        await newTask.save();
-        return res.status(201).json({ Success: true, Data: newTask });
+        const task = new Task(req.body);
+        await task.save();
+        res.status(201).json({ Success: true, Data: task });
     } catch (err) {
-        return res.status(400).json({ Success: false, Message: err.message });
+        res.status(400).json({
+            Success: false,
+            Message: 'Error while creating task',
+            Error: err.message,
+        });
     }
 });
 
-// Get single task by _id
+/**
+ * GET /tasks/:id
+ * - Get a single task by _id
+ */
 taskController.get('/:id', async (req, res) => {
     try {
         const task = await Task.findById(req.params.id)
@@ -74,13 +74,20 @@ taskController.get('/:id', async (req, res) => {
             return res.status(404).json({ Success: false, Message: 'Task not found' });
         }
 
-        return res.json({ Success: true, Data: task });
+        res.json({ Success: true, Data: task });
     } catch (err) {
-        return res.status(500).json({ Success: false, Message: 'An error occurred', Error: err.message });
+        res.status(500).json({
+            Success: false,
+            Message: 'Error while fetching task',
+            Error: err.message,
+        });
     }
 });
 
-// Update task by _id
+/**
+ * PUT /tasks/:id
+ * - Update a task by _id
+ */
 taskController.put('/:id', async (req, res) => {
     try {
         const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -89,27 +96,35 @@ taskController.put('/:id', async (req, res) => {
             return res.status(404).json({ Success: false, Message: 'Task not found' });
         }
 
-        return res.status(200).json({ Success: true, Data: updatedTask });
+        res.json({ Success: true, Data: updatedTask });
     } catch (err) {
-        return res.status(400).json({ Success: false, Message: 'Error occurred while updating task', Error: err.message });
+        res.status(400).json({
+            Success: false,
+            Message: 'Error while updating task',
+            Error: err.message,
+        });
     }
 });
 
-// End task (mark complete)
-taskController.delete('/delete/:id', async (req, res) => {
+/**
+ * DELETE /tasks/:id
+ * - Delete a task by _id
+ */
+taskController.delete('/:id', async (req, res) => {
     try {
-        const task = await Task.findById(req.params.id);
+        const deletedTask = await Task.findByIdAndDelete(req.params.id);
 
-        if (!task) {
+        if (!deletedTask) {
             return res.status(404).json({ Success: false, Message: 'Task not found' });
         }
 
-        task.Status = 1; // Mark as completed
-        await task.save();
-
-        return res.status(200).json({ Success: true, Message: 'Task marked as completed' });
+        res.json({ Success: true, Message: 'Task deleted successfully' });
     } catch (err) {
-        return res.status(400).json({ Success: false, Message: 'Error occurred while updating task', Error: err.message });
+        res.status(500).json({
+            Success: false,
+            Message: 'Error while deleting task',
+            Error: err.message,
+        });
     }
 });
 
