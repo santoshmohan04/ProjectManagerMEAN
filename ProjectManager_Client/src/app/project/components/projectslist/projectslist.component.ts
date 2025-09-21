@@ -178,8 +178,8 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getAssignedUser(row: Project): string {
-  if (!this.usersList || !row.Manager_ID) return 'N/A';
-  const user = this.usersList.find(u => u.User_ID === row.Manager_ID);
+  if (!this.usersList || !row?.Manager_ID) return 'N/A';
+  const user = this.usersList.find(u => u.User_ID === row?.Manager_ID);
   return user
     ? user.Full_Name || `${user.First_Name} ${user.Last_Name}`
     : 'N/A';

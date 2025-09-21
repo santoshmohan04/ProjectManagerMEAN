@@ -8,10 +8,12 @@ import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import { ProjectManagementEffects } from './store/effects';
 import { projectReducer } from './store/reducers';
+import { AlertService } from './shared/services/alert.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAnimations(),
+    AlertService,
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(),

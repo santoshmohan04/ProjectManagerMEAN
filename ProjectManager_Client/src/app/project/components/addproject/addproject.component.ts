@@ -73,6 +73,7 @@ export class AddprojectComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((users) => {
         this.usersList = users;
+        this.projectForm.get('manager')?.setValue(this.data?.projectdetails?.Manager_ID ? this.usersList.find(u => u.User_ID === this.data.projectdetails.Manager_ID) : null);
       });
   }
 
@@ -115,9 +116,6 @@ export class AddprojectComponent implements OnInit, OnDestroy {
         startDate: new Date(this.data.projectdetails.Start_Date),
         endDate: new Date(this.data.projectdetails.End_Date),
         priority: this.data.projectdetails.Priority,
-        manager: this.usersList.find(
-          (t) => t.User_ID === this.data.projectdetails.Manager_ID
-        ),
         projectId: this.data.projectdetails._id,
       });
     }
