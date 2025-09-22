@@ -3,18 +3,62 @@ import Project from "../data_models/project.js";
 import mongoose from "mongoose";
 
 const projectController = express.Router();
+/**
+ * @swagger
+ * tags:
+ *   name: Projects
+ *   description: Project management APIs
+ */
 
-// List projects
+/**
+ * @swagger
+ * /projects:
+ *   get:
+ *     summary: Get all projects
+ *     tags: [Projects]
+ *     description: Returns a list of all projects, optionally filtered and sorted.
+ *     parameters:
+ *       - in: query
+ *         name: searchKey
+ *         schema:
+ *           type: string
+ *         description: Search term for project name
+ *       - in: query
+ *         name: sortKey
+ *         schema:
+ *           type: string
+ *         description: Field to sort by
+ *     responses:
+ *       200:
+ *         description: List of projects
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Success:
+ *                   type: boolean
+ *                 Data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Project'
+ */
+function escapeRegex(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 projectController.get("/", async (req, res) => {
   try {
     const { searchKey, sortKey } = req.query;
     const projectQuery = Project.find();
 
     if (searchKey) {
-      projectQuery.or([{ Project: { $regex: searchKey, $options: "i" } }]);
+      const safeSearch = escapeRegex(searchKey);
+      projectQuery.or([{ Project: { $regex: safeSearch, $options: "i" } }]);
     }
 
-    if (sortKey) {
+    const allowedSortKeys = ["Project", "Priority", "Start_Date", "End_Date"];
+    if (sortKey && allowedSortKeys.includes(sortKey)) {
       projectQuery.sort([[sortKey, 1]]);
     }
 
@@ -32,7 +76,24 @@ projectController.get("/", async (req, res) => {
   }
 });
 
-// Add new project
+/**
+ * @swagger
+ * /projects/add:
+ *   post:
+ *     summary: Add a new project
+ *     tags: [Projects]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Project'
+ *     responses:
+ *       200:
+ *         description: Project added successfully
+ *       400:
+ *         description: Error occurred while creating new project
+ */
 projectController.post("/add", async (req, res) => {
   try {
     const project = new Project(req.body);
@@ -47,7 +108,33 @@ projectController.post("/add", async (req, res) => {
   }
 });
 
-// Update project
+/**
+ * @swagger
+ * /projects/edit/{id}:
+ *   post:
+ *     summary: Update a project
+ *     tags: [Projects]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Project ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Project'
+ *     responses:
+ *       200:
+ *         description: Project updated successfully
+ *       400:
+ *         description: Error occurred while updating project
+ *       404:
+ *         description: Project not found
+ */
 projectController.post("/edit/:id", async (req, res) => {
   const projectId = req.params.id;
 
@@ -72,7 +159,27 @@ projectController.post("/edit/:id", async (req, res) => {
   }
 });
 
-// Delete project
+/**
+ * @swagger
+ * /projects/delete/{id}:
+ *   delete:
+ *     summary: Delete a project
+ *     tags: [Projects]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Project ID
+ *     responses:
+ *       200:
+ *         description: Project deleted successfully
+ *       404:
+ *         description: Project not found
+ *       500:
+ *         description: An error occurred
+ */
 projectController.delete("/delete/:id", async (req, res) => {
   const projectId = req.params.id;
 
@@ -95,7 +202,27 @@ projectController.delete("/delete/:id", async (req, res) => {
   }
 });
 
-// Get project
+/**
+ * @swagger
+ * /projects/{id}:
+ *   get:
+ *     summary: Get a project by ID
+ *     tags: [Projects]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Project ID
+ *     responses:
+ *       200:
+ *         description: Project found
+ *       404:
+ *         description: Project not found
+ *       500:
+ *         description: An error occurred
+ */
 projectController.get("/:id", async (req, res) => {
   const projectId = req.params.id;
 
