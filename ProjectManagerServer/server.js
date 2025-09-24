@@ -113,10 +113,10 @@ mongoose
   });
 
 mongoose.set("debug", true);
-app.use("/", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/users", userController);
 app.use("/projects", projectController);
 app.use("/tasks", taskController);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);

@@ -1,6 +1,5 @@
 import express from "express";
 import Project from "../data_models/project.js";
-import mongoose from "mongoose";
 
 const projectController = express.Router();
 /**
@@ -50,19 +49,21 @@ function escapeRegex(string) {
 projectController.get("/", async (req, res) => {
   try {
     const { searchKey, sortKey } = req.query;
-    const projectQuery = Project.find();
 
+    let filter = {};
     if (searchKey) {
       const safeSearch = escapeRegex(searchKey);
-      projectQuery.or([{ Project: { $regex: safeSearch, $options: "i" } }]);
+      filter = { $or: [{ Project: { $regex: safeSearch, $options: "i" } }] };
     }
+
+    let query = Project.find(filter);
 
     const allowedSortKeys = ["Project", "Priority", "Start_Date", "End_Date"];
     if (sortKey && allowedSortKeys.includes(sortKey)) {
-      projectQuery.sort([[sortKey, 1]]);
+      query = query.sort({ [sortKey]: 1 });
     }
 
-    const projects = await projectQuery
+    const projects = await query
       .populate("Tasks", ["Task_ID", "Status"])
       .exec();
 
