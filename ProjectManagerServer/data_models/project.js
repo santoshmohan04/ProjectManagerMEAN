@@ -5,15 +5,8 @@ const autoIncrement = mongooseSequence(mongoose);
 const { Schema } = mongoose;
 
 const schemaOptions = {
-  toObject: { virtuals: true },
-  toJSON: {
-    virtuals: true,
-    versionKey: false,
-    transform: (_, ret) => {
-      delete ret.id; // remove duplicate id
-      return ret;
-    },
-  },
+  toObject: { virtuals: false },
+  toJSON: { virtuals: false },
 };
 
 // Project Schema
@@ -37,8 +30,9 @@ const projectSchema = new Schema(
     Priority: {
       type: Number,
     },
-    Manager_ID: {
-      type: Number,
+    Manager: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
       default: null,
     },
   },

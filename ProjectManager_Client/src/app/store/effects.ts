@@ -2,7 +2,12 @@ import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { ProjectService } from '../project/services/project.service';
 import { catchError, map, of, switchMap } from 'rxjs';
-import { ParentTasksDataActions, ProjectDataActions, TasksDataActions, UsersDataActions } from './actions';
+import {
+  ParentTasksDataActions,
+  ProjectDataActions,
+  TasksDataActions,
+  UsersDataActions,
+} from './actions';
 import { AlertService } from '../shared/services/alert.service';
 import { UserService } from '../user/services/user.service';
 import { TaskService } from '../task/services/task.service';
@@ -17,14 +22,19 @@ export class ProjectManagementEffects {
   private taskService = inject(TaskService);
   private parentTaskService = inject(ParentTaskService);
 
-// Effect to load projects
+  // Effect to load projects
   loadProjects$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(ProjectDataActions.loadProjects),
-      switchMap(action =>
+      ofType(
+        ProjectDataActions.loadProjects,
+        ProjectDataActions.deleteProjectSuccess,
+        ProjectDataActions.updateProjectSuccess,
+        ProjectDataActions.addProjectSuccess
+      ),
+      switchMap((action) =>
         this.projectservice.getProjects(action.searchKey, action.sortKey).pipe(
-          map(data => ProjectDataActions.loadProjectsSuccess({ data })),
-          catchError(error => {
+          map((data) => ProjectDataActions.loadProjectsSuccess({ data })),
+          catchError((error) => {
             this.alertService.error(
               'Error occurred while fetching projects',
               'Error',
@@ -40,9 +50,9 @@ export class ProjectManagementEffects {
   addProject$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ProjectDataActions.addProject),
-      switchMap(action =>
+      switchMap((action) =>
         this.projectservice.addProject(action.newProject).pipe(
-          map(data => {
+          map((data) => {
             if (data.Success) {
               this.alertService.success(
                 'Project added successfully!',
@@ -50,9 +60,13 @@ export class ProjectManagementEffects {
                 3000
               );
             }
-            return ProjectDataActions.addProjectSuccess({ data });
+            return ProjectDataActions.addProjectSuccess({
+              data,
+              searchKey: '',
+              sortKey: '',
+            });
           }),
-          catchError(error => {
+          catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
             return of(ProjectDataActions.addProjectFailure({ error }));
           })
@@ -64,19 +78,23 @@ export class ProjectManagementEffects {
   updateProject$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ProjectDataActions.updateProject),
-      switchMap(action =>
+      switchMap((action) =>
         this.projectservice.editProject(action.updateProject, action.id).pipe(
-          map(data => { 
-            if(data.Success){
+          map((data) => {
+            if (data.Success) {
               this.alertService.success(
                 'Project updated successfully!',
                 'Success',
                 3000
               );
             }
-            return ProjectDataActions.updateProjectSuccess({ data });
+            return ProjectDataActions.updateProjectSuccess({
+              data,
+              searchKey: '',
+              sortKey: '',
+            });
           }),
-          catchError(error => {
+          catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
             return of(ProjectDataActions.updateProjectFailure({ error }));
           })
@@ -88,21 +106,25 @@ export class ProjectManagementEffects {
   deleteProject$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ProjectDataActions.deleteProject),
-      switchMap(action =>
+      switchMap((action) =>
         this.projectservice.deleteProject(action.projectId).pipe(
-          map(data =>{ 
-            if(data.Success){
+          map((data) => {
+            if (data.Success) {
               this.alertService.success(
                 'Project suspended successfully!',
                 'Success',
                 3000
               );
             }
-            return ProjectDataActions.deleteProjectSuccess({ data })
+            return ProjectDataActions.deleteProjectSuccess({
+              data,
+              searchKey: '',
+              sortKey: '',
+            });
           }),
-          catchError(error => {
+          catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
-            return of(ProjectDataActions.deleteProjectFailure({ error }))
+            return of(ProjectDataActions.deleteProjectFailure({ error }));
           })
         )
       )
@@ -112,10 +134,10 @@ export class ProjectManagementEffects {
   getProject$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ProjectDataActions.getProject),
-      switchMap(action =>
+      switchMap((action) =>
         this.projectservice.getProject(action.projectId).pipe(
-          map(data => ProjectDataActions.getProjectSuccess({ data })),
-          catchError(error => {
+          map((data) => ProjectDataActions.getProjectSuccess({ data })),
+          catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
             return of(ProjectDataActions.getProjectFailure({ error }));
           })
@@ -127,11 +149,16 @@ export class ProjectManagementEffects {
   // Effect to load users
   loadUsers$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(UsersDataActions.loadUsers),
-      switchMap(action =>
+      ofType(
+        UsersDataActions.loadUsers,
+        UsersDataActions.addUserSuccess,
+        UsersDataActions.updateUserSuccess,
+        UsersDataActions.deleteUserSuccess
+      ),
+      switchMap((action) =>
         this.userService.getUsersList(action.searchKey, action.sortKey).pipe(
-          map(data => UsersDataActions.loadUsersSuccess({ data })),
-          catchError(error => {
+          map((data) => UsersDataActions.loadUsersSuccess({ data })),
+          catchError((error) => {
             this.alertService.error(
               'Error occurred while fetching users',
               'Error',
@@ -147,10 +174,16 @@ export class ProjectManagementEffects {
   addUser$ = createEffect(() =>
     this.actions$.pipe(
       ofType(UsersDataActions.addUser),
-      switchMap(action =>
+      switchMap((action) =>
         this.userService.addUser(action.newUser).pipe(
-          map(data => UsersDataActions.addUserSuccess({ data })),
-          catchError(error => of(UsersDataActions.addUserFailure({ error })))
+          map((data) =>
+            UsersDataActions.addUserSuccess({
+              data,
+              searchKey: '',
+              sortKey: '',
+            })
+          ),
+          catchError((error) => of(UsersDataActions.addUserFailure({ error })))
         )
       )
     )
@@ -159,10 +192,18 @@ export class ProjectManagementEffects {
   updateUser$ = createEffect(() =>
     this.actions$.pipe(
       ofType(UsersDataActions.updateUser),
-      switchMap(action =>
+      switchMap((action) =>
         this.userService.editUser(action.updateUser).pipe(
-          map(data => UsersDataActions.updateUserSuccess({ data })),
-          catchError(error => of(UsersDataActions.updateUserFailure({ error })))
+          map((data) =>
+            UsersDataActions.updateUserSuccess({
+              data,
+              searchKey: '',
+              sortKey: '',
+            })
+          ),
+          catchError((error) =>
+            of(UsersDataActions.updateUserFailure({ error }))
+          )
         )
       )
     )
@@ -171,10 +212,18 @@ export class ProjectManagementEffects {
   deleteUser$ = createEffect(() =>
     this.actions$.pipe(
       ofType(UsersDataActions.deleteUser),
-      switchMap(action =>
+      switchMap((action) =>
         this.userService.deleteUser(action.userId).pipe(
-          map(data => UsersDataActions.deleteUserSuccess({ data })),
-          catchError(error => of(UsersDataActions.deleteUserFailure({ error })))
+          map((data) =>
+            UsersDataActions.deleteUserSuccess({
+              data,
+              searchKey: '',
+              sortKey: '',
+            })
+          ),
+          catchError((error) =>
+            of(UsersDataActions.deleteUserFailure({ error }))
+          )
         )
       )
     )
@@ -183,10 +232,10 @@ export class ProjectManagementEffects {
   getUser$ = createEffect(() =>
     this.actions$.pipe(
       ofType(UsersDataActions.getUser),
-      switchMap(action =>
+      switchMap((action) =>
         this.userService.getUser(action.userId).pipe(
-          map(data => UsersDataActions.getUserSuccess({ data })),
-          catchError(error => of(UsersDataActions.getUserFailure({ error })))
+          map((data) => UsersDataActions.getUserSuccess({ data })),
+          catchError((error) => of(UsersDataActions.getUserFailure({ error })))
         )
       )
     )
@@ -196,16 +245,14 @@ export class ProjectManagementEffects {
   loadTasks$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TasksDataActions.loadTasks),
-      switchMap(action =>
-        this.taskService
-          .getTasksList(action.projectId, action.sortKey)
-          .pipe(
-            map(data => TasksDataActions.loadTasksSuccess({ data })),
-            catchError(error => {
-              this.alertService.error(error.Message, 'Error', 3000);
-              return of(TasksDataActions.loadTasksFailure({ error }));
-            })
-          )
+      switchMap((action) =>
+        this.taskService.getTasksList(action.projectId, action.sortKey).pipe(
+          map((data) => TasksDataActions.loadTasksSuccess({ data })),
+          catchError((error) => {
+            this.alertService.error(error.Message, 'Error', 3000);
+            return of(TasksDataActions.loadTasksFailure({ error }));
+          })
+        )
       )
     )
   );
@@ -213,10 +260,10 @@ export class ProjectManagementEffects {
   addTask$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TasksDataActions.addTask),
-      switchMap(action =>
+      switchMap((action) =>
         this.taskService.addTask(action.newTask).pipe(
-          map(data => TasksDataActions.addTaskSuccess({ data })),
-          catchError(error => {
+          map((data) => TasksDataActions.addTaskSuccess({ data, sortKey: '' })),
+          catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
             return of(TasksDataActions.addTaskFailure({ error }));
           })
@@ -228,10 +275,12 @@ export class ProjectManagementEffects {
   updateTask$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TasksDataActions.updateTask),
-      switchMap(action =>
+      switchMap((action) =>
         this.taskService.editTask(action.updateTask).pipe(
-          map(data => TasksDataActions.updateTaskSuccess({ data })),
-          catchError(error => {
+          map((data) =>
+            TasksDataActions.updateTaskSuccess({ data, sortKey: '' })
+          ),
+          catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
             return of(TasksDataActions.updateTaskFailure({ error }));
           })
@@ -243,10 +292,10 @@ export class ProjectManagementEffects {
   endTask$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TasksDataActions.endTask),
-      switchMap(action =>
+      switchMap((action) =>
         this.taskService.endTask(action.taskId).pipe(
-          map(data => TasksDataActions.endTaskSuccess({ data })),
-          catchError(error => {
+          map((data) => TasksDataActions.endTaskSuccess({ data, sortKey: '' })),
+          catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
             return of(TasksDataActions.endTaskFailure({ error }));
           })
@@ -258,10 +307,10 @@ export class ProjectManagementEffects {
   getTask$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TasksDataActions.getTask),
-      switchMap(action =>
+      switchMap((action) =>
         this.taskService.getTask(action.taskId).pipe(
-          map(data => TasksDataActions.getTaskSuccess({ data })),
-          catchError(error => {
+          map((data) => TasksDataActions.getTaskSuccess({ data })),
+          catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
             return of(TasksDataActions.getTaskFailure({ error }));
           })
@@ -274,10 +323,12 @@ export class ProjectManagementEffects {
   loadParentTasks$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ParentTasksDataActions.loadParentTasks),
-      switchMap(action =>
+      switchMap((action) =>
         this.parentTaskService.getParentTaskList(action.searchKey).pipe(
-          map(data => ParentTasksDataActions.loadParentTasksSuccess({ data })),
-          catchError(error => {
+          map((data) =>
+            ParentTasksDataActions.loadParentTasksSuccess({ data })
+          ),
+          catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
             return of(ParentTasksDataActions.loadParentTasksFailure({ error }));
           })
@@ -289,10 +340,10 @@ export class ProjectManagementEffects {
   addParentTask$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ParentTasksDataActions.addParentTask),
-      switchMap(action =>
+      switchMap((action) =>
         this.parentTaskService.addParentTask(action.newParentTask).pipe(
-          map(data => ParentTasksDataActions.addParentTaskSuccess({ data })),
-          catchError(error => {
+          map((data) => ParentTasksDataActions.addParentTaskSuccess({ data })),
+          catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
             return of(ParentTasksDataActions.addParentTaskFailure({ error }));
           })
@@ -304,10 +355,10 @@ export class ProjectManagementEffects {
   getParentTask$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ParentTasksDataActions.getParentTask),
-      switchMap(action =>
+      switchMap((action) =>
         this.parentTaskService.getParentTask(action.taskId).pipe(
-          map(data => ParentTasksDataActions.getParentTaskSuccess({ data })),
-          catchError(error => {
+          map((data) => ParentTasksDataActions.getParentTaskSuccess({ data })),
+          catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
             return of(ParentTasksDataActions.getParentTaskFailure({ error }));
           })
@@ -315,5 +366,4 @@ export class ProjectManagementEffects {
       )
     )
   );
-
 }

@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
-import mongooseSequence from "mongoose-sequence";
 
-const autoIncrement = mongooseSequence(mongoose);
 const { Schema } = mongoose;
 
 const schemaOptions = {
@@ -28,8 +26,9 @@ const userSchema = new Schema(
       type: String,
       default: null,
     },
-    Project_ID: {
-      type: String,
+    Project: {
+      type: Schema.Types.ObjectId,
+      ref: "Project",
       default: null,
     },
   },
@@ -41,4 +40,4 @@ userSchema.virtual("Full_Name").get(function () {
   return `${this.First_Name} ${this.Last_Name}`;
 });
 
-export default mongoose.model("User", userSchema); // Corrected
+export default mongoose.model("User", userSchema);

@@ -1,5 +1,10 @@
 import { createReducer, on } from '@ngrx/store';
-import { ParentTasksDataActions, ProjectDataActions, TasksDataActions, UsersDataActions } from './actions';
+import {
+  ParentTasksDataActions,
+  ProjectDataActions,
+  TasksDataActions,
+  UsersDataActions,
+} from './actions';
 import { Project } from '../project/models/project';
 import { User } from '../user/models/user';
 import { ParentTask, Task } from '../task/models/task';
@@ -33,7 +38,6 @@ export const projectReducer = createReducer(
   })),
   on(ProjectDataActions.addProjectSuccess, (state, { data }) => ({
     ...state,
-    projects: [...state.projects, data.Data],
     error: null,
   })),
   on(ProjectDataActions.addProjectFailure, (state, { error }) => ({
@@ -42,9 +46,6 @@ export const projectReducer = createReducer(
   })),
   on(ProjectDataActions.updateProjectSuccess, (state, { data }) => ({
     ...state,
-    projects: state.projects.map((project) =>
-      project._id === data.Data._id ? data.Data : project
-    ),
     error: null,
   })),
   on(ProjectDataActions.updateProjectFailure, (state, { error }) => ({
@@ -53,7 +54,7 @@ export const projectReducer = createReducer(
   })),
   on(ProjectDataActions.deleteProjectSuccess, (state, { data }) => ({
     ...state,
-    projects: state.projects.filter((project) => project._id !== data.Data._id),
+    error: null,
   })),
   on(ProjectDataActions.deleteProjectFailure, (state, { error }) => ({
     ...state,
@@ -83,7 +84,7 @@ export const projectReducer = createReducer(
   })),
   on(UsersDataActions.addUserSuccess, (state, { data }) => ({
     ...state,
-    users: [...state.users, data.Data],
+    error: null,
   })),
   on(UsersDataActions.addUserFailure, (state, { error }) => ({
     ...state,
@@ -91,9 +92,6 @@ export const projectReducer = createReducer(
   })),
   on(UsersDataActions.updateUserSuccess, (state, { data }) => ({
     ...state,
-    users: state.users.map((user) =>
-      user._id === data.Data._id ? data.Data : user
-    ),
     error: null,
   })),
   on(UsersDataActions.updateUserFailure, (state, { error }) => ({
@@ -102,7 +100,7 @@ export const projectReducer = createReducer(
   })),
   on(UsersDataActions.deleteUserSuccess, (state, { data }) => ({
     ...state,
-    users: state.users.filter((user) => user._id !== data.Data._id),
+    error: null,
   })),
   on(UsersDataActions.deleteUserFailure, (state, { error }) => ({
     ...state,
@@ -136,7 +134,7 @@ export const projectReducer = createReducer(
   })),
   on(TasksDataActions.addTaskSuccess, (state, { data }) => ({
     ...state,
-    tasks: [...state.tasks, data.Data],
+    error: null,
   })),
   on(TasksDataActions.addTaskFailure, (state, { error }) => ({
     ...state,
@@ -144,9 +142,7 @@ export const projectReducer = createReducer(
   })),
   on(TasksDataActions.updateTaskSuccess, (state, { data }) => ({
     ...state,
-    tasks: state.tasks.map((task) =>
-      task._id === data.Data._id ? data.Data : task
-    ),
+    error: null,
   })),
   on(TasksDataActions.updateTaskFailure, (state, { error }) => ({
     ...state,
@@ -154,7 +150,6 @@ export const projectReducer = createReducer(
   })),
   on(TasksDataActions.endTaskSuccess, (state, { data }) => ({
     ...state,
-    tasks: state.tasks.filter((task) => task._id !== data.Data._id),
     error: null,
   })),
   on(TasksDataActions.endTaskFailure, (state, { error }) => ({

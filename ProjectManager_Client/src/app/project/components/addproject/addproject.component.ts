@@ -73,7 +73,15 @@ export class AddprojectComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((users) => {
         this.usersList = users;
-        this.projectForm.get('manager')?.setValue(this.data?.projectdetails?.Manager_ID ? this.usersList.find(u => u.User_ID === this.data.projectdetails.Manager_ID) : null);
+        this.projectForm
+          .get('manager')
+          ?.setValue(
+            this.data?.projectdetails?._id
+              ? this.usersList.find(
+                  (u) => u._id === this.data.projectdetails.Manager_ID
+                )
+              : null
+          );
       });
   }
 
