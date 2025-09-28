@@ -244,7 +244,7 @@ export class ProjectManagementEffects {
   //Effects for Tasks
   loadTasks$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(TasksDataActions.loadTasks),
+      ofType(TasksDataActions.loadTasks, TasksDataActions.endTaskSuccess),
       switchMap((action) =>
         this.taskService.getTasksList(action.projectId, action.sortKey).pipe(
           map((data) => TasksDataActions.loadTasksSuccess({ data })),
@@ -294,7 +294,20 @@ export class ProjectManagementEffects {
       ofType(TasksDataActions.endTask),
       switchMap((action) =>
         this.taskService.endTask(action.taskId).pipe(
-          map((data) => TasksDataActions.endTaskSuccess({ data, sortKey: '' })),
+          map((data) => {
+            if (data.Success) {
+              this.alertService.success(
+                'Task deleted successfully',
+                'Success',
+                3000
+              );
+            }
+            return TasksDataActions.endTaskSuccess({
+              data,
+              sortKey: '',
+              projectId: '',
+            });
+          }),
           catchError((error) => {
             this.alertService.error(error.Message, 'Error', 3000);
             return of(TasksDataActions.endTaskFailure({ error }));

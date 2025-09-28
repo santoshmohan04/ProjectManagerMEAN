@@ -7,13 +7,13 @@ import {
 } from './actions';
 import { Project } from '../project/models/project';
 import { User } from '../user/models/user';
-import { ParentTask, Task } from '../task/models/task';
+import { Task } from '../task/models/task';
 
 export interface ProjectState {
   projects: Project[];
   users: User[];
   tasks: Task[];
-  parentTasks: ParentTask[];
+  parentTasks: Task[];
   error: any;
 }
 
@@ -190,9 +190,6 @@ export const projectReducer = createReducer(
   })),
   on(ParentTasksDataActions.getParentTaskSuccess, (state, { data }) => ({
     ...state,
-    parentTasks: state.parentTasks.map((parentTask) =>
-      parentTask.Parent_ID === data.Data.Parent_ID ? data.Data : parentTask
-    ),
     error: null,
   })),
   on(ParentTasksDataActions.getParentTaskFailure, (state, { error }) => ({

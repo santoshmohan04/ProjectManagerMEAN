@@ -23,12 +23,24 @@ import {
 } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Task } from '../../models/task';
 import { Store } from '@ngrx/store';
-import { ProjectDataActions, TasksDataActions } from '../../../store/actions';
-import { selectAllProjects, selectAllTasks } from '../../../store/selectors';
+import {
+  ProjectDataActions,
+  TasksDataActions,
+  UsersDataActions,
+} from '../../../store/actions';
+import {
+  selectAllProjects,
+  selectAllTasks,
+  selectAllUsers,
+} from '../../../store/selectors';
+import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { AlertService } from '../../../shared/services/alert.service';
+import { AddtaskComponent } from '../addtask/addtask.component';
+import { User } from '../../../user/models/user';
 
 @Component({
   selector: 'app-tasklist',
@@ -46,6 +58,7 @@ import { selectAllProjects, selectAllTasks } from '../../../store/selectors';
     MatDialogModule,
     MatAutocompleteModule,
   ],
+  providers: [AlertService],
   templateUrl: './tasklist.component.html',
   styleUrl: './tasklist.component.scss',
 })
@@ -53,29 +66,44 @@ export class TasklistComponent implements OnInit, AfterViewInit, OnDestroy {
   displayedColumns: string[] = [
     'id',
     'task',
-    'parent',
+    'description',
     'priority',
     'startDate',
     'endDate',
     'status',
     'actions',
   ];
-  dataSource: MatTableDataSource<Project> = new MatTableDataSource<Project>([]);
+  dataSource!: MatTableDataSource<Task>;
   selectedproject = new FormControl();
   SortKey!: string;
   SearchKey!: string;
   destroy$: Subject<boolean> = new Subject<boolean>();
   filteredOptions: Observable<Project[]> | undefined;
   projectsList: Project[] = [];
+  taskList!: Task[];
+  userList!: User[];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private readonly store: Store) {}
+  constructor(
+    private readonly dialogService: MatDialog,
+    private readonly store: Store
+  ) {}
 
   ngOnInit(): void {
     this.store.dispatch(
+      TasksDataActions.loadTasks({ projectId: '', sortKey: this.SortKey })
+    );
+    this.store.dispatch(
       ProjectDataActions.loadProjects({
+        searchKey: this.SearchKey,
+        sortKey: this.SortKey,
+      })
+    );
+
+    this.store.dispatch(
+      UsersDataActions.loadUsers({
         searchKey: this.SearchKey,
         sortKey: this.SortKey,
       })
@@ -85,10 +113,13 @@ export class TasklistComponent implements OnInit, AfterViewInit, OnDestroy {
 
   initialiseSubscriptions() {
     this.store
-      .select(selectAllProjects)
+      .select(selectAllTasks)
       .pipe(takeUntil(this.destroy$))
-      .subscribe((projects) => {
-        this.projectsList = projects;
+      .subscribe((tasks) => {
+        this.taskList = tasks;
+        this.dataSource = new MatTableDataSource(tasks);
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
       });
 
     this.filteredOptions = combineLatest([
@@ -96,7 +127,7 @@ export class TasklistComponent implements OnInit, AfterViewInit, OnDestroy {
       this.store.select(selectAllProjects),
     ]).pipe(
       map(([value, projects]) => {
-        this.projectsList = projects; // keep local copy if needed
+        this.projectsList = projects;
         return this._filter(value || '', projects);
       })
     );
@@ -113,6 +144,13 @@ export class TasklistComponent implements OnInit, AfterViewInit, OnDestroy {
             })
           );
         }
+      });
+
+    this.store
+      .select(selectAllUsers)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        this.userList = data;
       });
   }
 
@@ -152,11 +190,54 @@ export class TasklistComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  addTask() {}
+  addTask() {
+    const dialogRef = this.dialogService.open(AddtaskComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      data: {
+        title: 'Add Task',
+        tasklist: this.taskList,
+        projectlist: this.projectsList,
+        userlist: this.userList,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.onSubmit(result, 'add');
+      }
+    });
+  }
 
   editTask(task: Task) {}
 
-  endTask(task: Task) {}
+  endTask(task: Task) {
+    if (task._id === undefined) return;
+    const dialogRef = this.dialogService.open(ConfirmationDialogComponent, {
+      data: {
+        title: 'Delete Task',
+        content: `Are you sure you want to delete task ${task.Title}?`,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result === true && task._id !== undefined) {
+        this.store.dispatch(TasksDataActions.endTask({ taskId: task._id! }));
+      }
+    });
+  }
+
+  onSubmit(
+    data: { firstname: string; lastname: string; employeeid: string },
+    action: 'add' | 'edit',
+    task?: Task
+  ) {
+    if (action === 'add') {
+    }
+
+    if (action === 'edit') {
+    }
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next(true);

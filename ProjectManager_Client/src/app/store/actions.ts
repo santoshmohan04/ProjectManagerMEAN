@@ -3,7 +3,7 @@ import { ApiResponse } from '../shared/models/shared';
 import { Project, ProjectPayload } from '../project/models/project';
 import { HttpErrorResponse } from '@angular/common/http';
 import { User, UserPayload } from '../user/models/user';
-import { ParentTask, Task } from '../task/models/task';
+import { Task } from '../task/models/task';
 
 export const ProjectDataActions = createActionGroup({
   source: 'Project Data',
@@ -89,7 +89,11 @@ export const TasksDataActions = createActionGroup({
     }>(),
     'Update Task Failure': props<{ error: HttpErrorResponse }>(),
     'End Task': props<{ taskId: string }>(),
-    'End Task Success': props<{ data: ApiResponse<Task>; sortKey: string }>(),
+    'End Task Success': props<{
+      data: ApiResponse<Task>;
+      sortKey?: string;
+      projectId?: string;
+    }>(),
     'End Task Failure': props<{ error: HttpErrorResponse }>(),
     'Get Task': props<{ taskId: string }>(),
     'Get Task Success': props<{ data: ApiResponse<Task> }>(),
@@ -102,13 +106,13 @@ export const ParentTasksDataActions = createActionGroup({
   source: 'Parent Tasks Data',
   events: {
     'Load Parent Tasks': props<{ searchKey?: string }>(),
-    'Load Parent Tasks Success': props<{ data: ApiResponse<ParentTask[]> }>(),
+    'Load Parent Tasks Success': props<{ data: ApiResponse<Task[]> }>(),
     'Load Parent Tasks Failure': props<{ error: HttpErrorResponse }>(),
-    'Add Parent Task': props<{ newParentTask: ParentTask }>(),
-    'Add Parent Task Success': props<{ data: ApiResponse<ParentTask> }>(),
+    'Add Parent Task': props<{ newParentTask: Task }>(),
+    'Add Parent Task Success': props<{ data: ApiResponse<Task> }>(),
     'Add Parent Task Failure': props<{ error: HttpErrorResponse }>(),
     'Get Parent Task': props<{ taskId: string }>(),
-    'Get Parent Task Success': props<{ data: ApiResponse<ParentTask> }>(),
+    'Get Parent Task Success': props<{ data: ApiResponse<Task> }>(),
     'Get Parent Task Failure': props<{ error: HttpErrorResponse }>(),
     'Clear Parent Tasks': emptyProps(),
   },
