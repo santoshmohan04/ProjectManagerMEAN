@@ -18,7 +18,7 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AddprojectComponent } from '../addproject/addproject.component';
-import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
+import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { FormGroup } from '@angular/forms';
 import { User } from '../../../user/models/user';
 import { Store } from '@ngrx/store';
@@ -70,8 +70,18 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.store.dispatch(ProjectDataActions.loadProjects({ searchKey: this.SearchKey, sortKey: this.SortKey }));
-    this.store.dispatch(UsersDataActions.loadUsers({ searchKey: this.SearchKey , sortKey: this.SortKey }));
+    this.store.dispatch(
+      ProjectDataActions.loadProjects({
+        searchKey: this.SearchKey,
+        sortKey: this.SortKey,
+      })
+    );
+    this.store.dispatch(
+      UsersDataActions.loadUsers({
+        searchKey: this.SearchKey,
+        sortKey: this.SortKey,
+      })
+    );
     this.initialiseSubscriptions();
   }
 
@@ -82,26 +92,32 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
- initialiseSubscriptions() {
-    this.store.select(selectAllProjects).pipe(takeUntil(this.destroy$)).subscribe((projects) => {
-      this.dataSource = new MatTableDataSource(projects);
-      this.dataSource.filterPredicate = (data: Project, filter: string) => {
-            const assignedUser = this.getAssignedUser(data).toLowerCase();
-            const projectName = data.Project?.toLowerCase() || '';
-            const priority = (data.Priority ?? '').toString();
-            return (
-              projectName.includes(filter) ||
-              assignedUser.includes(filter) ||
-              priority.includes(filter)
-            );
-          };
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
-    });
+  initialiseSubscriptions() {
+    this.store
+      .select(selectAllProjects)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((projects) => {
+        this.dataSource = new MatTableDataSource(projects);
+        this.dataSource.filterPredicate = (data: Project, filter: string) => {
+          const assignedUser = this.getAssignedUser(data).toLowerCase();
+          const projectName = data.Project?.toLowerCase() || '';
+          const priority = (data.Priority ?? '').toString();
+          return (
+            projectName.includes(filter) ||
+            assignedUser.includes(filter) ||
+            priority.includes(filter)
+          );
+        };
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
+      });
 
-    this.store.select(selectAllUsers).pipe(takeUntil(this.destroy$)).subscribe((users) => {
-      this.usersList = users;
-    });
+    this.store
+      .select(selectAllUsers)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((users) => {
+        this.usersList = users;
+      });
   }
 
   applyFilter(event: Event) {
@@ -135,7 +151,9 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result === true && row._id !== undefined) {
-        this.store.dispatch(ProjectDataActions.deleteProject({ projectId: row._id }));
+        this.store.dispatch(
+          ProjectDataActions.deleteProject({ projectId: row._id })
+        );
       }
     });
   }
@@ -144,7 +162,7 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
     const dialogRef = this.dialogService.open(AddprojectComponent, {
       width: '800px',
       maxHeight: '90vh',
-      data: { projectdetails: null, edit: false},
+      data: { projectdetails: null, edit: false },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -170,20 +188,27 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
         : '',
     };
 
-      if(action === 'edit' && formValues.projectId) {
-        this.store.dispatch(ProjectDataActions.updateProject({updateProject: projectPayload, id: formValues.projectId}));
-      } else {
-        this.store.dispatch(ProjectDataActions.addProject({newProject: projectPayload}));
-      }
+    if (action === 'edit' && formValues.projectId) {
+      this.store.dispatch(
+        ProjectDataActions.updateProject({
+          updateProject: projectPayload,
+          id: formValues.projectId,
+        })
+      );
+    } else {
+      this.store.dispatch(
+        ProjectDataActions.addProject({ newProject: projectPayload })
+      );
+    }
   }
 
   getAssignedUser(row: Project): string {
-  if (!this.usersList || !row?.Manager_ID) return 'N/A';
-  const user = this.usersList.find(u => u.User_ID === row?.Manager_ID);
-  return user
-    ? user.Full_Name || `${user.First_Name} ${user.Last_Name}`
-    : 'N/A';
-}
+    if (!this.usersList || !row?.Manager_ID) return 'N/A';
+    const user = this.usersList.find((u) => u.User_ID === row?.Manager_ID);
+    return user
+      ? user.Full_Name || `${user.First_Name} ${user.Last_Name}`
+      : 'N/A';
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next(true);

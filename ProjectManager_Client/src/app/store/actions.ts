@@ -2,7 +2,7 @@ import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { ApiResponse } from '../shared/models/shared';
 import { Project, ProjectPayload } from '../project/models/project';
 import { HttpErrorResponse } from '@angular/common/http';
-import { User } from '../user/models/user';
+import { User, UserPayload } from '../user/models/user';
 import { ParentTask, Task } from '../task/models/task';
 
 export const ProjectDataActions = createActionGroup({
@@ -45,14 +45,14 @@ export const UsersDataActions = createActionGroup({
     'Load Users': props<{ searchKey?: string; sortKey?: string }>(),
     'Load Users Success': props<{ data: ApiResponse<User[]> }>(),
     'Load Users Failure': props<{ error: HttpErrorResponse }>(),
-    'Add User': props<{ newUser: User }>(),
+    'Add User': props<{ newUser: UserPayload }>(),
     'Add User Success': props<{
       data: ApiResponse<User>;
       searchKey: string;
       sortKey: string;
     }>(),
     'Add User Failure': props<{ error: HttpErrorResponse }>(),
-    'Update User': props<{ updateUser: User }>(),
+    'Update User': props<{ updateUser: UserPayload; id: string }>(),
     'Update User Success': props<{
       data: ApiResponse<User>;
       searchKey: string;

@@ -193,7 +193,7 @@ export class ProjectManagementEffects {
     this.actions$.pipe(
       ofType(UsersDataActions.updateUser),
       switchMap((action) =>
-        this.userService.editUser(action.updateUser).pipe(
+        this.userService.editUser(action.updateUser, action.id).pipe(
           map((data) =>
             UsersDataActions.updateUserSuccess({
               data,

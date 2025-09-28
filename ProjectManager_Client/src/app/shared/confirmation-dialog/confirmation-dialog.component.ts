@@ -22,6 +22,5 @@ import { MatButtonModule } from '@angular/material/button';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfirmationDialogComponent {
-  projectName!: string;
   data = inject(MAT_DIALOG_DATA);
 }
