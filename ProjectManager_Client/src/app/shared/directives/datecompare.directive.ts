@@ -1,6 +1,10 @@
-import { NG_VALIDATORS, Validator, AbstractControl, ValidationErrors } from '@angular/forms';
+import {
+  NG_VALIDATORS,
+  Validator,
+  AbstractControl,
+  ValidationErrors,
+} from '@angular/forms';
 import { Directive, Input } from '@angular/core';
-import moment from 'moment';
 
 @Directive({
   selector: '[dateCompare]',
@@ -14,24 +18,32 @@ import moment from 'moment';
   ],
 })
 export class DateCompareValidatorDirective implements Validator {
-  @Input() compareDate!: string; // Date to compare against
+  @Input() compareDate!: string | Date; // Accepts string or Date
   @Input() operation!: 'less than' | 'greater than'; // Comparison operation
 
   validate(control: AbstractControl): ValidationErrors | null {
-    // Validate inputs
     if (!this.compareDate || !this.operation || !control.value) {
       return null;
     }
 
-    const sourceDate = moment(control.value).toDate();
-    const targetDate = moment(this.compareDate).toDate();
+    // Convert values to Date objects if needed
+    const sourceDate =
+      control.value instanceof Date ? control.value : new Date(control.value);
+    const targetDate =
+      this.compareDate instanceof Date
+        ? this.compareDate
+        : new Date(this.compareDate);
 
-    // Check the comparison
-    const isValid = this.operation === 'less than' 
-      ? sourceDate < targetDate 
-      : sourceDate > targetDate;
+    // If either date is invalid, skip validation
+    if (isNaN(sourceDate.getTime()) || isNaN(targetDate.getTime())) {
+      return null;
+    }
 
-    // Return validation errors if the comparison fails
+    const isValid =
+      this.operation === 'less than'
+        ? sourceDate < targetDate
+        : sourceDate > targetDate;
+
     return isValid
       ? null
       : {

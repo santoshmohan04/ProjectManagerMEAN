@@ -2,15 +2,15 @@ import { Injectable } from '@angular/core';
 import { HttpParams, HttpClient } from '@angular/common/http';
 
 import { environment } from '../../../environments/environment';
-import { ParentTask } from '../models/task';
+import { Task } from '../models/task';
 import { ApiResponse } from '../../shared/models/shared';
 
 import { Observable } from 'rxjs';
 
 export interface IParentTaskService {
-  getParentTask(parentId: number): Observable<ApiResponse<ParentTask>>;
-  getParentTaskList(searchKey?: string): Observable<ApiResponse<ParentTask[]>>;
-  addParentTask(newParent: ParentTask): Observable<ApiResponse<ParentTask>>;
+  getParentTask(parentId: string): Observable<ApiResponse<Task>>;
+  getParentTaskList(searchKey?: string): Observable<ApiResponse<Task[]>>;
+  addParentTask(newParent: Task): Observable<ApiResponse<Task>>;
 }
 
 @Injectable({
@@ -21,13 +21,13 @@ export class ParentTaskService implements IParentTaskService {
 
   constructor(private http: HttpClient) {}
 
-  getParentTask(parentId: number): Observable<ApiResponse<ParentTask>> {
+  getParentTask(parentId: string): Observable<ApiResponse<Task>> {
     const uri = `${this.baseUri}${environment.endpoint_parentTask_get}/${parentId}`;
 
-    return this.http.get<ApiResponse<ParentTask>>(uri);
+    return this.http.get<ApiResponse<Task>>(uri);
   }
 
-  getParentTaskList(searchKey?: string): Observable<ApiResponse<ParentTask[]>> {
+  getParentTaskList(searchKey?: string): Observable<ApiResponse<Task[]>> {
     //add query string params to search and sort
     let params = new HttpParams();
 
@@ -35,12 +35,12 @@ export class ParentTaskService implements IParentTaskService {
 
     const uri = `${this.baseUri}${environment.endpoint_parentTask_get}`;
 
-    return this.http.get<ApiResponse<ParentTask[]>>(uri, { params: params });
+    return this.http.get<ApiResponse<Task[]>>(uri, { params: params });
   }
 
-  addParentTask(newParent: ParentTask): Observable<ApiResponse<ParentTask>> {
+  addParentTask(newParent: Task): Observable<ApiResponse<Task>> {
     const uri = `${this.baseUri}${environment.endpoint_parentTask_add}`;
 
-    return this.http.post<ApiResponse<ParentTask>>(uri, newParent);
+    return this.http.post<ApiResponse<Task>>(uri, newParent);
   }
 }

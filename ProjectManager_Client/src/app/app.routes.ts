@@ -1,28 +1,30 @@
 import { Routes } from '@angular/router';
-import { CreateComponent as UserCreateComponent } from './user/components/create/create.component';
-import { CreateComponent as ProjectComponent } from './project/components/create/create.component';
-import { CreateComponent as TaskCreateComponent } from './task/components/create/create.component';
-import { ViewComponent as TaskViewComponent } from './task/components/view/view.component';
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'project/add',
+    redirectTo: 'users',
     pathMatch: 'full',
   },
   {
-    path: 'user',
-    children: [{ path: 'add', component: UserCreateComponent }],
+    path: 'projects',
+    loadComponent: () =>
+      import('./project/components/projectslist/projectslist.component').then(
+        (m) => m.ProjectslistComponent
+      ),
   },
   {
-    path: 'project',
-    children: [{ path: 'add', component: ProjectComponent }],
+    path: 'users',
+    loadComponent: () =>
+      import('./user/components/userslist/userslist.component').then(
+        (m) => m.UserslistComponent
+      ),
   },
   {
-    path: 'task',
-    children: [
-      { path: 'add', component: TaskCreateComponent },
-      { path: 'view', component: TaskViewComponent },
-    ],
+    path: 'tasks',
+    loadComponent: () =>
+      import('./task/components/tasklist/tasklist.component').then(
+        (m) => m.TasklistComponent
+      ),
   },
 ];

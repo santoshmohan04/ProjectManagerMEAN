@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { HttpParams, HttpClient } from '@angular/common/http';
-
 import { environment } from '../../../environments/environment';
 import { Task } from '../models/task';
 import { ApiResponse } from '../../shared/models/shared';
@@ -8,9 +7,9 @@ import { ApiResponse } from '../../shared/models/shared';
 import { Observable } from 'rxjs';
 
 export interface ITaskService {
-  getTask(taskId: number): Observable<ApiResponse<Task>>;
+  getTask(taskId: string): Observable<ApiResponse<Task>>;
   getTasksList(
-    projectId?: number,
+    projectId?: string,
     sortKey?: string
   ): Observable<ApiResponse<Task[]>>;
   addTask(newUser: Task): Observable<ApiResponse<Task>>;
@@ -25,17 +24,16 @@ export class TaskService implements ITaskService {
 
   constructor(private http: HttpClient) {}
 
-  getTask(taskId: number): Observable<ApiResponse<Task>> {
+  getTask(taskId: string): Observable<ApiResponse<Task>> {
     const uri = `${this.baseUri}${environment.endpoint_task_get}/${taskId}`;
 
     return this.http.get<ApiResponse<Task>>(uri);
   }
 
   getTasksList(
-    projectId?: number,
+    projectId?: string,
     sortKey?: string
   ): Observable<ApiResponse<Task[]>> {
-    //add query string params to search and sort
     let params = new HttpParams();
 
     if (projectId) params = params.append('projectId', projectId.toString());
@@ -59,9 +57,9 @@ export class TaskService implements ITaskService {
     return this.http.post<ApiResponse<Task>>(uri, updateTask);
   }
 
-  endTask(taskId: number): Observable<ApiResponse<Task>> {
-    const uri = `${this.baseUri}${environment.endpoint_task_delete}/${taskId}`;
+  endTask(taskId: string): Observable<ApiResponse<Task>> {
+    const uri = `${this.baseUri}${environment.endpoint_task_get}/${taskId}`;
 
-    return this.http.get<ApiResponse<Task>>(uri);
+    return this.http.delete<ApiResponse<Task>>(uri);
   }
 }

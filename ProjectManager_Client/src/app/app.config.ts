@@ -1,25 +1,24 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { NgbDateParserFormatter } from '@ng-bootstrap/ng-bootstrap';
-import { NgbDateMomentParserFormatter } from './shared/date.formatter';
-import { provideAnimations } from '@angular/platform-browser/animations';
-
 import { provideToastr } from 'ngx-toastr';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { ProjectManagementEffects } from './store/effects';
+import { projectReducer } from './store/reducers';
+import { AlertService } from './shared/services/alert.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideAnimations(),
+    AlertService,
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    {
-      provide: NgbDateParserFormatter,
-      useFactory: () => {
-        return new NgbDateMomentParserFormatter('DD/MM/YYYY');
-      },
-    },
     provideHttpClient(),
-    provideAnimations(), // required animations providers
-    provideToastr(), // Toastr providers
-  ],
+    provideToastr(),
+    provideStore({projects: projectReducer}),
+    provideEffects([ProjectManagementEffects])
+],
 };

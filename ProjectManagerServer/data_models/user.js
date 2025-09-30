@@ -1,20 +1,15 @@
-import mongoose from 'mongoose';
-import mongooseSequence from 'mongoose-sequence';
+import mongoose from "mongoose";
 
-const autoIncrement = mongooseSequence(mongoose);
 const { Schema } = mongoose;
 
 const schemaOptions = {
-  toObject: { virtuals: true },
-  toJSON: { virtuals: true },
+  toObject: { virtuals: false },
+  toJSON: { virtuals: false },
 };
 
 // User Schema
 const userSchema = new Schema(
   {
-    User_ID: {
-      type: Number,
-    },
     First_Name: {
       type: String,
       required: true,
@@ -24,26 +19,25 @@ const userSchema = new Schema(
       required: true,
     },
     Employee_ID: {
-      type: Number,
+      type: String,
       required: true,
     },
     Task_ID: {
-      type: Number,
+      type: String,
       default: null,
     },
-    Project_ID: {
-      type: Number,
+    Project: {
+      type: Schema.Types.ObjectId,
+      ref: "Project",
       default: null,
     },
   },
   schemaOptions,
-  { collection: 'users' }
+  { collection: "users" }
 );
 
-userSchema.virtual('Full_Name').get(function () {
+userSchema.virtual("Full_Name").get(function () {
   return `${this.First_Name} ${this.Last_Name}`;
 });
 
-userSchema.plugin(autoIncrement, { inc_field: 'User _ID' }); // Corrected
-
-export default mongoose.model('User', userSchema); // Corrected
+export default mongoose.model("User", userSchema);

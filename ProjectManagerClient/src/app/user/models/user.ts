@@ -1,9 +1,11 @@
+import { Project } from "src/app/project/models/project";
+
 export interface User {
-    User_ID?: number,
-    First_Name: string;
-    Last_Name: String;
-    Employee_ID: number;
-    Project_ID?: number,
-    Task_ID?: number,
-    Full_Name?:string
+  _id: string;
+  First_Name: string;
+  Last_Name: string;
+  Employee_ID: string;
+  Project_ID: string | null;
+  Task_ID: string | null;
+  Project: Project | null;
 }

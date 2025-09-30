@@ -1,23 +1,21 @@
-import mongoose from 'mongoose';
-import mongooseSequence from 'mongoose-sequence';
-
-const autoIncrement = mongooseSequence(mongoose);
+import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const schemaOptions = {
-  toObject: { virtuals: true },
-  toJSON: { virtuals: true },
+  toObject: { virtuals: false },
+  toJSON: { virtuals: false },
 };
 
 // Task Schema
 const taskSchema = new Schema(
   {
-    Task_ID: {
-      type: Number,
-    },
-    Task: {
+    Title: {
       type: String,
       required: true,
+    },
+    Description: {
+      type: String,
+      default: "",
     },
     Start_Date: {
       type: Date,
@@ -29,19 +27,21 @@ const taskSchema = new Schema(
     },
     Priority: {
       type: Number,
-    },
-    Status: {
-      type: Number, // 0 - Open, 1 - Complete
       default: 0,
     },
-    Parent: { type: Schema.Types.ObjectId, ref: 'ParentTask' },
-    Project: { type: Schema.Types.ObjectId, ref: 'Project' },
-    User: { type: Schema.Types.ObjectId, ref: 'User' },
+    Status: {
+      type: String,
+      enum: ["Open", "In Progress", "Completed", "Blocked"], // more flexible than numbers
+      default: "Open",
+    },
+    Parent: { type: Schema.Types.ObjectId, ref: "Task", default: null }, // parent task or null
+    Project: { type: Schema.Types.ObjectId, ref: "Project", default: null },
+    User: { type: Schema.Types.ObjectId, ref: "User", default: null },
   },
-  schemaOptions,
-  { collection: 'tasks' }
+  {
+    ...schemaOptions,
+    collection: "tasks",
+  }
 );
 
-taskSchema.plugin(autoIncrement, { inc_field: 'Task_ID' }); // auto increment value
-
-export default mongoose.model('Task', taskSchema);
+export default mongoose.model("Task", taskSchema);
