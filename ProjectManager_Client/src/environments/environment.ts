@@ -4,8 +4,7 @@
 
 export const environment = {
   production: false,
-  // apiBaseUri: 'http://localhost:4300',
-  apiBaseUri: 'https://34.29.80.161',
+  apiBaseUri: `http://localhost:4300`,
 
   endpoint_user_get: '/users',
   endpoint_user_add: '/users/add',

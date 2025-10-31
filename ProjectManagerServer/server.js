@@ -25,7 +25,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${port}`,
+        url: process.env.API_BASE_URL || `http://localhost:${port}`,
       },
     ],
     components: {
@@ -117,6 +117,19 @@ app.use("/users", userController);
 app.use("/projects", projectController);
 app.use("/tasks", taskController);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// ✅ Default Route
+app.get("/", (req, res) => {
+  res.send(`
+    <div style="font-family: Arial, sans-serif; text-align: center; margin-top: 100px;">
+      <h2>🚀 Running Node Application</h2>
+      <p>Find the APIs and explore them using Swagger below:</p>
+      <a href="/api-docs" style="text-decoration: none; color: #007bff; font-size: 18px;">
+        👉 View API Documentation
+      </a>
+    </div>
+  `);
+});
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
