@@ -15,6 +15,8 @@ const port = process.env.PORT || 4300;
 app.use(cors());
 app.use(bodyParser.json());
 
+console.log('API_BASE_URL value:', process.env.API_BASE_URL);
+
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
