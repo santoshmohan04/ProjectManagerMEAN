@@ -1,0 +1,79 @@
+import { User, IUser, UserRole } from '../../models/user.model.js';
+
+export class UserRepository {
+  async findAll(searchKey?: string, sortKey?: string, activeOnly: boolean = false): Promise<IUser[]> {
+    const query = activeOnly ? User.findActive() : User.find();
+
+    if (searchKey) {
+      query.or([
+        { firstName: { $regex: searchKey, $options: 'i' } },
+        { lastName: { $regex: searchKey, $options: 'i' } },
+        { email: { $regex: searchKey, $options: 'i' } },
+      ]);
+    }
+
+    if (sortKey) {
+      query.sort([[sortKey, 1]]);
+    }
+
+    return query.exec();
+  }
+
+  async findById(id: string): Promise<IUser | null> {
+    return User.findById(id).exec();
+  }
+
+  async findByUuid(uuid: string): Promise<IUser | null> {
+    return User.findOne({ uuid }).exec();
+  }
+
+  async findByEmail(email: string): Promise<IUser | null> {
+    return User.findOne({ email }).exec();
+  }
+
+  async findActiveUsers(): Promise<IUser[]> {
+    return User.findActive().exec();
+  }
+
+  async create(userData: Partial<IUser>): Promise<IUser> {
+    const user = new User(userData);
+    return user.save();
+  }
+
+  async update(id: string, userData: Partial<IUser>): Promise<IUser | null> {
+    return User.findByIdAndUpdate(id, userData, { new: true }).exec();
+  }
+
+  async updateByUuid(uuid: string, userData: Partial<IUser>): Promise<IUser | null> {
+    return User.findOneAndUpdate({ uuid }, userData, { new: true }).exec();
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const result = await User.deleteOne({ _id: id }).exec();
+    return result.deletedCount > 0;
+  }
+
+  async softDelete(id: string): Promise<IUser | null> {
+    return User.findByIdAndUpdate(id, { isActive: false }, { new: true }).exec();
+  }
+
+  async updateLastLogin(uuid: string): Promise<IUser | null> {
+    const user = await User.findOne({ uuid }).exec();
+    if (user) {
+      return user.updateLastLogin();
+    }
+    return null;
+  }
+
+  async findByRole(role: UserRole): Promise<IUser[]> {
+    return User.find({ role, isActive: true }).exec();
+  }
+
+  async findByEmployeeId(employeeId: string): Promise<IUser | null> {
+    return User.findOne({ employeeId }).exec();
+  }
+
+  async updateRefreshToken(id: string, refreshTokenHash: string): Promise<IUser | null> {
+    return User.findByIdAndUpdate(id, { refreshToken: refreshTokenHash }, { new: true }).exec();
+  }
+}
