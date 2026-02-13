@@ -54,6 +54,142 @@ router.get('/', taskController.getTasks.bind(taskController));
 
 /**
  * @swagger
+ * /tasks/search:
+ *   post:
+ *     summary: Advanced task search
+ *     tags: [Tasks]
+ *     description: |
+ *       Performs an advanced search on tasks with complex filtering, sorting, and pagination.
+ *       Supports multiple filters, custom sorting, and paginated results.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - filters
+ *             properties:
+ *               filters:
+ *                 type: object
+ *                 properties:
+ *                   status:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                       enum: [pending, in-progress, completed, cancelled]
+ *                     description: Filter by task status (multiple values allowed)
+ *                   priority:
+ *                     type: object
+ *                     properties:
+ *                       min:
+ *                         type: integer
+ *                         minimum: 1
+ *                         maximum: 5
+ *                         description: Minimum priority level
+ *                       max:
+ *                         type: integer
+ *                         minimum: 1
+ *                         maximum: 5
+ *                         description: Maximum priority level
+ *                     description: Filter by priority range
+ *                   assignedTo:
+ *                     type: string
+ *                     description: Filter by assigned user UUID
+ *                   projectId:
+ *                     type: string
+ *                     description: Filter by project UUID
+ *                   dueDateBefore:
+ *                     type: string
+ *                     format: date-time
+ *                     description: Filter tasks due before this date
+ *               sort:
+ *                 type: object
+ *                 properties:
+ *                   field:
+ *                     type: string
+ *                     enum: [title, priority, status, dueDate, createdAt, updatedAt]
+ *                     description: Field to sort by
+ *                   order:
+ *                     type: string
+ *                     enum: [asc, desc]
+ *                     description: Sort order
+ *                 description: Sorting configuration
+ *               pagination:
+ *                 type: object
+ *                 properties:
+ *                   page:
+ *                     type: integer
+ *                     minimum: 1
+ *                     default: 1
+ *                     description: Page number (1-based)
+ *                   limit:
+ *                     type: integer
+ *                     minimum: 1
+ *                     maximum: 100
+ *                     default: 10
+ *                     description: Number of items per page
+ *                 description: Pagination configuration
+ *           example:
+ *             filters:
+ *               status: ["pending", "in-progress"]
+ *               priority: { min: 3, max: 5 }
+ *               assignedTo: "user-uuid-123"
+ *               projectId: "project-uuid-456"
+ *               dueDateBefore: "2024-12-31T23:59:59Z"
+ *             sort:
+ *               field: "priority"
+ *               order: "desc"
+ *             pagination:
+ *               page: 1
+ *               limit: 20
+ *     responses:
+ *       200:
+ *         description: Search results with pagination metadata
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Task'
+ *                     meta:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                         limit:
+ *                           type: integer
+ *                         total:
+ *                           type: integer
+ *                         totalPages:
+ *                           type: integer
+ *               example:
+ *                 success: true
+ *                 data:
+ *                   data: []
+ *                   meta:
+ *                     page: 1
+ *                     limit: 20
+ *                     total: 0
+ *                     totalPages: 0
+ *       400:
+ *         description: Invalid request - missing filters
+ *       500:
+ *         description: Server error
+ */
+router.post('/search', taskController.advancedSearch.bind(taskController));
+
+/**
+ * @swagger
  * /tasks/add:
  *   post:
  *     summary: Create a new task

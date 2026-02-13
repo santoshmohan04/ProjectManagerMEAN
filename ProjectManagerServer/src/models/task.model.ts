@@ -1,53 +1,98 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { v7 as uuidv7 } from 'uuid';
 
-export interface ITask extends Document {
-  Title: string;
-  Description?: string;
-  Start_Date?: Date;
-  End_Date?: Date;
-  Priority?: number;
-  Status: 'Open' | 'In Progress' | 'Completed' | 'Blocked';
-  Parent?: mongoose.Types.ObjectId;
-  Project?: mongoose.Types.ObjectId;
-  User?: mongoose.Types.ObjectId;
+export enum TaskStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  BLOCKED = 'BLOCKED',
 }
 
-const taskSchema = new Schema<ITask>(
-  {
-    Title: {
-      type: String,
-      required: true,
-    },
-    Description: {
-      type: String,
-      default: '',
-    },
-    Start_Date: {
-      type: Date,
-      default: null,
-    },
-    End_Date: {
-      type: Date,
-      default: null,
-    },
-    Priority: {
-      type: Number,
-      default: 0,
-    },
-    Status: {
-      type: String,
-      enum: ['Open', 'In Progress', 'Completed', 'Blocked'],
-      default: 'Open',
-    },
-    Parent: { type: Schema.Types.ObjectId, ref: 'Task', default: null },
-    Project: { type: Schema.Types.ObjectId, ref: 'Project', default: null },
-    User: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+export interface ITask extends Document {
+  uuid: string;
+  title: string;
+  description?: string;
+  priority: number;
+  status: TaskStatus;
+  project: mongoose.Types.ObjectId;
+  assignedTo?: mongoose.Types.ObjectId;
+  parentTask?: mongoose.Types.ObjectId;
+  dueDate?: Date;
+  estimatedHours?: number;
+  actualHours?: number;
+  createdBy: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const taskSchema = new Schema<ITask>({
+  uuid: {
+    type: String,
+    required: true,
+    unique: true,
+    default: () => uuidv7(),
   },
-  {
-    toObject: { virtuals: false },
-    toJSON: { virtuals: false },
-    collection: 'tasks',
-  }
-);
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  description: {
+    type: String,
+    trim: true,
+  },
+  priority: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 10,
+    default: 5,
+  },
+  status: {
+    type: String,
+    enum: Object.values(TaskStatus),
+    default: TaskStatus.OPEN,
+    index: true,
+  },
+  project: {
+    type: Schema.Types.ObjectId,
+    ref: 'Project',
+    required: true,
+    index: true,
+  },
+  assignedTo: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    index: true,
+  },
+  parentTask: {
+    type: Schema.Types.ObjectId,
+    ref: 'Task',
+  },
+  dueDate: {
+    type: Date,
+  },
+  estimatedHours: {
+    type: Number,
+    min: 0,
+  },
+  actualHours: {
+    type: Number,
+    min: 0,
+  },
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+}, {
+  timestamps: true,
+});
+
+// Add indexes for better query performance
+taskSchema.index({ project: 1, status: 1 }); // Compound index for project + status queries
+taskSchema.index({ assignedTo: 1, status: 1 }); // Compound index for assigned user + status queries
+taskSchema.index({ dueDate: 1 }); // Index for due date queries
+taskSchema.index({ createdAt: -1 }); // Index for recent tasks
 
 export const Task = mongoose.model<ITask>('Task', taskSchema);

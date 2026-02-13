@@ -11,9 +11,8 @@ export class ProjectController {
 
   async getProjects(req: Request, res: Response): Promise<void> {
     try {
-      const { searchKey, sortKey } = req.query as { searchKey?: string; sortKey?: string };
-      const projects = await this.projectService.getAllProjects(searchKey, sortKey);
-      sendSuccess(res, projects);
+      const result = await this.projectService.getProjects(req.query as any);
+      sendSuccess(res, result);
     } catch (err) {
       sendError(res, 'Error fetching projects');
     }

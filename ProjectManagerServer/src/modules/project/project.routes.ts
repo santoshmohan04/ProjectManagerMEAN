@@ -15,34 +15,135 @@ const projectController = new ProjectController();
  * @swagger
  * /projects:
  *   get:
- *     summary: Get all projects
+ *     summary: Get projects with pagination and filtering
  *     tags: [Projects]
- *     description: Returns a list of all projects, optionally filtered and sorted.
+ *     description: Returns a paginated list of projects with optional filtering and sorting.
  *     parameters:
  *       - in: query
- *         name: searchKey
+ *         name: page
  *         schema:
- *           type: string
- *         description: Search term for project name
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
  *       - in: query
- *         name: sortKey
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of items per page
+ *       - in: query
+ *         name: sort
  *         schema:
  *           type: string
- *         description: Field to sort by
+ *           pattern: '^[a-zA-Z_]+:(asc|desc)$'
+ *         description: Sort field and order (e.g., "name:asc", "priority:desc", "createdAt:desc")
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [PLANNING, ACTIVE, COMPLETED, ARCHIVED]
+ *         description: Filter by project status
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 10
+ *         description: Filter by priority level (1-10)
+ *       - in: query
+ *         name: manager
+ *         schema:
+ *           type: string
+ *         description: Filter by manager ID
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Full-text search in project names
  *     responses:
  *       200:
- *         description: List of projects
+ *         description: Paginated list of projects
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 Success:
+ *                 success:
  *                   type: boolean
- *                 Data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Project'
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             description: Project UUID
+ *                           name:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                           priority:
+ *                             type: integer
+ *                             minimum: 1
+ *                             maximum: 10
+ *                           status:
+ *                             type: string
+ *                             enum: [PLANNING, ACTIVE, COMPLETED, ARCHIVED]
+ *                           startDate:
+ *                             type: string
+ *                             format: date-time
+ *                           endDate:
+ *                             type: string
+ *                             format: date-time
+ *                           manager:
+ *                             type: object
+ *                             properties:
+ *                               firstName:
+ *                                 type: string
+ *                               lastName:
+ *                                 type: string
+ *                               email:
+ *                                 type: string
+ *                           createdBy:
+ *                             type: object
+ *                             properties:
+ *                               firstName:
+ *                                 type: string
+ *                               lastName:
+ *                                 type: string
+ *                               email:
+ *                                 type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                     meta:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                           example: 1
+ *                         limit:
+ *                           type: integer
+ *                           example: 10
+ *                         total:
+ *                           type: integer
+ *                           example: 25
+ *                         totalPages:
+ *                           type: integer
+ *                           example: 3
  */
 router.get('/', projectController.getProjects.bind(projectController));
 
