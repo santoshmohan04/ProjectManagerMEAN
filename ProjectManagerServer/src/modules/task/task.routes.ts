@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { TaskController } from './task.controller.js';
+import { authenticate, authorizeRoles } from '../../middleware/auth.middleware.js';
+import { validateUuidParam } from '../../middleware/validation.middleware.js';
 
 const router = Router();
 const taskController = new TaskController();
@@ -15,137 +17,78 @@ const taskController = new TaskController();
  * @swagger
  * /tasks:
  *   get:
- *     summary: List tasks
+ *     summary: Get tasks with pagination and filtering
  *     tags: [Tasks]
- *     description: |
- *       Retrieves a list of tasks with optional filters.
- *       - `projectId` = filter by project
- *       - `parentId` = filter by parent task (subtasks)
- *       - `searchKey` = search by title (case-insensitive)
- *       - `sortKey` = sort by any field (default ascending)
+ *     description: Returns a paginated list of tasks with optional filtering and sorting.
  *     parameters:
  *       - in: query
- *         name: projectId
+ *         name: page
  *         schema:
- *           type: string
- *         description: Filter tasks by project ID
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
  *       - in: query
- *         name: parentId
+ *         name: limit
  *         schema:
- *           type: string
- *         description: Filter tasks by parent task ID
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of items per page
  *       - in: query
- *         name: searchKey
+ *         name: sort
  *         schema:
  *           type: string
- *         description: Search tasks by title
+ *           pattern: '^[a-zA-Z_]+:(asc|desc)$'
+ *         description: Sort field and order (e.g., "title:asc", "priority:desc", "createdAt:desc")
  *       - in: query
- *         name: sortKey
+ *         name: status
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum: [TODO, IN_PROGRESS, IN_REVIEW, DONE, CANCELLED]
+ *         description: Filter by task status (multiple values allowed)
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: object
+ *           properties:
+ *             min:
+ *               type: integer
+ *               minimum: 1
+ *               maximum: 5
+ *             max:
+ *               type: integer
+ *               minimum: 1
+ *               maximum: 5
+ *         description: Filter by priority range
+ *       - in: query
+ *         name: project
  *         schema:
  *           type: string
- *         description: Sort by a specific field (default ascending)
+ *         description: Filter by project UUID
+ *       - in: query
+ *         name: assignedTo
+ *         schema:
+ *           type: string
+ *         description: Filter by assigned user UUID
+ *       - in: query
+ *         name: parentTask
+ *         schema:
+ *           type: string
+ *         description: Filter by parent task UUID
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Full-text search in task titles
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of tasks
- *       500:
- *         description: Server error
- */
-router.get('/', taskController.getTasks.bind(taskController));
-
-/**
- * @swagger
- * /tasks/search:
- *   post:
- *     summary: Advanced task search
- *     tags: [Tasks]
- *     description: |
- *       Performs an advanced search on tasks with complex filtering, sorting, and pagination.
- *       Supports multiple filters, custom sorting, and paginated results.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - filters
- *             properties:
- *               filters:
- *                 type: object
- *                 properties:
- *                   status:
- *                     type: array
- *                     items:
- *                       type: string
- *                       enum: [pending, in-progress, completed, cancelled]
- *                     description: Filter by task status (multiple values allowed)
- *                   priority:
- *                     type: object
- *                     properties:
- *                       min:
- *                         type: integer
- *                         minimum: 1
- *                         maximum: 5
- *                         description: Minimum priority level
- *                       max:
- *                         type: integer
- *                         minimum: 1
- *                         maximum: 5
- *                         description: Maximum priority level
- *                     description: Filter by priority range
- *                   assignedTo:
- *                     type: string
- *                     description: Filter by assigned user UUID
- *                   projectId:
- *                     type: string
- *                     description: Filter by project UUID
- *                   dueDateBefore:
- *                     type: string
- *                     format: date-time
- *                     description: Filter tasks due before this date
- *               sort:
- *                 type: object
- *                 properties:
- *                   field:
- *                     type: string
- *                     enum: [title, priority, status, dueDate, createdAt, updatedAt]
- *                     description: Field to sort by
- *                   order:
- *                     type: string
- *                     enum: [asc, desc]
- *                     description: Sort order
- *                 description: Sorting configuration
- *               pagination:
- *                 type: object
- *                 properties:
- *                   page:
- *                     type: integer
- *                     minimum: 1
- *                     default: 1
- *                     description: Page number (1-based)
- *                   limit:
- *                     type: integer
- *                     minimum: 1
- *                     maximum: 100
- *                     default: 10
- *                     description: Number of items per page
- *                 description: Pagination configuration
- *           example:
- *             filters:
- *               status: ["pending", "in-progress"]
- *               priority: { min: 3, max: 5 }
- *               assignedTo: "user-uuid-123"
- *               projectId: "project-uuid-456"
- *               dueDateBefore: "2024-12-31T23:59:59Z"
- *             sort:
- *               field: "priority"
- *               order: "desc"
- *             pagination:
- *               page: 1
- *               limit: 20
- *     responses:
- *       200:
- *         description: Search results with pagination metadata
+ *         description: Paginated list of tasks
  *         content:
  *           application/json:
  *             schema:
@@ -154,39 +97,96 @@ router.get('/', taskController.getTasks.bind(taskController));
  *                 success:
  *                   type: boolean
  *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Success"
  *                 data:
  *                   type: object
  *                   properties:
  *                     data:
  *                       type: array
  *                       items:
- *                         $ref: '#/components/schemas/Task'
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             description: Task UUID
+ *                           title:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                           priority:
+ *                             type: integer
+ *                             minimum: 1
+ *                             maximum: 5
+ *                           status:
+ *                             type: string
+ *                             enum: [TODO, IN_PROGRESS, IN_REVIEW, DONE, CANCELLED]
+ *                           startDate:
+ *                             type: string
+ *                             format: date-time
+ *                           dueDate:
+ *                             type: string
+ *                             format: date-time
+ *                           project:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                               name:
+ *                                 type: string
+ *                           assignedTo:
+ *                             type: object
+ *                             properties:
+ *                               firstName:
+ *                                 type: string
+ *                               lastName:
+ *                                 type: string
+ *                               email:
+ *                                 type: string
+ *                           parentTask:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                               title:
+ *                                 type: string
+ *                           createdBy:
+ *                             type: object
+ *                             properties:
+ *                               firstName:
+ *                                 type: string
+ *                               lastName:
+ *                                 type: string
+ *                               email:
+ *                                 type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
  *                     meta:
  *                       type: object
  *                       properties:
  *                         page:
  *                           type: integer
+ *                           example: 1
  *                         limit:
  *                           type: integer
+ *                           example: 10
  *                         total:
  *                           type: integer
+ *                           example: 25
  *                         totalPages:
  *                           type: integer
- *               example:
- *                 success: true
- *                 data:
- *                   data: []
- *                   meta:
- *                     page: 1
- *                     limit: 20
- *                     total: 0
- *                     totalPages: 0
- *       400:
- *         description: Invalid request - missing filters
- *       500:
- *         description: Server error
+ *                           example: 3
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  */
-router.post('/search', taskController.advancedSearch.bind(taskController));
+router.get('/', authorizeRoles('ADMIN', 'MANAGER', 'USER'), taskController.getTasksWithFilters.bind(taskController));
 
 /**
  * @swagger
@@ -194,7 +194,8 @@ router.post('/search', taskController.advancedSearch.bind(taskController));
  *   post:
  *     summary: Create a new task
  *     tags: [Tasks]
- *     description: Creates a new task. If `Parent` is provided, it will be created as a subtask.
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -204,17 +205,23 @@ router.post('/search', taskController.advancedSearch.bind(taskController));
  *     responses:
  *       201:
  *         description: Task created successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  *       400:
- *         description: Invalid request
+ *         description: Error occurred while creating new task
  */
-router.post('/', taskController.createTask.bind(taskController));
+router.post('/', authorizeRoles('ADMIN', 'MANAGER', 'USER'), taskController.createTask.bind(taskController));
 
 /**
  * @swagger
  * /tasks/{uuid}:
  *   get:
- *     summary: Get task by UUID
+ *     summary: Get a task by UUID
  *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: uuid
@@ -224,13 +231,17 @@ router.post('/', taskController.createTask.bind(taskController));
  *         description: Task UUID
  *     responses:
  *       200:
- *         description: Task details
+ *         description: Task found
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  *       404:
  *         description: Task not found
  *       500:
- *         description: Server error
+ *         description: An error occurred
  */
-router.get('/:uuid', taskController.getTaskById.bind(taskController));
+router.get('/:uuid', authorizeRoles('ADMIN', 'MANAGER', 'USER'), validateUuidParam(), taskController.getTaskByUuid.bind(taskController));
 
 /**
  * @swagger
@@ -238,6 +249,8 @@ router.get('/:uuid', taskController.getTaskById.bind(taskController));
  *   put:
  *     summary: Update a task
  *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: uuid
@@ -254,12 +267,16 @@ router.get('/:uuid', taskController.getTaskById.bind(taskController));
  *     responses:
  *       200:
  *         description: Task updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  *       400:
- *         description: Invalid request
+ *         description: Error occurred while updating task
  *       404:
  *         description: Task not found
  */
-router.put('/:uuid', taskController.updateTask.bind(taskController));
+router.put('/:uuid', authorizeRoles('ADMIN', 'MANAGER', 'USER'), validateUuidParam(), taskController.updateTaskByUuid.bind(taskController));
 
 /**
  * @swagger
@@ -267,6 +284,8 @@ router.put('/:uuid', taskController.updateTask.bind(taskController));
  *   delete:
  *     summary: Delete a task
  *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: uuid
@@ -277,12 +296,16 @@ router.put('/:uuid', taskController.updateTask.bind(taskController));
  *     responses:
  *       200:
  *         description: Task deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - admin access required
  *       404:
  *         description: Task not found
  *       500:
- *         description: Server error
+ *         description: An error occurred
  */
-router.delete('/:uuid', taskController.deleteTask.bind(taskController));
+router.delete('/:uuid', authorizeRoles('ADMIN', 'MANAGER'), validateUuidParam(), taskController.deleteTaskByUuid.bind(taskController));
 
 /**
  * @swagger
@@ -291,6 +314,8 @@ router.delete('/:uuid', taskController.deleteTask.bind(taskController));
  *     summary: Bulk update tasks
  *     tags: [Tasks]
  *     description: Update multiple tasks by their UUIDs with the same data
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -347,9 +372,13 @@ router.delete('/:uuid', taskController.deleteTask.bind(taskController));
  *                   example: "Tasks updated successfully"
  *       400:
  *         description: Invalid request data
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  *       500:
  *         description: Server error
  */
-router.put('/bulk-update', taskController.bulkUpdateTasks.bind(taskController));
+router.put('/bulk-update', authorizeRoles('ADMIN', 'MANAGER'), taskController.bulkUpdateTasks.bind(taskController));
 
 export default router;

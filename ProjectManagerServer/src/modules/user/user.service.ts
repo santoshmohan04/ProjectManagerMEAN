@@ -113,11 +113,6 @@ export class UserService {
     return users.map(user => this.mapToUserResponse(user));
   }
 
-  async getUserById(id: string): Promise<UserResponse | null> {
-    const user = await this.userRepository.findById(id);
-    return user ? this.mapToUserResponse(user) : null;
-  }
-
   async getUserByUuid(uuid: string): Promise<UserResponse | null> {
     const user = await this.userRepository.findByUuid(uuid);
     return user ? this.mapToUserResponse(user) : null;
@@ -157,27 +152,6 @@ export class UserService {
     return this.mapToUserResponse(user);
   }
 
-  async updateUser(id: string, userData: Partial<IUser>): Promise<UserResponse | null> {
-    // Check email uniqueness if email is being updated
-    if (userData.email) {
-      const existingUser = await this.userRepository.findByEmail(userData.email);
-      if (existingUser && (existingUser._id as mongoose.Types.ObjectId).toString() !== id) {
-        throw new Error('Email already exists');
-      }
-    }
-
-    // Check employeeId uniqueness if being updated
-    if (userData.employeeId) {
-      const existingEmployee = await this.userRepository.findByEmployeeId(userData.employeeId);
-      if (existingEmployee && (existingEmployee._id as mongoose.Types.ObjectId).toString() !== id) {
-        throw new Error('Employee ID already exists');
-      }
-    }
-
-    const user = await this.userRepository.update(id, userData);
-    return user ? this.mapToUserResponse(user) : null;
-  }
-
   async updateUserByUuid(uuid: string, userData: Partial<IUser>): Promise<UserResponse | null> {
     // Check email uniqueness if email is being updated
     if (userData.email) {
@@ -199,17 +173,8 @@ export class UserService {
     return user ? this.mapToUserResponse(user) : null;
   }
 
-  async deleteUser(id: string): Promise<boolean> {
-    return this.userRepository.delete(id);
-  }
-
   async deleteUserByUuid(uuid: string): Promise<boolean> {
     return this.userRepository.deleteByUuid(uuid);
-  }
-
-  async softDeleteUser(id: string): Promise<UserResponse | null> {
-    const user = await this.userRepository.softDelete(id);
-    return user ? this.mapToUserResponse(user) : null;
   }
 
   async softDeleteUserByUuid(uuid: string): Promise<UserResponse | null> {
@@ -292,7 +257,7 @@ export class UserService {
 
     // Store refresh token hash in database
     const refreshTokenHash = await bcrypt.hash(tokens.refreshToken, saltRounds);
-    await this.userRepository.updateRefreshToken((user._id as mongoose.Types.ObjectId).toString(), refreshTokenHash);
+    await this.userRepository.updateRefreshTokenByUuid(user.uuid, refreshTokenHash);
 
     return {
       user,
@@ -354,7 +319,7 @@ export class UserService {
     // Store refresh token hash in database
     const saltRounds = 12;
     const refreshTokenHash = await bcrypt.hash(tokens.refreshToken, saltRounds);
-    await this.userRepository.updateRefreshToken((user._id as mongoose.Types.ObjectId).toString(), refreshTokenHash);
+    await this.userRepository.updateRefreshTokenByUuid(user.uuid, refreshTokenHash);
 
     // Return sanitized user data (exclude passwordHash and refreshToken)
     const sanitizedUser = {

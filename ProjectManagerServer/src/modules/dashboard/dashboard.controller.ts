@@ -14,7 +14,7 @@ export class DashboardController {
       const overview = await this.dashboardService.getOverview();
       successResponse(res, overview);
     } catch (err) {
-      errorResponse(res, 'Error fetching dashboard overview');
+      errorResponse(res, 'Error fetching dashboard overview', 'FETCH_ERROR');
     }
   }
 }

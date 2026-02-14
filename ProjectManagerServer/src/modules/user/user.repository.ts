@@ -58,10 +58,6 @@ export class UserRepository {
     return query.countDocuments().exec();
   }
 
-  async findById(id: string): Promise<IUser | null> {
-    return User.findById(id).exec();
-  }
-
   async findByUuid(uuid: string): Promise<IUser | null> {
     return User.findOne({ uuid }).exec();
   }
@@ -79,26 +75,13 @@ export class UserRepository {
     return user.save();
   }
 
-  async update(id: string, userData: Partial<IUser>): Promise<IUser | null> {
-    return User.findByIdAndUpdate(id, userData, { new: true }).exec();
-  }
-
   async updateByUuid(uuid: string, userData: Partial<IUser>): Promise<IUser | null> {
     return User.findOneAndUpdate({ uuid }, userData, { new: true }).exec();
-  }
-
-  async delete(id: string): Promise<boolean> {
-    const result = await User.deleteOne({ _id: id }).exec();
-    return result.deletedCount > 0;
   }
 
   async deleteByUuid(uuid: string): Promise<boolean> {
     const result = await User.deleteOne({ uuid }).exec();
     return result.deletedCount > 0;
-  }
-
-  async softDelete(id: string): Promise<IUser | null> {
-    return User.findByIdAndUpdate(id, { isActive: false }, { new: true }).exec();
   }
 
   async softDeleteByUuid(uuid: string): Promise<IUser | null> {
@@ -121,7 +104,7 @@ export class UserRepository {
     return User.findOne({ employeeId }).exec();
   }
 
-  async updateRefreshToken(id: string, refreshTokenHash: string): Promise<IUser | null> {
-    return User.findByIdAndUpdate(id, { refreshToken: refreshTokenHash }, { new: true }).exec();
+  async updateRefreshTokenByUuid(uuid: string, refreshTokenHash: string): Promise<IUser | null> {
+    return User.findOneAndUpdate({ uuid }, { refreshToken: refreshTokenHash }, { new: true }).exec();
   }
 }

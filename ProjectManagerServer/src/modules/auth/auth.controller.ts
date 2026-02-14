@@ -15,13 +15,13 @@ export class AuthController {
 
       // Basic validation
       if (!credentials.email || !credentials.password) {
-        return errorResponse(res, 'Email and password are required', 400);
+        return errorResponse(res, 'Email and password are required', "VALIDATION_ERROR", 400);
       }
 
       const result = await this.authService.login(credentials);
       successResponse(res, result, undefined, 'Login successful');
     } catch (err: any) {
-      errorResponse(res, err.message || 'Login failed', 401);
+      errorResponse(res, err.message || 'Login failed', "VALIDATION_ERROR", 401);
     }
   }
 
@@ -31,13 +31,13 @@ export class AuthController {
 
       // Basic validation
       if (!userData.email || !userData.password || !userData.firstName || !userData.lastName) {
-        return errorResponse(res, 'Email, password, firstName, and lastName are required', 400);
+        return errorResponse(res, 'Email, password, firstName, and lastName are required', 'BAD_REQUEST', 400);
       }
 
       const result = await this.authService.register(userData);
       successResponse(res, result, undefined, 'Registration successful', 201);
     } catch (err: any) {
-      errorResponse(res, err.message || 'Registration failed', 400);
+      errorResponse(res, err.message || 'Registration failed', "VALIDATION_ERROR", 400);
     }
   }
 }

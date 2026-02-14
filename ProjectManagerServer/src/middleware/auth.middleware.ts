@@ -26,7 +26,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     const token = JWTUtils.extractTokenFromHeader(req.headers.authorization);
 
     if (!token) {
-      errorResponse(res, 'Access token is required', 401);
+      errorResponse(res, 'Access token is required', 'UNAUTHORIZED', 401);
       return;
     }
 
@@ -39,18 +39,18 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     } catch (error) {
       // Handle different JWT error types
       if (error instanceof jwt.TokenExpiredError) {
-        errorResponse(res, 'Access token has expired', 403);
+        errorResponse(res, 'Access token has expired', 'FORBIDDEN', 403);
         return;
       } else if (error instanceof jwt.JsonWebTokenError) {
-        errorResponse(res, 'Invalid access token', 401);
+        errorResponse(res, 'Invalid access token', 'UNAUTHORIZED', 401);
         return;
       } else {
-        errorResponse(res, 'Token verification failed', 401);
+        errorResponse(res, 'Token verification failed', 'UNAUTHORIZED', 401);
         return;
       }
     }
   } catch (error) {
-    errorResponse(res, 'Authentication failed', 401);
+    errorResponse(res, 'Authentication failed', 'UNAUTHORIZED', 401);
   }
 };
 
@@ -60,12 +60,12 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      errorResponse(res, 'Authentication required', 401);
+      errorResponse(res, 'Authentication required', 'UNAUTHORIZED', 401);
       return;
     }
 
     if (!roles.includes(req.user.role)) {
-      errorResponse(res, 'Insufficient permissions', 403);
+      errorResponse(res, 'Insufficient permissions', 'FORBIDDEN', 403);
       return;
     }
 
@@ -83,12 +83,12 @@ export const authorize = (...roles: string[]) => {
 export const authorizeRoles = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      errorResponse(res, 'Authentication required', 401);
+      errorResponse(res, 'Authentication required', 'UNAUTHORIZED', 401);
       return;
     }
 
     if (!roles.includes(req.user.role)) {
-      errorResponse(res, 'Insufficient permissions', 403);
+      errorResponse(res, 'Insufficient permissions', 'FORBIDDEN', 403);
       return;
     }
 
@@ -127,7 +127,7 @@ export const optionalAuthenticate = (req: Request, res: Response, next: NextFunc
  */
 export const authorizeUserAccess = (req: Request, res: Response, next: NextFunction): void => {
   if (!req.user) {
-    errorResponse(res, 'Authentication required', 401);
+    errorResponse(res, 'Authentication required', 'UNAUTHORIZED', 401);
     return;
   }
 
@@ -146,7 +146,7 @@ export const authorizeUserAccess = (req: Request, res: Response, next: NextFunct
     return;
   }
 
-  errorResponse(res, 'Forbidden - can only access own profile', 403);
+  errorResponse(res, 'Forbidden - can only access own profile', 'FORBIDDEN', 403);
 };
 
 /**
@@ -155,7 +155,7 @@ export const authorizeUserAccess = (req: Request, res: Response, next: NextFunct
  */
 export const authorizeUserUpdate = (req: Request, res: Response, next: NextFunction): void => {
   if (!req.user) {
-    errorResponse(res, 'Authentication required', 401);
+    errorResponse(res, 'Authentication required', 'UNAUTHORIZED', 401);
     return;
   }
 
@@ -174,5 +174,5 @@ export const authorizeUserUpdate = (req: Request, res: Response, next: NextFunct
     return;
   }
 
-  errorResponse(res, 'Forbidden - can only update own profile', 403);
+  errorResponse(res, 'Forbidden - can only update own profile', 'FORBIDDEN', 403);
 };

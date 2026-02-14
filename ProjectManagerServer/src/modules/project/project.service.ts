@@ -110,11 +110,6 @@ export class ProjectService {
     };
   }
 
-  async getProjectById(id: string): Promise<ProjectResponse | null> {
-    const project = await this.projectRepository.findById(id);
-    return project ? this.mapToProjectResponse(project) : null;
-  }
-
   async getProjectByUuid(uuid: string): Promise<ProjectResponse | null> {
     const project = await this.projectRepository.findByUuid(uuid);
     return project ? this.mapToProjectResponse(project) : null;
@@ -125,18 +120,8 @@ export class ProjectService {
     return this.mapToProjectResponse(project);
   }
 
-  async updateProject(id: string, projectData: Partial<IProject>): Promise<ProjectResponse | null> {
-    const project = await this.projectRepository.update(id, projectData);
-    return project ? this.mapToProjectResponse(project) : null;
-  }
-
   async updateProjectByUuid(uuid: string, projectData: Partial<IProject>): Promise<ProjectResponse | null> {
     const project = await this.projectRepository.updateByUuid(uuid, projectData);
-    return project ? this.mapToProjectResponse(project) : null;
-  }
-
-  async deleteProject(id: string): Promise<ProjectResponse | null> {
-    const project = await this.projectRepository.delete(id);
     return project ? this.mapToProjectResponse(project) : null;
   }
 

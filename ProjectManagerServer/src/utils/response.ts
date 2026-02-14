@@ -34,11 +34,15 @@ export const successResponse = <T>(
 export const errorResponse = (
   res: Response,
   message: string,
-  statusCode: number = 400
+  errorCode: string = 'INTERNAL_ERROR',
+  statusCode: number = 500
 ): void => {
-  const response: ApiResponse = {
+  const response: ErrorResponse = {
     success: false,
     message,
+    errorCode,
+    timestamp: new Date().toISOString(),
+    ...(process.env.NODE_ENV === 'development' && { stack: new Error().stack }),
   };
   res.status(statusCode).json(response);
 };

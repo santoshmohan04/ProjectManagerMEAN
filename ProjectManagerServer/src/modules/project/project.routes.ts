@@ -153,7 +153,7 @@ const projectController = new ProjectController();
  *       403:
  *         description: Forbidden - insufficient permissions
  */
-router.get('/', authenticate, authorizeRoles('ADMIN', 'MANAGER'), projectController.getProjects.bind(projectController));
+router.get('/', authorizeRoles('ADMIN', 'MANAGER'), projectController.getProjects.bind(projectController));
 
 /**
  * @swagger
@@ -179,7 +179,7 @@ router.get('/', authenticate, authorizeRoles('ADMIN', 'MANAGER'), projectControl
  *       400:
  *         description: Error occurred while creating new project
  */
-router.post('/', authenticate, authorizeRoles('ADMIN', 'MANAGER'), projectController.createProject.bind(projectController));
+router.post('/', authorizeRoles('ADMIN', 'MANAGER'), projectController.createProject.bind(projectController));
 
 /**
  * @swagger
@@ -214,7 +214,7 @@ router.post('/', authenticate, authorizeRoles('ADMIN', 'MANAGER'), projectContro
  *       404:
  *         description: Project not found
  */
-router.put('/:uuid', authenticate, authorizeRoles('ADMIN', 'MANAGER'), validateUuidParam(), projectController.updateProject.bind(projectController));
+router.put('/:uuid', authorizeRoles('ADMIN', 'MANAGER'), validateUuidParam(), projectController.updateProjectByUuid.bind(projectController));
 
 /**
  * @swagger
@@ -243,7 +243,7 @@ router.put('/:uuid', authenticate, authorizeRoles('ADMIN', 'MANAGER'), validateU
  *       500:
  *         description: An error occurred
  */
-router.delete('/:uuid', authenticate, authorizeRoles('ADMIN'), validateUuidParam(), projectController.deleteProject.bind(projectController));
+router.delete('/:uuid', authorizeRoles('ADMIN'), validateUuidParam(), projectController.deleteProjectByUuid.bind(projectController));
 
 /**
  * @swagger
@@ -272,6 +272,6 @@ router.delete('/:uuid', authenticate, authorizeRoles('ADMIN'), validateUuidParam
  *       500:
  *         description: An error occurred
  */
-router.get('/:uuid', authenticate, authorizeRoles('ADMIN', 'MANAGER'), validateUuidParam(), projectController.getProjectById.bind(projectController));
+router.get('/:uuid', authorizeRoles('ADMIN', 'MANAGER'), validateUuidParam(), projectController.getProjectByUuid.bind(projectController));
 
 export default router;

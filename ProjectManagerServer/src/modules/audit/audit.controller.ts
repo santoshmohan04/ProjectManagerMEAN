@@ -16,7 +16,7 @@ export class AuditController {
       const { limit = 50, skip = 0 } = req.query as { limit?: string; skip?: string };
 
       if (!Object.values(EntityType).includes(entityType as EntityType)) {
-        return errorResponse(res, 'Invalid entity type', 400);
+        return errorResponse(res, 'Invalid entity type', 'BAD_REQUEST', 400);
       }
 
       const history = await this.auditService.getEntityHistory(

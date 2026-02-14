@@ -15,20 +15,20 @@ export class ProjectController {
       const result = await this.projectService.getProjects(req.query as any);
       successResponse(res, result);
     } catch (err) {
-      errorResponse(res, 'Error fetching projects');
+      errorResponse(res, 'Error fetching projects', 'FETCH_ERROR');
     }
   }
 
-  async getProjectById(req: Request, res: Response): Promise<void> {
+  async getProjectByUuid(req: Request, res: Response): Promise<void> {
     try {
       const { uuid } = req.params;
       const project = await this.projectService.getProjectByUuid(uuid);
       if (!project) {
-        return errorResponse(res, 'Project not found', 404);
+        return errorResponse(res, 'Project not found', 'NOT_FOUND', 404);
       }
       successResponse(res, project);
     } catch (err) {
-      errorResponse(res, 'Error fetching project');
+      errorResponse(res, 'Error fetching project', 'FETCH_ERROR');
     }
   }
 
@@ -44,23 +44,23 @@ export class ProjectController {
 
       successResponse(res, project, undefined, 'Project created successfully');
     } catch (err) {
-      errorResponse(res, 'Error creating project');
+      errorResponse(res, 'Error creating project', 'CREATE_ERROR');
     }
   }
 
-  async updateProject(req: Request, res: Response): Promise<void> {
+  async updateProjectByUuid(req: Request, res: Response): Promise<void> {
     try {
       const { uuid } = req.params;
 
       // Get the original project for audit logging (before update)
       const originalProject = await this.projectService.getProjectByUuid(uuid);
       if (!originalProject) {
-        return errorResponse(res, 'Project not found', 404);
+        return errorResponse(res, 'Project not found', 'NOT_FOUND', 404);
       }
 
       const project = await this.projectService.updateProjectByUuid(uuid, req.body);
       if (!project) {
-        return errorResponse(res, 'Project not found', 404);
+        return errorResponse(res, 'Project not found', 'NOT_FOUND', 404);
       }
 
       // Log the update
@@ -75,18 +75,18 @@ export class ProjectController {
 
       successResponse(res, project, undefined, 'Project updated successfully');
     } catch (err) {
-      errorResponse(res, 'Error updating project');
+      errorResponse(res, 'Error updating project', 'UPDATE_ERROR');
     }
   }
 
-  async deleteProject(req: Request, res: Response): Promise<void> {
+  async deleteProjectByUuid(req: Request, res: Response): Promise<void> {
     try {
       const { uuid } = req.params;
 
       // Get the project before deleting for audit logging
       const project = await this.projectService.getProjectByUuid(uuid);
       if (!project) {
-        return errorResponse(res, 'Project not found', 404);
+        return errorResponse(res, 'Project not found', 'NOT_FOUND', 404);
       }
 
       // Log the deletion before actually deleting
@@ -97,7 +97,7 @@ export class ProjectController {
       await this.projectService.deleteProjectByUuid(uuid);
       successResponse(res, null, undefined, 'Project deleted successfully');
     } catch (err) {
-      errorResponse(res, 'Error deleting project');
+      errorResponse(res, 'Error deleting project', 'DELETE_ERROR');
     }
   }
 }

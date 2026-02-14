@@ -9,6 +9,7 @@ import mongoSanitize from 'mongo-sanitize';
 import hpp from 'hpp';
 import { config } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
+import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './modules/audit/audit.middleware.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import userRoutes from './modules/user/user.routes.js';
@@ -200,12 +201,12 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
-app.use('/projects', projectRoutes);
-app.use('/tasks', taskRoutes);
-app.use('/dashboard', dashboardRoutes);
-app.use('/audit', auditRoutes);
-app.use('/test', testRoutes);
+app.use('/users', authenticate, userRoutes);
+app.use('/projects', authenticate, projectRoutes);
+app.use('/tasks', authenticate, taskRoutes);
+app.use('/dashboard', authenticate, dashboardRoutes);
+app.use('/audit', authenticate, auditRoutes);
+app.use('/test', authenticate, testRoutes);
 // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Error handling

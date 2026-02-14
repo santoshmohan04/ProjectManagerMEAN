@@ -60,7 +60,7 @@ const userController = new UserController();
  *       403:
  *         description: Forbidden - insufficient permissions
  */
-router.get('/', authenticate, authorizeRoles('ADMIN', 'MANAGER'), userController.getUsers.bind(userController));
+router.get('/', authorizeRoles('ADMIN', 'MANAGER'), userController.getUsers.bind(userController));
 
 /**
  * @swagger
@@ -78,7 +78,7 @@ router.get('/', authenticate, authorizeRoles('ADMIN', 'MANAGER'), userController
  *       403:
  *         description: Forbidden - insufficient permissions
  */
-router.get('/active', authenticate, authorizeRoles('ADMIN', 'MANAGER'), userController.getActiveUsers.bind(userController));
+router.get('/active', authorizeRoles('ADMIN', 'MANAGER'), userController.getActiveUsers.bind(userController));
 
 /**
  * @swagger
@@ -135,7 +135,7 @@ router.get('/active', authenticate, authorizeRoles('ADMIN', 'MANAGER'), userCont
  *       400:
  *         description: Invalid request data
  */
-router.post('/', authenticate, authorizeRoles('ADMIN'), userController.createUser.bind(userController));
+router.post('/', authorizeRoles('ADMIN'), userController.createUser.bind(userController));
 
 /**
  * @swagger
@@ -162,7 +162,7 @@ router.post('/', authenticate, authorizeRoles('ADMIN'), userController.createUse
  *       404:
  *         description: User not found
  */
-router.get('/:uuid', authenticate, validateUuidParam(), authorizeUserAccess, userController.getUserById.bind(userController));
+router.get('/:uuid', validateUuidParam(), authorizeUserAccess, userController.getUserByUuid.bind(userController));
 
 /**
  * @swagger
@@ -190,7 +190,7 @@ router.get('/:uuid', authenticate, validateUuidParam(), authorizeUserAccess, use
  *       404:
  *         description: User not found
  */
-router.get('/email/:email', authenticate, authorizeRoles('ADMIN', 'MANAGER'), userController.getUserByEmail.bind(userController));
+router.get('/email/:email', authorizeRoles('ADMIN', 'MANAGER'), userController.getUserByEmail.bind(userController));
 
 /**
  * @swagger
@@ -240,7 +240,7 @@ router.get('/email/:email', authenticate, authorizeRoles('ADMIN', 'MANAGER'), us
  *       409:
  *         description: Email or employee ID already exists
  */
-router.put('/:uuid', authenticate, validateUuidParam(), authorizeUserUpdate, userController.updateUser.bind(userController));
+router.put('/:uuid', validateUuidParam(), authorizeUserUpdate, userController.updateUserByUuid.bind(userController));
 
 /**
  * @swagger
@@ -267,36 +267,7 @@ router.put('/:uuid', authenticate, validateUuidParam(), authorizeUserUpdate, use
  *       404:
  *         description: User not found
  */
-router.delete('/:uuid', authenticate, authorizeRoles('ADMIN'), validateUuidParam(), userController.softDeleteUser.bind(userController));
-
-/**
- * @swagger
- * /users/authenticate:
- *   post:
- *     summary: Authenticate user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - passwordHash
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               passwordHash:
- *                 type: string
- *     responses:
- *       200:
- *         description: Authentication successful
- *       401:
- *         description: Invalid credentials
- */
-router.post('/authenticate', userController.authenticateUser.bind(userController));
+router.delete('/:uuid', authorizeRoles('ADMIN'), validateUuidParam(), userController.softDeleteUserByUuid.bind(userController));
 
 /**
  * @swagger
@@ -364,7 +335,6 @@ router.post('/authenticate', userController.authenticateUser.bind(userController
  *       400:
  *         description: Invalid input data
  */
-router.post('/signup', userController.signup.bind(userController));
 
 /**
  * @swagger
@@ -445,6 +415,5 @@ router.post('/signup', userController.signup.bind(userController));
  *       400:
  *         description: Invalid input data
  */
-router.post('/login', userController.login.bind(userController));
 
 export default router;

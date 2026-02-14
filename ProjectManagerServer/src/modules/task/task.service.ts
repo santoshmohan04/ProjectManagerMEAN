@@ -25,20 +25,12 @@ export class TaskService {
     return this.taskRepository.advancedSearch(filters, sort, pagination);
   }
 
-  async getTaskById(id: string): Promise<ITask | null> {
-    return this.taskRepository.findById(id);
-  }
-
   async getTaskByUuid(uuid: string): Promise<ITask | null> {
     return this.taskRepository.findByUuid(uuid);
   }
 
   async createTask(taskData: Partial<ITask>): Promise<ITask> {
     return this.taskRepository.create(taskData);
-  }
-
-  async updateTask(id: string, taskData: Partial<ITask>): Promise<ITask | null> {
-    return this.taskRepository.update(id, taskData);
   }
 
   async updateTaskByUuid(uuid: string, taskData: Partial<ITask>): Promise<ITask | null> {
@@ -63,10 +55,6 @@ export class TaskService {
     }
 
     return this.taskRepository.bulkUpdateByUuids(uuids, taskData);
-  }
-
-  async deleteTask(id: string): Promise<ITask | null> {
-    return this.taskRepository.delete(id);
   }
 
   async deleteTaskByUuid(uuid: string): Promise<ITask | null> {

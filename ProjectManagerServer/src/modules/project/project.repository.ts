@@ -110,10 +110,6 @@ export class ProjectRepository {
     };
   }
 
-  async findById(id: string): Promise<IProject | null> {
-    return Project.findById(id).populate('Tasks').exec();
-  }
-
   async findByUuid(uuid: string): Promise<IProject | null> {
     return Project.findOne({ uuid })
       .populate('manager', 'firstName lastName email')
@@ -126,16 +122,8 @@ export class ProjectRepository {
     return project.save();
   }
 
-  async update(id: string, projectData: Partial<IProject>): Promise<IProject | null> {
-    return Project.findByIdAndUpdate(id, projectData, { new: true }).exec();
-  }
-
   async updateByUuid(uuid: string, projectData: Partial<IProject>): Promise<IProject | null> {
     return Project.findOneAndUpdate({ uuid }, projectData, { new: true }).exec();
-  }
-
-  async delete(id: string): Promise<IProject | null> {
-    return Project.findByIdAndDelete(id).exec();
   }
 
   async deleteByUuid(uuid: string): Promise<IProject | null> {

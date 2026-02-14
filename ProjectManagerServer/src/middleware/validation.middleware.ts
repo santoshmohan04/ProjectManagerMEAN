@@ -18,7 +18,7 @@ export const validateUuidParam = (paramName: string = 'uuid') => {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
     if (!uuid || !uuidRegex.test(uuid)) {
-      errorResponse(res, `Invalid ${paramName} format. Must be a valid UUID v7.`, 400);
+      errorResponse(res, 'Invalid UUID format provided', 'INVALID_UUID_FORMAT', 400);
       return;
     }
 

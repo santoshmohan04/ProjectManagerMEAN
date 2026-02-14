@@ -6,7 +6,9 @@ export interface TaskSearchFilters {
   priority?: { min: number; max: number };
   assignedTo?: string;
   projectId?: string;
+  parentId?: string;
   dueDateBefore?: Date;
+  search?: string;
 }
 
 export interface TaskSort {
@@ -84,9 +86,22 @@ export class TaskRepository {
       matchConditions.project = filters.projectId;
     }
 
+    // Parent ID filter
+    if (filters.parentId) {
+      matchConditions.parent = filters.parentId;
+    }
+
     // Due date before filter
     if (filters.dueDateBefore) {
       matchConditions.dueDate = { $lte: filters.dueDateBefore };
+    }
+
+    // Search filter - search in title and description
+    if (filters.search) {
+      matchConditions.$or = [
+        { title: { $regex: filters.search, $options: 'i' } },
+        { description: { $regex: filters.search, $options: 'i' } }
+      ];
     }
 
     // Build sort conditions
@@ -242,14 +257,6 @@ export class TaskRepository {
     };
   }
 
-  async findById(id: string): Promise<ITask | null> {
-    return Task.findById(id)
-      .populate('Project')
-      .populate('User')
-      .populate('Parent')
-      .exec();
-  }
-
   async findByUuid(uuid: string): Promise<ITask | null> {
     return Task.findOne({ uuid })
       .populate('project', 'uuid name status')
@@ -262,10 +269,6 @@ export class TaskRepository {
   async create(taskData: Partial<ITask>): Promise<ITask> {
     const task = new Task(taskData);
     return task.save();
-  }
-
-  async update(id: string, taskData: Partial<ITask>): Promise<ITask | null> {
-    return Task.findByIdAndUpdate(id, taskData, { new: true }).exec();
   }
 
   async updateByUuid(uuid: string, taskData: Partial<ITask>): Promise<ITask | null> {
@@ -294,10 +297,6 @@ export class TaskRepository {
     } finally {
       session.endSession();
     }
-  }
-
-  async delete(id: string): Promise<ITask | null> {
-    return Task.findByIdAndDelete(id).exec();
   }
 
   async deleteByUuid(uuid: string): Promise<ITask | null> {
