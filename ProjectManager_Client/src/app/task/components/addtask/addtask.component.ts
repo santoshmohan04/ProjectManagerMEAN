@@ -30,6 +30,7 @@ import {
 } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
 import { User } from '../../../user/models/user';
+import { priorityRangeValidator } from '../../../shared/validators/custom-validators';
 
 @Component({
   selector: 'app-addtask',
@@ -76,7 +77,7 @@ export class AddtaskComponent implements OnInit, OnDestroy {
       description: [''],
       startdate: [null],
       enddate: [null],
-      priority: [0],
+      priority: [0, [Validators.required, priorityRangeValidator()]],
       parenttask: [null],
       project: [null],
       user: [null],

@@ -23,6 +23,7 @@ import {
   MatDialogTitle,
   MatDialogModule,
 } from '@angular/material/dialog';
+import { employeeIdPatternValidator } from '../../../shared/validators/custom-validators';
 
 @Component({
   selector: 'app-adduser',
@@ -57,7 +58,7 @@ export class AdduserComponent implements OnInit, OnDestroy {
     this.userForm = this.formbuilder.group({
       firstname: ['', Validators.required],
       lastname: ['', Validators.required],
-      employeeid: ['', Validators.required],
+      employeeid: ['', [Validators.required, employeeIdPatternValidator()]],
     });
 
     if (this.data && this.data.edit && this.data.userdetails) {

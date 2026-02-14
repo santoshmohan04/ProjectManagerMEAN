@@ -24,6 +24,8 @@ import { User } from '../../../user/models/user';
 import { Store } from '@ngrx/store';
 import { ProjectDataActions, UsersDataActions } from '../../../store/actions';
 import { selectAllProjects, selectAllUsers } from '../../../store/selectors';
+import { filterByText } from '../../../shared/utils/filter-utils';
+import { getInitials } from '../../../shared/utils/string-utils';
 
 @Component({
   selector: 'app-projectslist',
@@ -205,9 +207,10 @@ export class ProjectslistComponent implements OnInit, AfterViewInit, OnDestroy {
   getAssignedUser(row: Project): string {
     if (!this.usersList || !row?.Manager_ID) return 'N/A';
     const user = this.usersList.find((u) => u.User_ID === row?.Manager_ID);
-    return user
-      ? user.Full_Name || `${user.First_Name} ${user.Last_Name}`
-      : 'N/A';
+    if (!user) return 'N/A';
+
+    const fullName = user.Full_Name || `${user.First_Name} ${user.Last_Name}`;
+    return `${getInitials(fullName)} (${fullName})`;
   }
 
   ngOnDestroy(): void {

@@ -25,6 +25,7 @@ import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
 import { selectAllUsers } from '../../../store/selectors';
+import { managerRequiredValidator, priorityRangeValidator, dateComparisonValidator } from '../../../shared/validators/custom-validators';
 
 @Component({
   selector: 'app-addproject',
@@ -114,10 +115,10 @@ export class AddprojectComponent implements OnInit, OnDestroy {
       projectName: ['', Validators.required],
       startDate: [null],
       endDate: [null],
-      priority: [0],
-      manager: [null],
+      priority: [0, [Validators.required, priorityRangeValidator()]],
+      manager: [null, managerRequiredValidator()],
       projectId: '',
-    });
+    }, { validators: dateComparisonValidator('startDate', 'endDate') });
     if (this.data?.projectdetails && this.data?.edit === true) {
       this.projectForm.patchValue({
         projectName: this.data.projectdetails.Project,
