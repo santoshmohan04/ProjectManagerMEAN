@@ -1,0 +1,244 @@
+<div class="projects-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <h2>Projects Management</h2>
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Filters Section -->
+      <div class="filters-section">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search Projects</mat-label>
+          <input
+            matInput
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchChange()"
+            placeholder="Search by name..."
+          />
+          <mat-icon matPrefix>search</mat-icon>
+          @if (searchTerm) {
+            <button mat-icon-button matSuffix (click)="clearSearch()">
+              <mat-icon>clear</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select
+            [(ngModel)]="selectedStatus"
+            (ngModelChange)="onFilterChange()"
+          >
+            <mat-option [value]="null">All</mat-option>
+            <mat-option [value]="ProjectStatus.PLANNING">Planning</mat-option>
+            <mat-option [value]="ProjectStatus.ACTIVE">Active</mat-option>
+            <mat-option [value]="ProjectStatus.COMPLETED">Completed</mat-option>
+            <mat-option [value]="ProjectStatus.ARCHIVED">Archived</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Priority</mat-label>
+          <mat-select
+            [(ngModel)]="selectedPriority"
+            (ngModelChange)="onFilterChange()"
+          >
+            <mat-option [value]="null">All</mat-option>
+            <mat-option [value]="1">1 - Low</mat-option>
+            <mat-option [value]="5">5 - Medium</mat-option>
+            <mat-option [value]="10">10 - High</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        @if (projectsStore.hasActiveFilters()) {
+          <button mat-raised-button color="warn" (click)="clearAllFilters()">
+            <mat-icon>clear_all</mat-icon>
+            Clear Filters
+          </button>
+        }
+
+        <button mat-raised-button color="primary" (click)="refreshProjects()">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
+      </div>
+
+      <!-- Loading Spinner -->
+      @if (projectsStore.loading()) {
+        <div class="loading-container">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Loading projects...</p>
+        </div>
+      }
+
+      <!-- Error Message -->
+      @if (projectsStore.error()) {
+        <div class="error-message">
+          <mat-icon>error</mat-icon>
+          {{ projectsStore.error() }}
+        </div>
+      }
+
+      <!-- Projects Table -->
+      @if (!projectsStore.loading() && projectsStore.hasProjects()) {
+        <div class="table-container">
+          <table mat-table [dataSource]="projectsStore.projects()" class="projects-table">
+            <!-- ID Column -->
+            <ng-container matColumnDef="id">
+              <th mat-header-cell *matHeaderCellDef>ID</th>
+              <td mat-cell *matCellDef="let project">{{ project.Project_ID || 'N/A' }}</td>
+            </ng-container>
+
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Project Name</th>
+              <td mat-cell *matCellDef="let project">
+                {{ project.Project || project.name || 'Unnamed' }}
+              </td>
+            </ng-container>
+
+            <!-- Priority Column -->
+            <ng-container matColumnDef="priority">
+              <th mat-header-cell *matHeaderCellDef>Priority</th>
+              <td mat-cell *matCellDef="let project">
+                <mat-chip
+                  [ngClass]="{
+                    'priority-low': (project.Priority || project.priority) <= 3,
+                    'priority-medium': (project.Priority || project.priority) > 3 && (project.Priority || project.priority) <= 7,
+                    'priority-high': (project.Priority || project.priority) > 7
+                  }"
+                >
+                  {{ project.Priority || project.priority }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let project">
+                @if (project.status) {
+                  <mat-chip [ngClass]="'status-' + project.status.toLowerCase()">
+                    {{ project.status }}
+                  </mat-chip>
+                } @else {
+                  <span class="no-status">-</span>
+                }
+              </td>
+            </ng-container>
+
+            <!-- Tasks Column -->
+            <ng-container matColumnDef="tasks">
+              <th mat-header-cell *matHeaderCellDef>Tasks</th>
+              <td mat-cell *matCellDef="let project">
+                {{ project.CompletedTasks || 0 }} / {{ project.NoOfTasks || 0 }}
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let project">
+                <button mat-icon-button [matMenuTriggerFor]="menu">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #menu="matMenu">
+                  <button mat-menu-item (click)="viewProject(project)">
+                    <mat-icon>visibility</mat-icon>
+                    <span>View</span>
+                  </button>
+                  <button mat-menu-item (click)="editProject(project)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit</span>
+                  </button>
+                  <button mat-menu-item (click)="archiveProject(project)">
+                    <mat-icon>archive</mat-icon>
+                    <span>Archive</span>
+                  </button>
+                  <button mat-menu-item (click)="deleteProject(project)" color="warn">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <mat-paginator
+          [length]="projectsStore.pagination().totalItems"
+          [pageSize]="projectsStore.pagination().itemsPerPage"
+          [pageIndex]="projectsStore.pagination().currentPage - 1"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons
+        >
+        </mat-paginator>
+      }
+
+      <!-- No Projects Message -->
+      @if (!projectsStore.loading() && !projectsStore.hasProjects()) {
+        <div class="no-projects">
+          <mat-icon>folder_open</mat-icon>
+          <h3>No Projects Found</h3>
+          <p>
+            @if (projectsStore.hasActiveFilters()) {
+              No projects match your current filters.
+            } @else {
+              Get started by creating your first project.
+            }
+          </p>
+          <button mat-raised-button color="primary">
+            <mat-icon>add</mat-icon>
+            Create Project
+          </button>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <mat-icon class="summary-icon planning">schedule</mat-icon>
+          <div>
+            <h3>{{ projectsStore.planningProjects().length }}</h3>
+            <p>Planning</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <mat-icon class="summary-icon active">play_circle</mat-icon>
+          <div>
+            <h3>{{ projectsStore.activeProjects().length }}</h3>
+            <p>Active</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <mat-icon class="summary-icon completed">check_circle</mat-icon>
+          <div>
+            <h3>{{ projectsStore.completedProjects().length }}</h3>
+            <p>Completed</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
