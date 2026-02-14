@@ -3,12 +3,36 @@
 Project Manager application is a Single Page Application (SPA) to keep track of projects,
 their respective tasks, their status and priorities.
 
-This application is developed using MEAN stack such as Angular 18, Node JS(20.x), Express JS and Mongo DB(8.x).
+This application is developed using MEAN stack such as Angular 20, Node JS(20.x), Express JS and Mongo DB(8.x).
 
 This project contains two folders.
-1. Project Manager Client - Front end SPA developed uing Angular 18, Angular CLI, HTML 5, BootStrap
+1. ProjectManager_Client - Front end SPA developed using Angular 20, Angular CLI, Angular Material, HTML 5
 
-2. Project Manager Server - Rest APIs developed using Node+Express JS and MongoDB with Mongoose driver
+2. ProjectManagerServer - Rest APIs developed using Node+Express JS and MongoDB with Mongoose driver
+
+## Frontend
+
+The frontend is built using:
+- **Angular 20** - Latest Angular framework with standalone components
+- **Standalone APIs** - Modern Angular architecture without NgModules
+- **NgRx Signal Store** - Reactive state management with signals
+- **Angular Material** - Material Design components for consistent UI
+- **UUID-based REST APIs** - Modern API routing with UUID identifiers
+- **JWT Authentication** - Secure token-based authentication system
+
+### Key Features:
+- **UUID Routing**: All entities use UUID-based identifiers for RESTful operations
+- **JWT Authentication**: Secure authentication with JSON Web Tokens
+- **Pagination Support**: Efficient data loading with server-side pagination
+- **Role-based UI**: Dynamic interface based on user roles and permissions
+
+Legacy Angular 6 project (ProjectManagerClient) has been removed as part of modernization.
+
+### Folder Structure:
+```
+ProjectManager_Client  → Angular 20 frontend
+ProjectManagerServer   → Express + MongoDB backend
+```
 
 Installation and Run steps:
 
@@ -31,13 +55,13 @@ configure port in server.js. default port is 4300
 
 By now, Rest API is connected to MongoDB and running.
 
-3. Open ProjectManagerClient folder, run these steps -
+3. Open ProjectManager_Client folder, run these steps -
  > npm install
- 
- modify the urls and port config in environment.ts file per step 2.
- 
+
+ modify the urls and port config in src/environments/environment.ts file per step 2.
+
  > ng build
- > ng server --open
- 
- frontend UI is running on local anguar cli server with default port 4200.
+ > ng serve --open
+
+ frontend UI is running on local angular cli server with default port 4200.
  

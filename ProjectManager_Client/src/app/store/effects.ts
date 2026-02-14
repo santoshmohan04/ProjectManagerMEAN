@@ -276,7 +276,7 @@ export class ProjectManagementEffects {
     this.actions$.pipe(
       ofType(TasksDataActions.updateTask),
       switchMap((action) =>
-        this.taskService.editTask(action.updateTask).pipe(
+        this.taskService.editTask(action.updateTask, action.updateTask._id).pipe(
           map((data) =>
             TasksDataActions.updateTaskSuccess({ data, sortKey: '' })
           ),

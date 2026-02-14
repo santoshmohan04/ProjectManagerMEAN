@@ -47,7 +47,7 @@ export class ProjectService {
   ): Observable<ApiResponse<Project>> {
     const uri = `${this.baseUri}${environment.endpoint_project_edit}/${id}`;
 
-    return this.http.post<ApiResponse<Project>>(uri, updateProject);
+    return this.http.put<ApiResponse<Project>>(uri, updateProject);
   }
 
   deleteProject(projectID: string): Observable<ApiResponse<Project>> {

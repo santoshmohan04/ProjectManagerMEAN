@@ -13,7 +13,8 @@ export interface ITaskService {
     sortKey?: string
   ): Observable<ApiResponse<Task[]>>;
   addTask(newUser: Task): Observable<ApiResponse<Task>>;
-  editTask(updateUser: Task): Observable<ApiResponse<Task>>;
+  editTask(updateUser: Task, id: string): Observable<ApiResponse<Task>>;
+  deleteTask(taskId: string): Observable<ApiResponse<Task>>;
 }
 
 @Injectable({
@@ -51,10 +52,16 @@ export class TaskService implements ITaskService {
     return this.http.post<ApiResponse<Task>>(uri, newTask);
   }
 
-  editTask(updateTask: Task): Observable<ApiResponse<Task>> {
-    const uri = `${this.baseUri}${environment.endpoint_task_edit}`;
+  editTask(updateTask: Task, id: string): Observable<ApiResponse<Task>> {
+    const uri = `${this.baseUri}${environment.endpoint_task_edit}/${id}`;
 
-    return this.http.post<ApiResponse<Task>>(uri, updateTask);
+    return this.http.put<ApiResponse<Task>>(uri, updateTask);
+  }
+
+  deleteTask(taskId: string): Observable<ApiResponse<Task>> {
+    const uri = `${this.baseUri}${environment.endpoint_task_delete}/${taskId}`;
+
+    return this.http.delete<ApiResponse<Task>>(uri);
   }
 
   endTask(taskId: string): Observable<ApiResponse<Task>> {

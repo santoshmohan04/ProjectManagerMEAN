@@ -57,7 +57,7 @@ export class UserService implements IUserService {
   editUser(updateUser: UserPayload, id: string): Observable<ApiResponse<User>> {
     const uri = `${this.baseUri}${environment.endpoint_user_edit}/${id}`;
 
-    return this.http.post<ApiResponse<User>>(uri, updateUser);
+    return this.http.put<ApiResponse<User>>(uri, updateUser);
   }
 
   deleteUser(userId: string): Observable<ApiResponse<User>> {
