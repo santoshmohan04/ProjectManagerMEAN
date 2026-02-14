@@ -3,17 +3,69 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'mongo-sanitize';
+import hpp from 'hpp';
 import { config } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
+import { auditMiddleware } from './modules/audit/audit.middleware.js';
 import userRoutes from './modules/user/user.routes.js';
 import projectRoutes from './modules/project/project.routes.js';
 import taskRoutes from './modules/task/task.routes.js';
+import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
+import auditRoutes from './modules/audit/audit.routes.js';
+import testRoutes from './modules/test/routes/test.routes.js';
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
+// Security middleware
+app.use(helmet()); // Set security headers
+
+// Rate limiting - 100 requests per 15 minutes per IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+app.use(limiter);
+
+// CORS configuration with allowed origins from environment
+const corsOptions = {
+  origin: config.corsOrigins,
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
+
+// Body parser with size limit
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+
+// Data sanitization against NoSQL query injection
+app.use((req, res, next) => {
+  if (req.body) {
+    req.body = mongoSanitize(req.body);
+  }
+  if (req.query) {
+    req.query = mongoSanitize(req.query);
+  }
+  if (req.params) {
+    req.params = mongoSanitize(req.params);
+  }
+  next();
+});
+
+// Prevent HTTP Parameter Pollution
+app.use(hpp());
+
+// Audit logging middleware
+app.use(auditMiddleware.auditLogger.bind(auditMiddleware));
 
 // Swagger setup
 const swaggerOptions = {
@@ -149,7 +201,10 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/users', userRoutes);
 app.use('/projects', projectRoutes);
 app.use('/tasks', taskRoutes);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/dashboard', dashboardRoutes);
+app.use('/audit', auditRoutes);
+app.use('/test', testRoutes);
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Error handling
 app.use(notFoundHandler);

@@ -117,4 +117,29 @@ userSchema.methods.updateLastLogin = function () {
   return this.save();
 };
 
+// Add audit hooks to the schema
+userSchema.pre('save', async function (this: IUser, next) {
+  try {
+    const doc = this;
+    // Audit logging is handled by controllers using the audit service
+    next();
+  } catch (error) {
+    console.error('Audit logging error in user pre-save:', error);
+    next();
+  }
+});
+
+userSchema.pre('deleteOne', async function (this: IUser, next) {
+  try {
+    const doc = this;
+    // Audit logging is handled by controllers using the audit service
+    next();
+  } catch (error) {
+    console.error('Audit logging error in user pre-deleteOne:', error);
+    next();
+  }
+});
+
 export const User = mongoose.model<IUser, IUserModel>('User', userSchema);
+
+// Note: Audit logging is now handled by the controllers using the audit service

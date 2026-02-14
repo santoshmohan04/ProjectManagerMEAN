@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { TaskService } from './task.service.js';
 import { TaskSearchFilters, TaskSort, TaskPagination } from './task.repository.js';
-import { sendSuccess, sendError } from '../../utils/response.js';
+import { successResponse, errorResponse } from '../../utils/response.js';
+import { EntityType } from '../../models/audit.model.js';
+import { ITask } from '../../models/task.model.js';
 
 export class TaskController {
   private taskService: TaskService;
@@ -19,9 +21,9 @@ export class TaskController {
         sortKey?: string;
       };
       const tasks = await this.taskService.getAllTasks({ projectId, parentId, searchKey, sortKey });
-      sendSuccess(res, tasks);
+      successResponse(res, tasks);
     } catch (err) {
-      sendError(res, 'Error fetching tasks');
+      errorResponse(res, 'Error fetching tasks');
     }
   }
 
@@ -35,13 +37,13 @@ export class TaskController {
 
       // Validate required fields
       if (!filters) {
-        return sendError(res, 'Filters are required', 400);
+        return errorResponse(res, 'Filters are required', 400);
       }
 
       const result = await this.taskService.getAdvancedTasks(filters, sort, pagination);
-      sendSuccess(res, result);
+      successResponse(res, result);
     } catch (err) {
-      sendError(res, 'Error performing advanced search');
+      errorResponse(res, 'Error performing advanced search');
     }
   }
 
@@ -50,11 +52,11 @@ export class TaskController {
       const { id } = req.params;
       const task = await this.taskService.getTaskById(id);
       if (!task) {
-        return sendError(res, 'Task not found', 404);
+        return errorResponse(res, 'Task not found', 404);
       }
-      sendSuccess(res, task);
+      successResponse(res, task);
     } catch (err) {
-      sendError(res, 'Error fetching task');
+      errorResponse(res, 'Error fetching task');
     }
   }
 
@@ -63,33 +65,54 @@ export class TaskController {
       const { uuid } = req.params;
       const task = await this.taskService.getTaskByUuid(uuid);
       if (!task) {
-        return sendError(res, 'Task not found', 404);
+        return errorResponse(res, 'Task not found', 404);
       }
-      sendSuccess(res, task);
+      successResponse(res, task);
     } catch (err) {
-      sendError(res, 'Error fetching task');
+      errorResponse(res, 'Error fetching task');
     }
   }
 
   async createTask(req: Request, res: Response): Promise<void> {
     try {
       const task = await this.taskService.createTask(req.body);
-      sendSuccess(res, task, 'Task created successfully', 201);
+
+      // Log the creation
+      if ((req as any).audit) {
+        await (req as any).audit.logCreate(EntityType.TASK, task.uuid, task.toObject());
+      }
+
+      successResponse(res, task, undefined, 'Task created successfully', 201);
     } catch (err) {
-      sendError(res, 'Error creating task');
+      errorResponse(res, 'Error creating task');
     }
   }
 
   async updateTask(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+
+      // Get the original task for audit logging
+      const originalTask = await this.taskService.getTaskById(id);
+
       const task = await this.taskService.updateTask(id, req.body);
       if (!task) {
-        return sendError(res, 'Task not found', 404);
+        return errorResponse(res, 'Task not found', 404);
       }
-      sendSuccess(res, task, 'Task updated successfully');
+
+      // Log the update
+      if ((req as any).audit && originalTask) {
+        await (req as any).audit.logUpdate(
+          EntityType.TASK,
+          task.uuid,
+          originalTask.toObject(),
+          task.toObject()
+        );
+      }
+
+      successResponse(res, task, undefined, 'Task updated successfully');
     } catch (err) {
-      sendError(res, 'Error updating task');
+      errorResponse(res, 'Error updating task');
     }
   }
 
@@ -98,24 +121,56 @@ export class TaskController {
       const { uuid } = req.params;
       const task = await this.taskService.updateTaskByUuid(uuid, req.body);
       if (!task) {
-        return sendError(res, 'Task not found', 404);
+        return errorResponse(res, 'Task not found', 404);
       }
-      sendSuccess(res, task, 'Task updated successfully');
+      successResponse(res, task, undefined, 'Task updated successfully');
     } catch (err) {
-      sendError(res, 'Error updating task');
+      errorResponse(res, 'Error updating task');
+    }
+  }
+
+  async bulkUpdateTasks(req: Request, res: Response): Promise<void> {
+    try {
+      const { uuids, updates } = req.body as {
+        uuids: string[];
+        updates: Partial<ITask>;
+      };
+
+      // Validate required fields
+      if (!uuids || !Array.isArray(uuids) || uuids.length === 0) {
+        return errorResponse(res, 'uuids array is required and must not be empty', 400);
+      }
+
+      if (!updates || Object.keys(updates).length === 0) {
+        return errorResponse(res, 'updates object is required and must not be empty', 400);
+      }
+
+      const result = await this.taskService.bulkUpdateTasksByUuids(uuids, updates);
+      successResponse(res, result, undefined, 'Tasks updated successfully');
+    } catch (err: any) {
+      errorResponse(res, err.message || 'Error updating tasks', 400);
     }
   }
 
   async deleteTask(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const task = await this.taskService.deleteTask(id);
+
+      // Get the task before deleting for audit logging
+      const task = await this.taskService.getTaskById(id);
       if (!task) {
-        return sendError(res, 'Task not found', 404);
+        return errorResponse(res, 'Task not found', 404);
       }
-      sendSuccess(res, null, 'Task deleted successfully');
+
+      // Log the deletion before actually deleting
+      if ((req as any).audit) {
+        await (req as any).audit.logDelete(EntityType.TASK, task.uuid, task.toObject());
+      }
+
+      await this.taskService.deleteTask(id);
+      successResponse(res, null, undefined, 'Task deleted successfully');
     } catch (err) {
-      sendError(res, 'Error deleting task');
+      errorResponse(res, 'Error deleting task');
     }
   }
 
@@ -124,11 +179,11 @@ export class TaskController {
       const { uuid } = req.params;
       const task = await this.taskService.deleteTaskByUuid(uuid);
       if (!task) {
-        return sendError(res, 'Task not found', 404);
+        return errorResponse(res, 'Task not found', 404);
       }
-      sendSuccess(res, null, 'Task deleted successfully');
+      successResponse(res, null, undefined, 'Task deleted successfully');
     } catch (err) {
-      sendError(res, 'Error deleting task');
+      errorResponse(res, 'Error deleting task');
     }
   }
 }

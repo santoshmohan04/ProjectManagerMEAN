@@ -1,4 +1,5 @@
 import { Task, ITask, TaskStatus } from '../../models/task.model.js';
+import mongoose from 'mongoose';
 
 export interface TaskSearchFilters {
   status?: TaskStatus[];
@@ -269,6 +270,30 @@ export class TaskRepository {
 
   async updateByUuid(uuid: string, taskData: Partial<ITask>): Promise<ITask | null> {
     return Task.findOneAndUpdate({ uuid }, taskData, { new: true }).exec();
+  }
+
+  async bulkUpdateByUuids(uuids: string[], taskData: Partial<ITask>): Promise<{ modifiedCount: number }> {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const result = await Task.updateMany(
+        { uuid: { $in: uuids } },
+        { 
+          ...taskData, 
+          updatedAt: new Date() 
+        },
+        { session }
+      );
+
+      await session.commitTransaction();
+      return { modifiedCount: result.modifiedCount };
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   }
 
   async delete(id: string): Promise<ITask | null> {

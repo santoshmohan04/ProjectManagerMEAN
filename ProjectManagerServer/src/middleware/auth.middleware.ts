@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { sendError } from '../utils/response.js';
+import { errorResponse } from '../utils/response.js';
 import { JWTUtils, TokenPayload } from '../utils/jwt.utils.js';
 
 // Extend Express Request to include user
@@ -26,7 +26,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     const token = JWTUtils.extractTokenFromHeader(req.headers.authorization);
 
     if (!token) {
-      sendError(res, 'Access token is required', 401);
+      errorResponse(res, 'Access token is required', 401);
       return;
     }
 
@@ -39,18 +39,18 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     } catch (error) {
       // Handle different JWT error types
       if (error instanceof jwt.TokenExpiredError) {
-        sendError(res, 'Access token has expired', 403);
+        errorResponse(res, 'Access token has expired', 403);
         return;
       } else if (error instanceof jwt.JsonWebTokenError) {
-        sendError(res, 'Invalid access token', 401);
+        errorResponse(res, 'Invalid access token', 401);
         return;
       } else {
-        sendError(res, 'Token verification failed', 401);
+        errorResponse(res, 'Token verification failed', 401);
         return;
       }
     }
   } catch (error) {
-    sendError(res, 'Authentication failed', 401);
+    errorResponse(res, 'Authentication failed', 401);
   }
 };
 
@@ -60,12 +60,12 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      sendError(res, 'Authentication required', 401);
+      errorResponse(res, 'Authentication required', 401);
       return;
     }
 
     if (!roles.includes(req.user.role)) {
-      sendError(res, 'Insufficient permissions', 403);
+      errorResponse(res, 'Insufficient permissions', 403);
       return;
     }
 
@@ -83,12 +83,12 @@ export const authorize = (...roles: string[]) => {
 export const authorizeRoles = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      sendError(res, 'Authentication required', 401);
+      errorResponse(res, 'Authentication required', 401);
       return;
     }
 
     if (!roles.includes(req.user.role)) {
-      sendError(res, 'Insufficient permissions', 403);
+      errorResponse(res, 'Insufficient permissions', 403);
       return;
     }
 

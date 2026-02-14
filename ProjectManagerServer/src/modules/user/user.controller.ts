@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { UserService } from './user.service.js';
-import { sendSuccess, sendError } from '../../utils/response.js';
+import { successResponse, errorResponse } from '../../utils/response.js';
+import { EntityType } from '../../models/audit.model.js';
 
 export class UserController {
   private userService: UserService;
@@ -21,18 +22,18 @@ export class UserController {
         sortKey,
         activeOnly === 'true'
       );
-      sendSuccess(res, users);
+      successResponse(res, users);
     } catch (err) {
-      sendError(res, 'Error fetching users');
+      errorResponse(res, 'Error fetching users');
     }
   }
 
   async getActiveUsers(req: Request, res: Response): Promise<void> {
     try {
       const users = await this.userService.getActiveUsers();
-      sendSuccess(res, users);
+      successResponse(res, users);
     } catch (err) {
-      sendError(res, 'Error fetching active users');
+      errorResponse(res, 'Error fetching active users');
     }
   }
 
@@ -41,11 +42,11 @@ export class UserController {
       const { id } = req.params;
       const user = await this.userService.getUserById(id);
       if (!user) {
-        return sendError(res, 'User not found', 404);
+        return errorResponse(res, 'User not found', 404);
       }
-      sendSuccess(res, user);
+      successResponse(res, user);
     } catch (err) {
-      sendError(res, 'Error fetching user');
+      errorResponse(res, 'Error fetching user');
     }
   }
 
@@ -54,11 +55,11 @@ export class UserController {
       const { uuid } = req.params;
       const user = await this.userService.getUserByUuid(uuid);
       if (!user) {
-        return sendError(res, 'User not found', 404);
+        return errorResponse(res, 'User not found', 404);
       }
-      sendSuccess(res, user);
+      successResponse(res, user);
     } catch (err) {
-      sendError(res, 'Error fetching user');
+      errorResponse(res, 'Error fetching user');
     }
   }
 
@@ -67,23 +68,29 @@ export class UserController {
       const { email } = req.params;
       const user = await this.userService.getUserByEmail(email);
       if (!user) {
-        return sendError(res, 'User not found', 404);
+        return errorResponse(res, 'User not found', 404);
       }
-      sendSuccess(res, user);
+      successResponse(res, user);
     } catch (err) {
-      sendError(res, 'Error fetching user');
+      errorResponse(res, 'Error fetching user');
     }
   }
 
   async createUser(req: Request, res: Response): Promise<void> {
     try {
       const user = await this.userService.createUser(req.body);
-      sendSuccess(res, user, 'User created successfully', 201);
+
+      // Log the creation
+      if ((req as any).audit) {
+        await (req as any).audit.logCreate(EntityType.USER, user.uuid, user.toObject());
+      }
+
+      successResponse(res, user, undefined, 'User created successfully', 201);
     } catch (err: any) {
       if (err.message.includes('already exists')) {
-        sendError(res, err.message, 409);
+        errorResponse(res, err.message, 409);
       } else {
-        sendError(res, 'Error creating user');
+        errorResponse(res, 'Error creating user');
       }
     }
   }
@@ -91,16 +98,31 @@ export class UserController {
   async updateUser(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+
+      // Get the original user for audit logging
+      const originalUser = await this.userService.getUserById(id);
+
       const user = await this.userService.updateUser(id, req.body);
       if (!user) {
-        return sendError(res, 'User not found', 404);
+        return errorResponse(res, 'User not found', 404);
       }
-      sendSuccess(res, user, 'User updated successfully');
+
+      // Log the update
+      if ((req as any).audit && originalUser) {
+        await (req as any).audit.logUpdate(
+          EntityType.USER,
+          user.uuid,
+          originalUser.toObject(),
+          user.toObject()
+        );
+      }
+
+      successResponse(res, user, undefined, 'User updated successfully');
     } catch (err: any) {
       if (err.message.includes('already exists')) {
-        sendError(res, err.message, 409);
+        errorResponse(res, err.message, 409);
       } else {
-        sendError(res, 'Error updating user');
+        errorResponse(res, 'Error updating user');
       }
     }
   }
@@ -110,14 +132,14 @@ export class UserController {
       const { uuid } = req.params;
       const user = await this.userService.updateUserByUuid(uuid, req.body);
       if (!user) {
-        return sendError(res, 'User not found', 404);
+        return errorResponse(res, 'User not found', 404);
       }
-      sendSuccess(res, user, 'User updated successfully');
+      successResponse(res, user, undefined, 'User updated successfully');
     } catch (err: any) {
       if (err.message.includes('already exists')) {
-        sendError(res, err.message, 409);
+        errorResponse(res, err.message, 409);
       } else {
-        sendError(res, 'Error updating user');
+        errorResponse(res, 'Error updating user');
       }
     }
   }
@@ -125,13 +147,25 @@ export class UserController {
   async deleteUser(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+
+      // Get the user before deleting for audit logging
+      const user = await this.userService.getUserById(id);
+      if (!user) {
+        return errorResponse(res, 'User not found', 404);
+      }
+
+      // Log the deletion before actually deleting
+      if ((req as any).audit) {
+        await (req as any).audit.logDelete(EntityType.USER, user.uuid, user.toObject());
+      }
+
       const deleted = await this.userService.deleteUser(id);
       if (!deleted) {
-        return sendError(res, 'User not found', 404);
+        return errorResponse(res, 'User not found', 404);
       }
-      sendSuccess(res, null, 'User deleted successfully');
+      successResponse(res, null, undefined, 'User deleted successfully');
     } catch (err) {
-      sendError(res, 'Error deleting user');
+      errorResponse(res, 'Error deleting user');
     }
   }
 
@@ -140,11 +174,11 @@ export class UserController {
       const { id } = req.params;
       const user = await this.userService.softDeleteUser(id);
       if (!user) {
-        return sendError(res, 'User not found', 404);
+        return errorResponse(res, 'User not found', 404);
       }
-      sendSuccess(res, user, 'User deactivated successfully');
+      successResponse(res, user, undefined, 'User deactivated successfully');
     } catch (err) {
-      sendError(res, 'Error deactivating user');
+      errorResponse(res, 'Error deactivating user');
     }
   }
 
@@ -153,45 +187,45 @@ export class UserController {
       const { email, passwordHash } = req.body;
       const user = await this.userService.authenticateUser(email, passwordHash);
       if (!user) {
-        return sendError(res, 'Invalid credentials', 401);
+        return errorResponse(res, 'Invalid credentials', 401);
       }
-      sendSuccess(res, user, 'Authentication successful');
+      successResponse(res, user, undefined, 'Authentication successful');
     } catch (err) {
-      sendError(res, 'Authentication failed');
+      errorResponse(res, 'Authentication failed');
     }
   }
 
   async signup(req: Request, res: Response): Promise<void> {
     try {
       const result = await this.userService.signup(req.body);
-      sendSuccess(res, {
+      successResponse(res, {
         user: result.user,
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
-      }, 'User created successfully', 201);
+      }, undefined, 'User created successfully', 201);
     } catch (err) {
       const error = err as Error;
       if (error.message.includes('already exists')) {
-        return sendError(res, error.message, 409);
+        return errorResponse(res, error.message, 409);
       }
-      sendError(res, 'Error creating user');
+      errorResponse(res, 'Error creating user');
     }
   }
 
   async login(req: Request, res: Response): Promise<void> {
     try {
       const result = await this.userService.login(req.body);
-      sendSuccess(res, {
+      successResponse(res, {
         user: result.user,
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
-      }, 'Login successful');
+      }, undefined, 'Login successful');
     } catch (err) {
       const error = err as Error;
       if (error.message === 'Invalid email or password' || error.message === 'Account is deactivated') {
-        return sendError(res, error.message, 401);
+        return errorResponse(res, error.message, 401);
       }
-      sendError(res, 'Login failed');
+      errorResponse(res, 'Login failed');
     }
   }
 }

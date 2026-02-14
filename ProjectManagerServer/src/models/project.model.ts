@@ -110,4 +110,37 @@ projectSchema.virtual('CompletedTasks').get(function (this: IProject) {
 // @ts-ignore
 projectSchema.plugin(autoIncrement, { inc_field: 'Project_ID' });
 
+// Add audit hooks to the schema
+projectSchema.pre('save', async function (this: IProject, next) {
+  try {
+    const doc = this;
+    const isNew = doc.isNew;
+    const entityId = doc.uuid;
+
+    if (isNew) {
+      // CREATE operation - will be handled by the audit service when called from controller
+    } else {
+      // UPDATE operation - will be handled by the audit service when called from controller
+    }
+    next();
+  } catch (error) {
+    console.error('Audit logging error in project pre-save:', error);
+    next(); // Don't fail the operation due to audit logging
+  }
+});
+
+projectSchema.pre('deleteOne', async function (this: IProject, next) {
+  try {
+    const doc = this;
+    // DELETE operation - will be handled by the audit service when called from controller
+    next();
+  } catch (error) {
+    console.error('Audit logging error in project pre-deleteOne:', error);
+    next(); // Don't fail the operation due to audit logging
+  }
+});
+
 export const Project = mongoose.model<IProject>('Project', projectSchema);
+
+// Note: Audit logging is now handled by the controllers using the audit service
+// The hooks above are placeholders for future enhancement if needed

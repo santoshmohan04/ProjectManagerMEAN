@@ -95,4 +95,29 @@ taskSchema.index({ assignedTo: 1, status: 1 }); // Compound index for assigned u
 taskSchema.index({ dueDate: 1 }); // Index for due date queries
 taskSchema.index({ createdAt: -1 }); // Index for recent tasks
 
+// Add audit hooks to the schema
+taskSchema.pre('save', async function (this: ITask, next) {
+  try {
+    const doc = this;
+    // Audit logging is handled by controllers using the audit service
+    next();
+  } catch (error) {
+    console.error('Audit logging error in task pre-save:', error);
+    next();
+  }
+});
+
+taskSchema.pre('deleteOne', async function (this: ITask, next) {
+  try {
+    const doc = this;
+    // Audit logging is handled by controllers using the audit service
+    next();
+  } catch (error) {
+    console.error('Audit logging error in task pre-deleteOne:', error);
+    next();
+  }
+});
+
 export const Task = mongoose.model<ITask>('Task', taskSchema);
+
+// Note: Audit logging is now handled by the controllers using the audit service
