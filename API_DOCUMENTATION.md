@@ -11,11 +11,12 @@ This document provides comprehensive API documentation for the ProjectManagerSer
 
 ## Table of Contents
 1. [Data Models](#data-models)
-2. [Projects API](#projects-api)
-3. [Users API](#users-api)
-4. [Tasks API](#tasks-api)
-5. [Response Format](#response-format)
-6. [Error Handling](#error-handling)
+2. [Authentication API](#authentication-api)
+3. [Projects API](#projects-api)
+4. [Users API](#users-api)
+5. [Tasks API](#tasks-api)
+6. [Response Format](#response-format)
+7. [Error Handling](#error-handling)
 
 ---
 
@@ -68,6 +69,87 @@ This document provides comprehensive API documentation for the ProjectManagerSer
   "Parent": "ObjectId",              // Reference to parent Task (nullable)
   "Project": "ObjectId",             // Reference to Project (nullable)
   "User": "ObjectId"                 // Reference to User (nullable)
+}
+```
+
+---
+
+## Authentication API
+
+### 1. User Registration
+**Endpoint:** `POST /auth/register`
+
+**Description:** Registers a new user account
+
+**Frontend Use Case:** User registration form submission
+
+**Request Body:**
+```json
+{
+  "username": "johndoe",
+  "password": "securepassword123",
+  "email": "john.doe@example.com"
+}
+```
+
+**Success Response (201):**
+```json
+{
+  "Success": true,
+  "Data": {
+    "user": {
+      "id": "user_id",
+      "username": "johndoe",
+      "email": "john.doe@example.com"
+    },
+    "token": "jwt_token_here"
+  }
+}
+```
+
+**Error Response (400):**
+```json
+{
+  "Success": false,
+  "Message": "User already exists"
+}
+```
+
+### 2. User Login
+**Endpoint:** `POST /auth/login`
+
+**Description:** Authenticates a user and returns a JWT token
+
+**Frontend Use Case:** User login form submission
+
+**Request Body:**
+```json
+{
+  "username": "johndoe",
+  "password": "securepassword123"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "Success": true,
+  "Data": {
+    "user": {
+      "id": "user_id",
+      "username": "johndoe",
+      "email": "john.doe@example.com"
+    },
+    "token": "jwt_token_here"
+  }
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "Success": false,
+  "Message": "Invalid credentials"
 }
 ```
 

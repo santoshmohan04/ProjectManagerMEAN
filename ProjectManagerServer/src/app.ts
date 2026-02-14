@@ -10,6 +10,7 @@ import hpp from 'hpp';
 import { config } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 import { auditMiddleware } from './modules/audit/audit.middleware.js';
+import authRoutes from './modules/auth/auth.routes.js';
 import userRoutes from './modules/user/user.routes.js';
 import projectRoutes from './modules/project/project.routes.js';
 import taskRoutes from './modules/task/task.routes.js';
@@ -198,6 +199,7 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 // Routes
+app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/projects', projectRoutes);
 app.use('/tasks', taskRoutes);
