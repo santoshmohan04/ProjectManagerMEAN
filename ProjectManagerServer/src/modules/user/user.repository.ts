@@ -19,6 +19,45 @@ export class UserRepository {
     return query.exec();
   }
 
+  async findAllPaginated(options: {
+    page: number;
+    limit: number;
+    sort: string;
+    search?: string;
+    filter: any;
+  }): Promise<IUser[]> {
+    const { page, limit, sort, search, filter } = options;
+    const skip = (page - 1) * limit;
+
+    let query = User.find(filter);
+
+    if (search) {
+      query = query.or([
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ]);
+    }
+
+    query = query.sort([[sort, 1]]).skip(skip).limit(limit);
+
+    return query.exec();
+  }
+
+  async countUsers(filter: any = {}, search?: string): Promise<number> {
+    let query = User.find(filter);
+
+    if (search) {
+      query = query.or([
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ]);
+    }
+
+    return query.countDocuments().exec();
+  }
+
   async findById(id: string): Promise<IUser | null> {
     return User.findById(id).exec();
   }
@@ -53,8 +92,17 @@ export class UserRepository {
     return result.deletedCount > 0;
   }
 
+  async deleteByUuid(uuid: string): Promise<boolean> {
+    const result = await User.deleteOne({ uuid }).exec();
+    return result.deletedCount > 0;
+  }
+
   async softDelete(id: string): Promise<IUser | null> {
     return User.findByIdAndUpdate(id, { isActive: false }, { new: true }).exec();
+  }
+
+  async softDeleteByUuid(uuid: string): Promise<IUser | null> {
+    return User.findOneAndUpdate({ uuid }, { isActive: false }, { new: true }).exec();
   }
 
   async updateLastLogin(uuid: string): Promise<IUser | null> {

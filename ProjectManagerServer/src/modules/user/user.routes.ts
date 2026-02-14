@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { UserController } from './user.controller.js';
+import { authenticate, authorizeRoles, authorizeUserAccess, authorizeUserUpdate } from '../../middleware/auth.middleware.js';
+import { validateUuidParam } from '../../middleware/validation.middleware.js';
 
 const router = Router();
 const userController = new UserController();
@@ -15,9 +17,26 @@ const userController = new UserController();
  * @swagger
  * /users:
  *   get:
- *     summary: List users
+ *     summary: List users (paginated)
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of items per page
  *       - in: query
  *         name: searchKey
  *         schema:
@@ -35,9 +54,13 @@ const userController = new UserController();
  *         description: Filter only active users
  *     responses:
  *       200:
- *         description: List of users
+ *         description: Paginated list of users
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  */
-router.get('/', userController.getUsers.bind(userController));
+router.get('/', authenticate, authorizeRoles('ADMIN', 'MANAGER'), userController.getUsers.bind(userController));
 
 /**
  * @swagger
@@ -45,18 +68,26 @@ router.get('/', userController.getUsers.bind(userController));
  *   get:
  *     summary: List active users
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of active users
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  */
-router.get('/active', userController.getActiveUsers.bind(userController));
+router.get('/active', authenticate, authorizeRoles('ADMIN', 'MANAGER'), userController.getActiveUsers.bind(userController));
 
 /**
  * @swagger
- * /users/add:
+ * /users:
  *   post:
  *     summary: Create a new user
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -95,40 +126,25 @@ router.get('/active', userController.getActiveUsers.bind(userController));
  *     responses:
  *       201:
  *         description: User created successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - admin access required
  *       409:
  *         description: Email or employee ID already exists
  *       400:
  *         description: Invalid request data
  */
-router.post('/add', userController.createUser.bind(userController));
+router.post('/', authenticate, authorizeRoles('ADMIN'), userController.createUser.bind(userController));
 
 /**
  * @swagger
- * /users/{id}:
- *   get:
- *     summary: Get user by ID
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: User ID
- *     responses:
- *       200:
- *         description: User details
- *       404:
- *         description: User not found
- */
-router.get('/:id', userController.getUserById.bind(userController));
-
-/**
- * @swagger
- * /users/uuid/{uuid}:
+ * /users/{uuid}:
  *   get:
  *     summary: Get user by UUID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: uuid
@@ -139,10 +155,14 @@ router.get('/:id', userController.getUserById.bind(userController));
  *     responses:
  *       200:
  *         description: User details
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - can only view own profile
  *       404:
  *         description: User not found
  */
-router.get('/uuid/:uuid', userController.getUserByUuid.bind(userController));
+router.get('/:uuid', authenticate, validateUuidParam(), authorizeUserAccess, userController.getUserById.bind(userController));
 
 /**
  * @swagger
@@ -150,6 +170,8 @@ router.get('/uuid/:uuid', userController.getUserByUuid.bind(userController));
  *   get:
  *     summary: Get user by email
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: email
@@ -161,61 +183,23 @@ router.get('/uuid/:uuid', userController.getUserByUuid.bind(userController));
  *     responses:
  *       200:
  *         description: User details
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  *       404:
  *         description: User not found
  */
-router.get('/email/:email', userController.getUserByEmail.bind(userController));
+router.get('/email/:email', authenticate, authorizeRoles('ADMIN', 'MANAGER'), userController.getUserByEmail.bind(userController));
 
 /**
  * @swagger
- * /users/{id}:
- *   put:
- *     summary: Update user by ID
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: User ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               firstName:
- *                 type: string
- *               lastName:
- *                 type: string
- *               email:
- *                 type: string
- *                 format: email
- *               employeeId:
- *                 type: string
- *               role:
- *                 type: string
- *                 enum: [ADMIN, MANAGER, USER]
- *               isActive:
- *                 type: boolean
- *     responses:
- *       200:
- *         description: User updated successfully
- *       404:
- *         description: User not found
- *       409:
- *         description: Email or employee ID already exists
- */
-router.put('/:id', userController.updateUser.bind(userController));
-
-/**
- * @swagger
- * /users/uuid/{uuid}:
+ * /users/{uuid}:
  *   put:
  *     summary: Update user by UUID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: uuid
@@ -247,54 +231,43 @@ router.put('/:id', userController.updateUser.bind(userController));
  *     responses:
  *       200:
  *         description: User updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - can only update own profile or admin access required
  *       404:
  *         description: User not found
  *       409:
  *         description: Email or employee ID already exists
  */
-router.put('/uuid/:uuid', userController.updateUserByUuid.bind(userController));
+router.put('/:uuid', authenticate, validateUuidParam(), authorizeUserUpdate, userController.updateUser.bind(userController));
 
 /**
  * @swagger
- * /users/{id}:
+ * /users/{uuid}:
  *   delete:
- *     summary: Hard delete user by ID
+ *     summary: Soft delete (deactivate) user by UUID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: uuid
  *         required: true
  *         schema:
  *           type: string
- *         description: User ID
- *     responses:
- *       200:
- *         description: User deleted successfully
- *       404:
- *         description: User not found
- */
-router.delete('/:id', userController.deleteUser.bind(userController));
-
-/**
- * @swagger
- * /users/{id}/deactivate:
- *   patch:
- *     summary: Soft delete (deactivate) user by ID
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: User ID
+ *         description: User UUID
  *     responses:
  *       200:
  *         description: User deactivated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - admin access required
  *       404:
  *         description: User not found
  */
-router.patch('/:id/deactivate', userController.softDeleteUser.bind(userController));
+router.delete('/:uuid', authenticate, authorizeRoles('ADMIN'), validateUuidParam(), userController.softDeleteUser.bind(userController));
 
 /**
  * @swagger

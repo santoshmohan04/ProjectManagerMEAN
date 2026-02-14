@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { ProjectController } from './project.controller.js';
+import { authenticate, authorizeRoles } from '../../middleware/auth.middleware.js';
+import { validateUuidParam } from '../../middleware/validation.middleware.js';
 
 const router = Router();
 const projectController = new ProjectController();
@@ -63,6 +65,8 @@ const projectController = new ProjectController();
  *         schema:
  *           type: string
  *         description: Full-text search in project names
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Paginated list of projects
@@ -144,15 +148,21 @@ const projectController = new ProjectController();
  *                         totalPages:
  *                           type: integer
  *                           example: 3
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  */
-router.get('/', projectController.getProjects.bind(projectController));
+router.get('/', authenticate, authorizeRoles('ADMIN', 'MANAGER'), projectController.getProjects.bind(projectController));
 
 /**
  * @swagger
- * /projects/add:
+ * /projects:
  *   post:
- *     summary: Add a new project
+ *     summary: Create a new project
  *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -161,25 +171,31 @@ router.get('/', projectController.getProjects.bind(projectController));
  *             $ref: '#/components/schemas/Project'
  *     responses:
  *       200:
- *         description: Project added successfully
+ *         description: Project created successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  *       400:
  *         description: Error occurred while creating new project
  */
-router.post('/add', projectController.createProject.bind(projectController));
+router.post('/', authenticate, authorizeRoles('ADMIN', 'MANAGER'), projectController.createProject.bind(projectController));
 
 /**
  * @swagger
- * /projects/edit/{id}:
- *   post:
+ * /projects/{uuid}:
+ *   put:
  *     summary: Update a project
  *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: uuid
  *         required: true
  *         schema:
  *           type: string
- *         description: Project ID
+ *         description: Project UUID
  *     requestBody:
  *       required: true
  *       content:
@@ -189,57 +205,73 @@ router.post('/add', projectController.createProject.bind(projectController));
  *     responses:
  *       200:
  *         description: Project updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  *       400:
  *         description: Error occurred while updating project
  *       404:
  *         description: Project not found
  */
-router.post('/edit/:id', projectController.updateProject.bind(projectController));
+router.put('/:uuid', authenticate, authorizeRoles('ADMIN', 'MANAGER'), validateUuidParam(), projectController.updateProject.bind(projectController));
 
 /**
  * @swagger
- * /projects/delete/{id}:
+ * /projects/{uuid}:
  *   delete:
  *     summary: Delete a project
  *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: uuid
  *         required: true
  *         schema:
  *           type: string
- *         description: Project ID
+ *         description: Project UUID
  *     responses:
  *       200:
  *         description: Project deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - admin access required
  *       404:
  *         description: Project not found
  *       500:
  *         description: An error occurred
  */
-router.delete('/delete/:id', projectController.deleteProject.bind(projectController));
+router.delete('/:uuid', authenticate, authorizeRoles('ADMIN'), validateUuidParam(), projectController.deleteProject.bind(projectController));
 
 /**
  * @swagger
- * /projects/{id}:
+ * /projects/{uuid}:
  *   get:
- *     summary: Get a project by ID
+ *     summary: Get a project by UUID
  *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: uuid
  *         required: true
  *         schema:
  *           type: string
- *         description: Project ID
+ *         description: Project UUID
  *     responses:
  *       200:
  *         description: Project found
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
  *       404:
  *         description: Project not found
  *       500:
  *         description: An error occurred
  */
-router.get('/:id', projectController.getProjectById.bind(projectController));
+router.get('/:uuid', authenticate, authorizeRoles('ADMIN', 'MANAGER'), validateUuidParam(), projectController.getProjectById.bind(projectController));
 
 export default router;

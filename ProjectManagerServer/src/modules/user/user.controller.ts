@@ -12,17 +12,33 @@ export class UserController {
 
   async getUsers(req: Request, res: Response): Promise<void> {
     try {
-      const { searchKey, sortKey, activeOnly } = req.query as {
-        searchKey?: string;
-        sortKey?: string;
-        activeOnly?: string;
+      const {
+        page = '1',
+        limit = '10',
+        sort = 'createdAt',
+        search,
+        role,
+        isActive
+      } = req.query as {
+        page?: string;
+        limit?: string;
+        sort?: string;
+        search?: string;
+        role?: string;
+        isActive?: string;
       };
-      const users = await this.userService.getAllUsers(
-        searchKey,
-        sortKey,
-        activeOnly === 'true'
-      );
-      successResponse(res, users);
+
+      const options = {
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
+        sort,
+        search,
+        role: role as any,
+        isActive: isActive ? isActive === 'true' : undefined,
+      };
+
+      const result = await this.userService.getAllUsers(options);
+      successResponse(res, result.data, result.meta);
     } catch (err) {
       errorResponse(res, 'Error fetching users');
     }
@@ -39,8 +55,8 @@ export class UserController {
 
   async getUserById(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const user = await this.userService.getUserById(id);
+      const { uuid } = req.params;
+      const user = await this.userService.getUserByUuid(uuid);
       if (!user) {
         return errorResponse(res, 'User not found', 404);
       }
@@ -80,9 +96,10 @@ export class UserController {
     try {
       const user = await this.userService.createUser(req.body);
 
-      // Log the creation
-      if ((req as any).audit) {
-        await (req as any).audit.logCreate(EntityType.USER, user.uuid, user.toObject());
+      // For audit logging, we need the original document
+      const originalUser = await this.userService.getUserByUuid(user.uuid);
+      if ((req as any).audit && originalUser) {
+        await (req as any).audit.logCreate(EntityType.USER, user.uuid, originalUser);
       }
 
       successResponse(res, user, undefined, 'User created successfully', 201);
@@ -97,23 +114,26 @@ export class UserController {
 
   async updateUser(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const { uuid } = req.params;
 
-      // Get the original user for audit logging
-      const originalUser = await this.userService.getUserById(id);
+      // Get the original user for audit logging (before update)
+      const originalUser = await this.userService.getUserByUuid(uuid);
+      if (!originalUser) {
+        return errorResponse(res, 'User not found', 404);
+      }
 
-      const user = await this.userService.updateUser(id, req.body);
+      const user = await this.userService.updateUserByUuid(uuid, req.body);
       if (!user) {
         return errorResponse(res, 'User not found', 404);
       }
 
       // Log the update
-      if ((req as any).audit && originalUser) {
+      if ((req as any).audit) {
         await (req as any).audit.logUpdate(
           EntityType.USER,
           user.uuid,
-          originalUser.toObject(),
-          user.toObject()
+          originalUser,
+          user
         );
       }
 
@@ -146,20 +166,20 @@ export class UserController {
 
   async deleteUser(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const { uuid } = req.params;
 
       // Get the user before deleting for audit logging
-      const user = await this.userService.getUserById(id);
+      const user = await this.userService.getUserByUuid(uuid);
       if (!user) {
         return errorResponse(res, 'User not found', 404);
       }
 
       // Log the deletion before actually deleting
       if ((req as any).audit) {
-        await (req as any).audit.logDelete(EntityType.USER, user.uuid, user.toObject());
+        await (req as any).audit.logDelete(EntityType.USER, user.uuid, user);
       }
 
-      const deleted = await this.userService.deleteUser(id);
+      const deleted = await this.userService.deleteUserByUuid(uuid);
       if (!deleted) {
         return errorResponse(res, 'User not found', 404);
       }
@@ -171,12 +191,24 @@ export class UserController {
 
   async softDeleteUser(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const user = await this.userService.softDeleteUser(id);
+      const { uuid } = req.params;
+
+      // Get the user before deleting for audit logging
+      const user = await this.userService.getUserByUuid(uuid);
       if (!user) {
         return errorResponse(res, 'User not found', 404);
       }
-      successResponse(res, user, undefined, 'User deactivated successfully');
+
+      // Log the deletion before actually deleting
+      if ((req as any).audit) {
+        await (req as any).audit.logDelete(EntityType.USER, user.uuid, user);
+      }
+
+      const updatedUser = await this.userService.softDeleteUserByUuid(uuid);
+      if (!updatedUser) {
+        return errorResponse(res, 'User not found', 404);
+      }
+      successResponse(res, updatedUser, undefined, 'User deactivated successfully');
     } catch (err) {
       errorResponse(res, 'Error deactivating user');
     }

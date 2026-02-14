@@ -190,7 +190,7 @@ router.post('/search', taskController.advancedSearch.bind(taskController));
 
 /**
  * @swagger
- * /tasks/add:
+ * /tasks:
  *   post:
  *     summary: Create a new task
  *     tags: [Tasks]
@@ -207,21 +207,21 @@ router.post('/search', taskController.advancedSearch.bind(taskController));
  *       400:
  *         description: Invalid request
  */
-router.post('/add', taskController.createTask.bind(taskController));
+router.post('/', taskController.createTask.bind(taskController));
 
 /**
  * @swagger
- * /tasks/{id}:
+ * /tasks/{uuid}:
  *   get:
- *     summary: Get task by ID
+ *     summary: Get task by UUID
  *     tags: [Tasks]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: uuid
  *         required: true
  *         schema:
  *           type: string
- *         description: Task ID
+ *         description: Task UUID
  *     responses:
  *       200:
  *         description: Task details
@@ -230,21 +230,21 @@ router.post('/add', taskController.createTask.bind(taskController));
  *       500:
  *         description: Server error
  */
-router.get('/:id', taskController.getTaskById.bind(taskController));
+router.get('/:uuid', taskController.getTaskById.bind(taskController));
 
 /**
  * @swagger
- * /tasks/{id}:
+ * /tasks/{uuid}:
  *   put:
  *     summary: Update a task
  *     tags: [Tasks]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: uuid
  *         required: true
  *         schema:
  *           type: string
- *         description: Task ID
+ *         description: Task UUID
  *     requestBody:
  *       required: true
  *       content:
@@ -259,21 +259,21 @@ router.get('/:id', taskController.getTaskById.bind(taskController));
  *       404:
  *         description: Task not found
  */
-router.put('/:id', taskController.updateTask.bind(taskController));
+router.put('/:uuid', taskController.updateTask.bind(taskController));
 
 /**
  * @swagger
- * /tasks/{id}:
+ * /tasks/{uuid}:
  *   delete:
  *     summary: Delete a task
  *     tags: [Tasks]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: uuid
  *         required: true
  *         schema:
  *           type: string
- *         description: Task ID
+ *         description: Task UUID
  *     responses:
  *       200:
  *         description: Task deleted successfully
@@ -282,7 +282,7 @@ router.put('/:id', taskController.updateTask.bind(taskController));
  *       500:
  *         description: Server error
  */
-router.delete('/:id', taskController.deleteTask.bind(taskController));
+router.delete('/:uuid', taskController.deleteTask.bind(taskController));
 
 /**
  * @swagger

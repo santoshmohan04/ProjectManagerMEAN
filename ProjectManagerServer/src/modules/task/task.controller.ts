@@ -49,8 +49,8 @@ export class TaskController {
 
   async getTaskById(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const task = await this.taskService.getTaskById(id);
+      const { uuid } = req.params;
+      const task = await this.taskService.getTaskByUuid(uuid);
       if (!task) {
         return errorResponse(res, 'Task not found', 404);
       }
@@ -90,12 +90,12 @@ export class TaskController {
 
   async updateTask(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const { uuid } = req.params;
 
       // Get the original task for audit logging
-      const originalTask = await this.taskService.getTaskById(id);
+      const originalTask = await this.taskService.getTaskByUuid(uuid);
 
-      const task = await this.taskService.updateTask(id, req.body);
+      const task = await this.taskService.updateTaskByUuid(uuid, req.body);
       if (!task) {
         return errorResponse(res, 'Task not found', 404);
       }
@@ -154,10 +154,10 @@ export class TaskController {
 
   async deleteTask(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const { uuid } = req.params;
 
       // Get the task before deleting for audit logging
-      const task = await this.taskService.getTaskById(id);
+      const task = await this.taskService.getTaskByUuid(uuid);
       if (!task) {
         return errorResponse(res, 'Task not found', 404);
       }
@@ -167,7 +167,7 @@ export class TaskController {
         await (req as any).audit.logDelete(EntityType.TASK, task.uuid, task.toObject());
       }
 
-      await this.taskService.deleteTask(id);
+      await this.taskService.deleteTaskByUuid(uuid);
       successResponse(res, null, undefined, 'Task deleted successfully');
     } catch (err) {
       errorResponse(res, 'Error deleting task');

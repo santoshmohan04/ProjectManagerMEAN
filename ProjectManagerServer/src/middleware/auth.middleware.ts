@@ -120,3 +120,59 @@ export const optionalAuthenticate = (req: Request, res: Response, next: NextFunc
     next();
   }
 };
+
+/**
+ * Authorization middleware for user-specific operations
+ * Allows ADMIN and MANAGER to access any user, USER can only access their own profile
+ */
+export const authorizeUserAccess = (req: Request, res: Response, next: NextFunction): void => {
+  if (!req.user) {
+    errorResponse(res, 'Authentication required', 401);
+    return;
+  }
+
+  const userRole = req.user.role;
+  const requestedUserUuid = req.params.uuid;
+
+  // ADMIN and MANAGER can access any user
+  if (userRole === 'ADMIN' || userRole === 'MANAGER') {
+    next();
+    return;
+  }
+
+  // USER can only access their own profile
+  if (userRole === 'USER' && req.user.userId === requestedUserUuid) {
+    next();
+    return;
+  }
+
+  errorResponse(res, 'Forbidden - can only access own profile', 403);
+};
+
+/**
+ * Authorization middleware for user update operations
+ * Allows ADMIN to update any user, USER can only update their own profile
+ */
+export const authorizeUserUpdate = (req: Request, res: Response, next: NextFunction): void => {
+  if (!req.user) {
+    errorResponse(res, 'Authentication required', 401);
+    return;
+  }
+
+  const userRole = req.user.role;
+  const requestedUserUuid = req.params.uuid;
+
+  // ADMIN can update any user
+  if (userRole === 'ADMIN') {
+    next();
+    return;
+  }
+
+  // USER can only update their own profile
+  if (userRole === 'USER' && req.user.userId === requestedUserUuid) {
+    next();
+    return;
+  }
+
+  errorResponse(res, 'Forbidden - can only update own profile', 403);
+};

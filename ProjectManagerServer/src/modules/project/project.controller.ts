@@ -21,8 +21,8 @@ export class ProjectController {
 
   async getProjectById(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const project = await this.projectService.getProjectById(id);
+      const { uuid } = req.params;
+      const project = await this.projectService.getProjectByUuid(uuid);
       if (!project) {
         return errorResponse(res, 'Project not found', 404);
       }
@@ -36,9 +36,10 @@ export class ProjectController {
     try {
       const project = await this.projectService.createProject(req.body);
 
-      // Log the creation
-      if ((req as any).audit) {
-        await (req as any).audit.logCreate(EntityType.PROJECT, project.uuid, project.toObject());
+      // For audit logging, we need the original document
+      const originalProject = await this.projectService.getProjectByUuid(project.uuid);
+      if ((req as any).audit && originalProject) {
+        await (req as any).audit.logCreate(EntityType.PROJECT, project.uuid, originalProject);
       }
 
       successResponse(res, project, undefined, 'Project created successfully');
@@ -49,23 +50,26 @@ export class ProjectController {
 
   async updateProject(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const { uuid } = req.params;
 
-      // Get the original project for audit logging
-      const originalProject = await this.projectService.getProjectById(id);
+      // Get the original project for audit logging (before update)
+      const originalProject = await this.projectService.getProjectByUuid(uuid);
+      if (!originalProject) {
+        return errorResponse(res, 'Project not found', 404);
+      }
 
-      const project = await this.projectService.updateProject(id, req.body);
+      const project = await this.projectService.updateProjectByUuid(uuid, req.body);
       if (!project) {
         return errorResponse(res, 'Project not found', 404);
       }
 
       // Log the update
-      if ((req as any).audit && originalProject) {
+      if ((req as any).audit) {
         await (req as any).audit.logUpdate(
           EntityType.PROJECT,
           project.uuid,
-          originalProject.toObject(),
-          project.toObject()
+          originalProject,
+          project
         );
       }
 
@@ -77,20 +81,20 @@ export class ProjectController {
 
   async deleteProject(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const { uuid } = req.params;
 
       // Get the project before deleting for audit logging
-      const project = await this.projectService.getProjectById(id);
+      const project = await this.projectService.getProjectByUuid(uuid);
       if (!project) {
         return errorResponse(res, 'Project not found', 404);
       }
 
       // Log the deletion before actually deleting
       if ((req as any).audit) {
-        await (req as any).audit.logDelete(EntityType.PROJECT, project.uuid, project.toObject());
+        await (req as any).audit.logDelete(EntityType.PROJECT, project.uuid, project);
       }
 
-      await this.projectService.deleteProject(id);
+      await this.projectService.deleteProjectByUuid(uuid);
       successResponse(res, null, undefined, 'Project deleted successfully');
     } catch (err) {
       errorResponse(res, 'Error deleting project');
