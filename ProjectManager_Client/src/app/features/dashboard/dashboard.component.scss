@@ -1,31 +1,560 @@
 .dashboard-container {
-  padding: 20px;
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
 }
 
-h1 {
-  margin-bottom: 24px;
-  color: #333;
+// Header
+.dashboard-header {
+  margin-bottom: 32px;
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 500;
+      color: #333;
+
+      @media (max-width: 768px) {
+        font-size: 24px;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .last-updated {
+        font-size: 14px;
+        color: #666;
+
+        @media (max-width: 768px) {
+          display: none;
+        }
+      }
+
+      button {
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
 }
 
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
+// Loading & Error States
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
 
-.dashboard-card {
   mat-icon {
     font-size: 48px;
     width: 48px;
     height: 48px;
-    color: #4fc3f7;
+    margin-bottom: 16px;
   }
 
-  .metric {
-    font-size: 48px;
-    font-weight: bold;
-    color: #4fc3f7;
-    text-align: center;
-    padding: 20px;
+  p {
+    margin: 16px 0;
+    font-size: 16px;
+    color: #666;
   }
+}
+
+// Dashboard Content
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+// Sections
+.metrics-section {
+  h2 {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0 0 16px 0;
+    color: #333;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Metric Cards
+.metric-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px !important;
+  }
+
+  .metric-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+  }
+
+  .metric-info {
+    flex: 1;
+
+    .metric-value {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+      color: #333;
+    }
+
+    .metric-label {
+      font-size: 14px;
+      color: #666;
+      font-weight: 500;
+    }
+  }
+
+  // Color variations
+  &.metric-primary .metric-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  &.metric-accent .metric-icon {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  &.metric-success .metric-icon {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+
+  &.metric-warn .metric-icon {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  }
+
+  &.metric-error .metric-icon {
+    background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%);
+  }
+}
+
+// Charts Row
+.charts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  mat-card-header {
+    margin-bottom: 24px;
+
+    mat-card-title {
+      font-size: 18px;
+      font-weight: 500;
+    }
+  }
+
+  mat-card-content {
+    padding: 0 16px 16px 16px !important;
+  }
+}
+
+// Bar Chart
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .bar-item {
+    .bar-label {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .bar-container {
+      position: relative;
+      height: 32px;
+      background: #f5f5f5;
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+
+      .bar-fill {
+        height: 100%;
+        border-radius: 16px;
+        transition: width 0.6s ease;
+        min-width: 40px;
+      }
+
+      .bar-value {
+        position: absolute;
+        right: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+      }
+    }
+  }
+}
+
+// Donut Chart
+.donut-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+
+  .donut-chart {
+    position: relative;
+    width: 200px;
+    height: 200px;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+
+      .donut-hole {
+        fill: #fff;
+      }
+
+      .donut-segment {
+        fill: none;
+        transition: all 0.3s ease;
+      }
+    }
+
+    .donut-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+
+      .center-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #333;
+      }
+
+      .center-label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
+      }
+    }
+  }
+
+  .chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+      }
+
+      .legend-label {
+        font-size: 14px;
+        color: #333;
+      }
+    }
+  }
+}
+
+// Completion Rate
+.completion-rate {
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+
+  .rate-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+  }
+
+  .rate-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #4CAF50;
+    margin-bottom: 12px;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    overflow: hidden;
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50 0%, #81C784 100%);
+      border-radius: 4px;
+      transition: width 0.6s ease;
+
+      &.success {
+        background: linear-gradient(90deg, #4CAF50 0%, #81C784 100%);
+      }
+    }
+  }
+}
+
+// No Data State
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #ccc;
+    margin-bottom: 16px;
+  }
+
+  p {
+    color: #999;
+    font-size: 14px;
+  }
+}
+
+// Recent Projects Section
+.recent-section {
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 500;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+
+  .projects-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .project-item {
+      padding: 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      transition: box-shadow 0.2s;
+
+      &:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .project-info {
+        margin-bottom: 12px;
+
+        .project-name {
+          font-size: 16px;
+          font-weight: 500;
+          color: #333;
+          margin-bottom: 8px;
+        }
+
+        .project-meta {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+
+          mat-chip {
+            font-size: 12px;
+            height: 24px;
+            padding: 0 8px;
+          }
+        }
+      }
+
+      .project-progress {
+        .progress-info {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          margin-bottom: 8px;
+          color: #666;
+        }
+
+        .progress-bar {
+          height: 6px;
+          background: #f5f5f5;
+          border-radius: 3px;
+          overflow: hidden;
+
+          .progress-fill {
+            height: 100%;
+            background: #2196F3;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Stats Section
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    mat-card-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px !important;
+    }
+
+    .stat-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: #f5f5f5;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+        color: #666;
+      }
+    }
+
+    .stat-info {
+      .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+      }
+
+      .stat-label {
+        font-size: 13px;
+        color: #666;
+      }
+    }
+
+    &.alert {
+      border-left: 4px solid #f44336;
+
+      .stat-icon {
+        background: #ffebee;
+
+        mat-icon {
+          color: #f44336;
+        }
+      }
+
+      .stat-value {
+        color: #f44336;
+      }
+    }
+  }
+}
+
+// Status Colors
+.status-active {
+  background-color: #2196F3 !important;
+  color: white !important;
+}
+
+.status-completed {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
+.status-archived {
+  background-color: #9E9E9E !important;
+  color: white !important;
+}
+
+// Priority Colors
+.priority-high {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+.priority-medium {
+  background-color: #FF9800 !important;
+  color: white !important;
+}
+
+.priority-low {
+  background-color: #4CAF50 !important;
+  color: white !important;
 }

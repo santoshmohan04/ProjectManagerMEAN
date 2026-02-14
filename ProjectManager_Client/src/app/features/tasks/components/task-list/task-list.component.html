@@ -1,0 +1,393 @@
+<div class="task-list-container">
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <h2>Tasks</h2>
+      <mat-button-toggle-group
+        [value]="viewMode()"
+        (change)="switchView($event.value)"
+        class="view-toggle"
+      >
+        <mat-button-toggle value="table">
+          <mat-icon>view_list</mat-icon>
+          Table
+        </mat-button-toggle>
+        <mat-button-toggle value="kanban">
+          <mat-icon>view_kanban</mat-icon>
+          Kanban
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <div class="toolbar-right">
+      <button mat-raised-button color="primary">
+        <mat-icon>add</mat-icon>
+        New Task
+      </button>
+      <button mat-icon-button (click)="refresh()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input
+        matInput
+        [value]="searchValue"
+        (input)="onSearchChange($any($event.target).value)"
+        placeholder="Search tasks..."
+      />
+      <mat-icon matPrefix>search</mat-icon>
+      @if (searchValue) {
+        <button mat-icon-button matSuffix (click)="searchValue = ''; onSearchChange('')">
+          <mat-icon>clear</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Status</mat-label>
+      <mat-select [(ngModel)]="selectedStatus" (ngModelChange)="onFilterChange()">
+        <mat-option [value]="null">All</mat-option>
+        <mat-option [value]="TaskStatus.Open">Open</mat-option>
+        <mat-option [value]="TaskStatus.InProgress">In Progress</mat-option>
+        <mat-option [value]="TaskStatus.Completed">Completed</mat-option>
+        <mat-option [value]="TaskStatus.Blocked">Blocked</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Priority</mat-label>
+      <mat-select [(ngModel)]="selectedPriority" (ngModelChange)="onFilterChange()">
+        <mat-option [value]="null">All</mat-option>
+        <mat-option [value]="1">Low (1-3)</mat-option>
+        <mat-option [value]="5">Medium (4-7)</mat-option>
+        <mat-option [value]="10">High (8-10)</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    @if (tasksStore.hasActiveFilters()) {
+      <button mat-stroked-button color="warn" (click)="clearFilters()">
+        <mat-icon>clear_all</mat-icon>
+        Clear Filters
+      </button>
+    }
+  </div>
+
+  <!-- Bulk Actions Bar -->
+  @if (selectedCount() > 0) {
+    <div class="bulk-actions-bar">
+      <div class="selection-info">
+        <mat-checkbox
+          [checked]="allSelected()"
+          [indeterminate]="someSelected()"
+          (change)="toggleSelectAll()"
+        ></mat-checkbox>
+        <span class="selection-text">
+          {{ selectedCount() }} task(s) selected
+        </span>
+        <button mat-button (click)="clearSelection()">Clear</button>
+      </div>
+
+      <div class="bulk-actions">
+        <button mat-stroked-button [matMenuTriggerFor]="statusMenu">
+          <mat-icon>edit</mat-icon>
+          Change Status
+        </button>
+        <mat-menu #statusMenu="matMenu">
+          <button mat-menu-item (click)="bulkUpdateStatus(TaskStatus.Open)">
+            <mat-icon>radio_button_unchecked</mat-icon>
+            Open
+          </button>
+          <button mat-menu-item (click)="bulkUpdateStatus(TaskStatus.InProgress)">
+            <mat-icon>pending</mat-icon>
+            In Progress
+          </button>
+          <button mat-menu-item (click)="bulkUpdateStatus(TaskStatus.Completed)">
+            <mat-icon>check_circle</mat-icon>
+            Completed
+          </button>
+          <button mat-menu-item (click)="bulkUpdateStatus(TaskStatus.Blocked)">
+            <mat-icon>block</mat-icon>
+            Blocked
+          </button>
+        </mat-menu>
+
+        <button mat-stroked-button [matMenuTriggerFor]="priorityMenu">
+          <mat-icon>flag</mat-icon>
+          Change Priority
+        </button>
+        <mat-menu #priorityMenu="matMenu">
+          <button mat-menu-item (click)="bulkUpdatePriority(2)">Low (2)</button>
+          <button mat-menu-item (click)="bulkUpdatePriority(5)">Medium (5)</button>
+          <button mat-menu-item (click)="bulkUpdatePriority(8)">High (8)</button>
+          <button mat-menu-item (click)="bulkUpdatePriority(10)">Critical (10)</button>
+        </mat-menu>
+
+        <button mat-stroked-button color="warn" (click)="bulkDelete()">
+          <mat-icon>delete</mat-icon>
+          Delete Selected
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Loading Overlay -->
+  @if (tasksStore.loading()) {
+    <div class="loading-overlay">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (tasksStore.error()) {
+    <div class="error-banner">
+      <mat-icon>error</mat-icon>
+      <span>{{ tasksStore.error() }}</span>
+      <button mat-button (click)="refresh()">Retry</button>
+    </div>
+  }
+
+  <!-- TABLE VIEW -->
+  @if (viewMode() === 'table') {
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="dataSource" class="tasks-table">
+        <!-- Select Column -->
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef>
+            <mat-checkbox
+              [checked]="allSelected()"
+              [indeterminate]="someSelected()"
+              (change)="toggleSelectAll()"
+            ></mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let task">
+            <mat-checkbox
+              [checked]="isSelected(task._id)"
+              (change)="toggleTaskSelection(task._id)"
+              (click)="$event.stopPropagation()"
+            ></mat-checkbox>
+          </td>
+        </ng-container>
+
+        <!-- Title Column -->
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Title</th>
+          <td mat-cell *matCellDef="let task">
+            <div class="task-title" [class.overdue]="isOverdue(task)">
+              <strong>{{ task.Title }}</strong>
+              @if (isOverdue(task)) {
+                <mat-icon class="overdue-icon" matTooltip="Overdue">warning</mat-icon>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Project Column -->
+        <ng-container matColumnDef="project">
+          <th mat-header-cell *matHeaderCellDef>Project</th>
+          <td mat-cell *matCellDef="let task">
+            {{ task.Project?.Project || task.Project?.name || '-' }}
+          </td>
+        </ng-container>
+
+        <!-- Assignee Column -->
+        <ng-container matColumnDef="assignee">
+          <th mat-header-cell *matHeaderCellDef>Assignee</th>
+          <td mat-cell *matCellDef="let task">
+            {{ task.User?.First_Name || task.User?.Full_Name || 'Unassigned' }}
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let task">
+            <mat-select
+              [value]="task.Status"
+              (selectionChange)="onStatusChange(task._id, $event.value)"
+              class="status-select"
+              [ngClass]="getStatusClass(task.Status)"
+            >
+              <mat-option [value]="TaskStatus.Open">Open</mat-option>
+              <mat-option [value]="TaskStatus.InProgress">In Progress</mat-option>
+              <mat-option [value]="TaskStatus.Completed">Completed</mat-option>
+              <mat-option [value]="TaskStatus.Blocked">Blocked</mat-option>
+            </mat-select>
+          </td>
+        </ng-container>
+
+        <!-- Priority Column -->
+        <ng-container matColumnDef="priority">
+          <th mat-header-cell *matHeaderCellDef>Priority</th>
+          <td mat-cell *matCellDef="let task">
+            <mat-chip [ngClass]="getPriorityClass(task.Priority)">
+              {{ getPriorityLabel(task.Priority) }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Due Date Column -->
+        <ng-container matColumnDef="dueDate">
+          <th mat-header-cell *matHeaderCellDef>Due Date</th>
+          <td mat-cell *matCellDef="let task">
+            <div [class.overdue]="isOverdue(task)">
+              {{ formatDate(task.End_Date) }}
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let task">
+            <button mat-icon-button [matMenuTriggerFor]="menu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="viewTask(task)">
+                <mat-icon>visibility</mat-icon>
+                View
+              </button>
+              <button mat-menu-item (click)="editTask(task)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              <button mat-menu-item (click)="deleteTask(task._id, task.Title)" class="delete-action">
+                <mat-icon>delete</mat-icon>
+                Delete
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+        <!-- No Data Row -->
+        <tr class="mat-row no-data-row" *matNoDataRow>
+          <td [attr.colspan]="displayedColumns.length">
+            <div class="no-data-message">
+              <mat-icon>assignment_late</mat-icon>
+              @if (tasksStore.hasActiveFilters()) {
+                <p>No tasks match your filters</p>
+                <button mat-stroked-button (click)="clearFilters()">Clear Filters</button>
+              } @else {
+                <p>No tasks found</p>
+                <button mat-raised-button color="primary">Create Task</button>
+              }
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Paginator -->
+    <mat-paginator
+      [length]="tasksStore.pagination().totalItems"
+      [pageSize]="tasksStore.pagination().itemsPerPage"
+      [pageIndex]="tasksStore.pagination().currentPage - 1"
+      [pageSizeOptions]="[5, 10, 25, 50, 100]"
+      (page)="onPageChange($event)"
+      showFirstLastButtons
+    ></mat-paginator>
+  }
+
+  <!-- KANBAN VIEW -->
+  @if (viewMode() === 'kanban') {
+    <div class="kanban-board">
+      @for (column of kanbanColumns(); track column.status) {
+        <div class="kanban-column">
+          <div class="column-header" [ngClass]="getStatusClass(column.status)">
+            <h3>{{ column.title }}</h3>
+            <span class="task-count" [matBadge]="column.tasks.length" matBadgeColor="accent">
+            </span>
+          </div>
+
+          <div class="column-content">
+            @for (task of column.tasks; track task._id) {
+              <mat-card class="task-card" [class.overdue]="isOverdue(task)">
+                <mat-card-header>
+                  <mat-card-title>
+                    <div class="card-title-row">
+                      <mat-checkbox
+                        [checked]="isSelected(task._id)"
+                        (change)="toggleTaskSelection(task._id)"
+                        (click)="$event.stopPropagation()"
+                      ></mat-checkbox>
+                      <span [class.overdue-text]="isOverdue(task)">
+                        {{ task.Title }}
+                      </span>
+                    </div>
+                  </mat-card-title>
+                </mat-card-header>
+
+                <mat-card-content>
+                  @if (task.Description) {
+                    <p class="task-description">{{ task.Description }}</p>
+                  }
+
+                  <div class="task-meta">
+                    <mat-chip [ngClass]="getPriorityClass(task.Priority)" class="priority-chip">
+                      {{ getPriorityLabel(task.Priority) }}
+                    </mat-chip>
+
+                    @if (task.Project) {
+                      <div class="meta-item">
+                        <mat-icon>folder</mat-icon>
+                        <span>{{ task.Project.Project || task.Project.name }}</span>
+                      </div>
+                    }
+
+                    @if (task.User) {
+                      <div class="meta-item">
+                        <mat-icon>person</mat-icon>
+                        <span>{{ task.User.First_Name || task.User.Full_Name }}</span>
+                      </div>
+                    }
+
+                    <div class="meta-item" [class.overdue]="isOverdue(task)">
+                      <mat-icon>event</mat-icon>
+                      <span>{{ formatDate(task.End_Date) }}</span>
+                      @if (isOverdue(task)) {
+                        <mat-icon class="overdue-icon">warning</mat-icon>
+                      }
+                    </div>
+                  </div>
+                </mat-card-content>
+
+                <mat-card-actions>
+                  <button mat-button (click)="viewTask(task)">
+                    <mat-icon>visibility</mat-icon>
+                    View
+                  </button>
+                  <button mat-button (click)="editTask(task)">
+                    <mat-icon>edit</mat-icon>
+                    Edit
+                  </button>
+                  <button mat-icon-button [matMenuTriggerFor]="cardMenu">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  <mat-menu #cardMenu="matMenu">
+                    <button mat-menu-item (click)="deleteTask(task._id, task.Title)">
+                      <mat-icon>delete</mat-icon>
+                      Delete
+                    </button>
+                  </mat-menu>
+                </mat-card-actions>
+              </mat-card>
+            } @empty {
+              <div class="empty-column">
+                <mat-icon>inbox</mat-icon>
+                <p>No tasks</p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

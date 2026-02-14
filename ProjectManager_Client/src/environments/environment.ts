@@ -24,6 +24,8 @@ export const environment = {
   endpoint_task_edit: '/tasks',
   endpoint_task_delete: '/tasks',
 
+  endpoint_dashboard_overview: '/dashboard/overview',
+
   endpoint_auth_login: '/auth/login',
   endpoint_auth_register: '/auth/register',
 };

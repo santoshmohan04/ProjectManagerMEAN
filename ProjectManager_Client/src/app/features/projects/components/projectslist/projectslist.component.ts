@@ -138,7 +138,11 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
   }
 
   private loadUsers(searchKey?: string, sortKey?: string) {
-    this.userService.getUsersList(searchKey, sortKey).subscribe({
+    const params = {
+      search: searchKey,
+      sort: sortKey,
+    };
+    this.userService.getUsersList(params).subscribe({
       next: (response: ApiResponse<User[]>) => {
         if (response.success) {
           this.appStore.setUsers(response.data);

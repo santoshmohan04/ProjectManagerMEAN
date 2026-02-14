@@ -106,7 +106,11 @@ export class UserslistComponent implements OnInit, AfterViewInit {
 
   private loadUsers(searchKey?: string, sortKey?: string) {
     this.appStore.setLoading(true);
-    this.userService.getUsersList(searchKey, sortKey).subscribe({
+    const params = {
+      search: searchKey,
+      sort: sortKey,
+    };
+    this.userService.getUsersList(params).subscribe({
       next: (response) => {
         if (response.success) {
           this.appStore.setUsers(response.data);
@@ -197,9 +201,11 @@ export class UserslistComponent implements OnInit, AfterViewInit {
   ) {
     if (action === 'add') {
       const addUser = {
-        First_Name: data.firstname,
-        Last_Name: data.lastname,
-        Employee_ID: data.employeeid,
+        firstName: data.firstname,
+        lastName: data.lastname,
+        email: `${data.firstname.toLowerCase()}.${data.lastname.toLowerCase()}@example.com`,
+        password: 'ChangeMe123!',
+        employeeId: data.employeeid,
       };
       this.userService.addUser(addUser).subscribe({
         next: (response) => {
@@ -218,9 +224,9 @@ export class UserslistComponent implements OnInit, AfterViewInit {
 
     if (action === 'edit') {
       const updateUser = {
-        First_Name: data.firstname,
-        Last_Name: data.lastname,
-        Employee_ID: data.employeeid,
+        firstName: data.firstname,
+        lastName: data.lastname,
+        employeeId: data.employeeid,
       };
       this.userService.editUser(updateUser, user?._id || '').subscribe({
         next: (response) => {
