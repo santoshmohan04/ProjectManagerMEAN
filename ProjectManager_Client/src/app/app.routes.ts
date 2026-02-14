@@ -9,21 +9,21 @@ export const routes: Routes = [
   {
     path: 'projects',
     loadComponent: () =>
-      import('./project/components/projectslist/projectslist.component').then(
+      import('./features/projects/components/projectslist/projectslist.component').then(
         (m) => m.ProjectslistComponent
       ),
   },
   {
     path: 'users',
     loadComponent: () =>
-      import('./user/components/userslist/userslist.component').then(
+      import('./features/users/components/userslist/userslist.component').then(
         (m) => m.UserslistComponent
       ),
   },
   {
     path: 'tasks',
     loadComponent: () =>
-      import('./task/components/tasklist/tasklist.component').then(
+      import('./features/tasks/components/tasklist/tasklist.component').then(
         (m) => m.TasklistComponent
       ),
   },

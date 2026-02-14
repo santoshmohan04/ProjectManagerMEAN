@@ -1,21 +1,4 @@
-/* Importing Bootstrap SCSS file. */
-@use "bootstrap/scss/bootstrap" as bs;
+/* You can add global styles to this file, and also import other style files */
 
-/* Ensure body takes full width and removes margin */
-body,
-html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
-}
-
-.alert {
-  padding-top: 1px;
-  padding-left: 2px;
-  padding-bottom: 10px;
-  margin: 0px;
-}
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
