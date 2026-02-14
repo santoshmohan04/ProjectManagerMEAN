@@ -1,7 +1,7 @@
 # Project Manager API Documentation
 
 ## Overview
-This document provides comprehensive API documentation for the ProjectManagerServer backend from a frontend UI perspective. The server is built using Express.js and MongoDB (MEAN stack) and provides RESTful APIs for managing projects, tasks, and users.
+This document provides comprehensive API documentation for the ProjectManagerServer backend from a frontend UI perspective. The server is built using Express.js and MongoDB (MEAN stack) and provides RESTful APIs for managing projects, tasks, users, dashboard analytics, and audit trails.
 
 **Base URL:** `http://localhost:4300`
 
@@ -15,8 +15,10 @@ This document provides comprehensive API documentation for the ProjectManagerSer
 3. [Projects API](#projects-api)
 4. [Users API](#users-api)
 5. [Tasks API](#tasks-api)
-6. [Response Format](#response-format)
-7. [Error Handling](#error-handling)
+6. [Dashboard API](#dashboard-api)
+7. [Audit API](#audit-api)
+8. [Response Format](#response-format)
+9. [Error Handling](#error-handling)
 
 ---
 
@@ -33,13 +35,13 @@ This document provides comprehensive API documentation for the ProjectManagerSer
   "status": "string",             // Enum: PLANNING, ACTIVE, COMPLETED, ARCHIVED
   "startDate": "Date",            // Project start date (nullable)
   "endDate": "Date",              // Project end date (nullable)
-  "manager": "ObjectId",          // Reference to User (nullable)
+  "manager": "string",            // UUID reference to User (nullable)
   "isArchived": "boolean",        // Archive status
-  "createdBy": "ObjectId",        // Reference to User who created
+  "createdBy": "string",          // UUID reference to User who created
   "createdAt": "Date",            // Auto-generated
   "updatedAt": "Date",            // Auto-generated
-  // Virtual fields
-  "Tasks": [...],                 // Populated tasks
+  // Virtual/Populated fields
+  "Tasks": [...],                 // Populated tasks with full details
   "NoOfTasks": "number",          // Total task count
   "CompletedTasks": "number"      // Completed task count
 }
@@ -71,17 +73,17 @@ This document provides comprehensive API documentation for the ProjectManagerSer
   "uuid": "string",               // UUID v7 (primary identifier)
   "title": "string",              // Required
   "description": "string",        // Optional
-  "priority": "number",           // 1-10
+  "priority": "number",           // 1-5 (1=lowest, 5=highest)
   "status": "string",             // Enum: OPEN, IN_PROGRESS, COMPLETED, BLOCKED
   "startDate": "Date",            // Nullable
   "endDate": "Date",              // Nullable
-  "project": "ObjectId",          // Reference to Project
-  "assignedTo": "ObjectId",       // Reference to User
-  "parentTask": "ObjectId",       // Reference to parent Task (nullable)
   "dueDate": "Date",              // Task deadline
   "estimatedHours": "number",     // Estimated effort
   "actualHours": "number",        // Actual effort
-  "createdBy": "ObjectId",        // Reference to User who created
+  "project": "string",            // UUID reference to Project
+  "assignedTo": "string",         // UUID reference to User
+  "parentTask": "string",         // UUID reference to parent Task (nullable)
+  "createdBy": "string",          // UUID reference to User who created
   "createdAt": "Date",            // Auto-generated
   "updatedAt": "Date"             // Auto-generated
 }
@@ -260,9 +262,10 @@ GET /projects?page=1&limit=5&sort=name:asc&status=ACTIVE
 **Error Response (500):**
 ```json
 {
-  "Success": false,
-  "Message": "An error occurred",
-  "Error": "error message"
+  "success": false,
+  "message": "An error occurred",
+  "errorCode": "INTERNAL_ERROR",
+  "timestamp": "2024-01-20T09:00:00.000Z"
 }
 ```
 
@@ -718,6 +721,80 @@ GET /users?page=1&limit=10&sort=firstName:asc&role=USER&isActive=true
 
 ---
 
+### 6. Get Active Users
+**Endpoint:** `GET /users/active`
+
+**Description:** Retrieves a list of all active users
+
+**Authentication:** Required (JWT token)
+
+**Authorization:** ADMIN, MANAGER roles
+
+**Frontend Use Case:** Populate dropdowns or user selection lists
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "uuid": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4n",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@example.com",
+      "role": "USER",
+      "isActive": true
+    }
+  ]
+}
+```
+
+---
+
+### 7. Get User by Email
+**Endpoint:** `GET /users/email/:email`
+
+**Description:** Retrieves a single user by email address
+
+**Authentication:** Required (JWT token)
+
+**Authorization:** ADMIN, MANAGER roles
+
+**URL Parameters:**
+- `email`: User email address
+
+**Frontend Use Case:** User lookup by email
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "uuid": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4n",
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "employeeId": "EMP001",
+    "role": "USER",
+    "isActive": true,
+    "createdAt": "2024-01-15T08:00:00.000Z",
+    "updatedAt": "2024-01-20T09:00:00.000Z"
+  }
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "success": false,
+  "message": "User not found",
+  "errorCode": "NOT_FOUND",
+  "timestamp": "2024-01-20T09:00:00.000Z"
+}
+```
+
+---
+
 ## Tasks API
 
 ### 1. List All Tasks
@@ -1012,6 +1089,195 @@ GET /tasks?page=1&limit=10&sort=priority:desc&status=IN_PROGRESS&project=0192a1b
 
 ---
 
+## Dashboard API
+
+### 1. Get Dashboard Overview
+**Endpoint:** `GET /dashboard/overview`
+
+**Description:** Retrieves dashboard statistics and overview data
+
+**Authentication:** Required (JWT token)
+
+**Frontend Use Case:** Display dashboard with project/task statistics
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "totalProjects": 25,
+    "activeProjects": 18,
+    "completedProjects": 7,
+    "totalTasks": 150,
+    "completedTasks": 89,
+    "inProgressTasks": 45,
+    "overdueTasks": 16,
+    "totalUsers": 12,
+    "activeUsers": 10,
+    "projectsByStatus": {
+      "PLANNING": 5,
+      "ACTIVE": 18,
+      "COMPLETED": 7,
+      "ARCHIVED": 2
+    },
+    "tasksByStatus": {
+      "OPEN": 25,
+      "IN_PROGRESS": 45,
+      "COMPLETED": 89,
+      "BLOCKED": 8
+    },
+    "recentProjects": [
+      {
+        "uuid": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4n",
+        "name": "New Web Application",
+        "status": "ACTIVE",
+        "createdAt": "2024-01-20T10:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Audit API
+
+### 1. Get Entity History
+**Endpoint:** `GET /audit/entity/:entityType/:entityId`
+
+**Description:** Retrieves audit history for a specific entity
+
+**Authentication:** Required (JWT token)
+
+**URL Parameters:**
+- `entityType`: Type of entity (PROJECT, TASK, USER)
+- `entityId`: Entity UUID
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10, max: 100)
+
+**Frontend Use Case:** View audit trail for specific records
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "uuid": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4a",
+      "entityType": "PROJECT",
+      "entityId": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4n",
+      "action": "CREATE",
+      "userId": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4o",
+      "oldValues": null,
+      "newValues": {
+        "name": "New Project",
+        "status": "PLANNING"
+      },
+      "timestamp": "2024-01-20T10:00:00.000Z",
+      "ipAddress": "192.168.1.100"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 5,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### 2. Get User Activity
+**Endpoint:** `GET /audit/user/:userId`
+
+**Description:** Retrieves audit history for a specific user's actions
+
+**Authentication:** Required (JWT token)
+
+**URL Parameters:**
+- `userId`: User UUID
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10, max: 100)
+
+**Frontend Use Case:** View user activity log
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "uuid": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4b",
+      "entityType": "TASK",
+      "entityId": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4q",
+      "action": "UPDATE",
+      "userId": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4o",
+      "oldValues": {
+        "status": "OPEN"
+      },
+      "newValues": {
+        "status": "IN_PROGRESS"
+      },
+      "timestamp": "2024-01-20T11:30:00.000Z"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 25,
+    "totalPages": 3
+  }
+}
+```
+
+---
+
+### 3. Get Recent Activity
+**Endpoint:** `GET /audit/recent`
+
+**Description:** Retrieves recent audit activity across all entities
+
+**Authentication:** Required (JWT token)
+
+**Query Parameters:**
+- `limit` (optional): Number of recent activities to retrieve (default: 50, max: 200)
+
+**Frontend Use Case:** Display recent activity feed
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "uuid": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4c",
+      "entityType": "PROJECT",
+      "entityId": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4n",
+      "action": "UPDATE",
+      "userId": "0192a1b2-3c4d-5e6f-7g8h-9i0j1k2l3m4o",
+      "changes": {
+        "status": {
+          "old": "PLANNING",
+          "new": "ACTIVE"
+        }
+      },
+      "timestamp": "2024-01-20T14:00:00.000Z",
+      "user": {
+        "firstName": "John",
+        "lastName": "Doe"
+      }
+    }
+  ]
+}
+```
+
+---
+
 ## Response Format
 
 All API responses follow a consistent format:
@@ -1179,15 +1445,16 @@ export class ApiService {
 ```
 
 ### 2. Error Handling
-Always check the `Success` field in responses:
+Always check the `success` field in responses:
 
 ```typescript
 this.apiService.getProjects().subscribe({
   next: (response) => {
-    if (response.Success) {
-      this.projects = response.Data;
+    if (response.success) {
+      this.projects = response.data;
+      this.pagination = response.meta;
     } else {
-      this.handleError(response.Message);
+      this.handleError(response.message);
     }
   },
   error: (error) => {
@@ -1198,14 +1465,19 @@ this.apiService.getProjects().subscribe({
 
 ### 3. Data Population
 When displaying related data (e.g., project with tasks), use endpoints that populate references:
-- Use `GET /projects/:id` for full project details with tasks
-- Use `GET /tasks?projectId=xxx` for project's task list with user details
+- Use `GET /projects/:uuid` for full project details with populated manager and tasks
+- Use `GET /tasks/:uuid` for task details with populated project, assigned user, and creator
+- Use `GET /users/:uuid` for user details
+- Dashboard endpoints provide aggregated statistics without full population
 
 ### 4. Search and Filter
 All list endpoints support search and sort:
-- Search: Use `searchKey` query parameter for text search
-- Sort: Use `sortKey` query parameter with field name
-- Filter: Tasks API supports `projectId` and `parentId` filters
+- Search: Use `search` query parameter for text search in projects and tasks
+- Search: Use `searchKey` query parameter for user searches
+- Sort: Use `sort` query parameter with field name and direction (e.g., "name:asc", "createdAt:desc")
+- Filter: Tasks API supports `project`, `assignedTo`, `status`, `priority` filters
+- Filter: Users API supports `role`, `isActive` filters
+- Pagination: All list endpoints support `page` and `limit` parameters
 
 ### 5. Date Handling
 - Dates are stored as ISO 8601 strings
@@ -1214,10 +1486,10 @@ All list endpoints support search and sort:
 
 ### 6. Task Status Values
 Valid task status values:
-- `"Open"`
-- `"In Progress"`
-- `"Completed"`
-- `"Blocked"`
+- `"OPEN"`
+- `"IN_PROGRESS"`
+- `"COMPLETED"`
+- `"BLOCKED"`
 
 ### 7. Virtual Fields
 Some fields are computed (virtual) and read-only:
@@ -1238,38 +1510,41 @@ http://localhost:4300/api-docs
 
 **Get all projects:**
 ```bash
-curl http://localhost:4300/projects
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" http://localhost:4300/projects
 ```
 
 **Create a project:**
 ```bash
-curl -X POST http://localhost:4300/projects/add \
+curl -X POST http://localhost:4300/projects \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "Project": "New Project",
-    "Priority": 5,
-    "Start_Date": "2024-01-01",
-    "End_Date": "2024-12-31"
+    "name": "New Project",
+    "description": "Project description",
+    "priority": 5,
+    "status": "PLANNING"
   }'
 ```
 
-**Search users:**
+**Get user by email:**
 ```bash
-curl "http://localhost:4300/users?searchKey=john&sortKey=First_Name"
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:4300/users/email/john.doe@example.com"
 ```
 
 ---
 
 ## Database Configuration
 
-The server connects to MongoDB using the configuration in:
+The server connects to MongoDB using environment variables. The connection is configured in:
 ```
-/config/ProjectManagerDB.js
+src/config/database.ts
 ```
 
 Default connection:
 - **Port**: 4300
-- **Database**: ProjectManager (configured in ProjectManagerDB.js)
+- **Database**: Configured via `MONGODB_CONNECTION_STRING` environment variable
+- **Authentication**: JWT-based with role-based access control
 
 ---
 
@@ -1287,27 +1562,45 @@ app.use(cors({
 
 ## Notes
 
-1. **Auto-increment**: Projects use `Project_ID` as an auto-incrementing field via mongoose-sequence plugin
-2. **References**: All foreign key relationships use MongoDB ObjectId references
-3. **Population**: Related documents are populated using Mongoose's `.populate()` method
-4. **Validation**: Basic validation is handled at the schema level
-5. **Search**: Text searches use case-insensitive regex matching
-6. **Security**: For production, implement:
-   - Authentication/Authorization
+1. **UUID Primary Keys**: All entities use UUID v7 as primary identifiers instead of MongoDB ObjectIds
+2. **Auto-increment**: Projects use `Project_ID` as an auto-incrementing field via mongoose-sequence plugin
+3. **References**: Foreign key relationships use UUID strings for API consistency
+4. **Population**: Related documents are populated using Mongoose's `.populate()` method
+5. **Validation**: Comprehensive validation using Zod schemas and middleware
+6. **Search**: Text searches use case-insensitive regex matching
+7. **Audit Logging**: All data changes are automatically logged for compliance
+8. **Security**: Production-ready security with:
+   - JWT authentication and role-based authorization
    - Input validation and sanitization
-   - Rate limiting
-   - HTTPS
-   - Environment-specific CORS
+   - Rate limiting (100 requests per 15 minutes)
+   - HTTPS enforcement
+   - Environment-specific CORS configuration
 
 ---
 
 ## Summary
 
-This API provides a complete CRUD (Create, Read, Update, Delete) interface for managing:
-- **Projects**: With manager assignment and task tracking
-- **Users**: With project and task assignments
-- **Tasks**: With hierarchical structure (parent-child) and status tracking
+This API provides a complete RESTful interface for managing:
+- **Projects**: CRUD operations with manager assignment and task tracking
+- **Users**: User management with role-based access control and authentication
+- **Tasks**: Task management with hierarchical structure and status tracking
+- **Dashboard**: Analytics and overview statistics
+- **Audit**: Complete audit trail for all data changes
 
-All endpoints return consistent JSON responses with a `Success` flag and appropriate data/error information.
+### Key Features:
+- **UUID-based**: All resources use UUID v7 as primary identifiers
+- **JWT Authentication**: Bearer token authentication with role-based authorization
+- **Pagination**: All list endpoints support pagination with configurable limits
+- **Consistent Responses**: Standardized success/error response format
+- **Audit Logging**: Complete audit trail for compliance and debugging
+- **Swagger Documentation**: Interactive API documentation
+
+### Security Features:
+- JWT token-based authentication
+- Role-based access control (ADMIN, MANAGER, USER)
+- Input validation and sanitization
+- Rate limiting (100 requests per 15 minutes)
+- CORS configuration
+- MongoDB injection prevention
 
 For real-time updates in the frontend, consider implementing WebSocket connections or polling strategies for critical data updates.
