@@ -51,13 +51,13 @@ export const AppStore = signalStore(
     updateProject(updatedProject: Project) {
       patchState(store, (state) => ({
         projects: state.projects.map(p =>
-          p._id === updatedProject._id ? updatedProject : p
+          (p._id === updatedProject._id || p.uuid === updatedProject.uuid) ? updatedProject : p
         )
       }));
     },
     deleteProject(projectId: string) {
       patchState(store, (state) => ({
-        projects: state.projects.filter(p => p._id !== projectId)
+        projects: state.projects.filter(p => p._id !== projectId && p.uuid !== projectId)
       }));
     },
     addUser(user: User) {
@@ -68,13 +68,13 @@ export const AppStore = signalStore(
     updateUser(updatedUser: User) {
       patchState(store, (state) => ({
         users: state.users.map(u =>
-          u._id === updatedUser._id ? updatedUser : u
+          (u._id === updatedUser._id || u.uuid === updatedUser.uuid) ? updatedUser : u
         )
       }));
     },
     deleteUser(userId: string) {
       patchState(store, (state) => ({
-        users: state.users.filter(u => u._id !== userId)
+        users: state.users.filter(u => u._id !== userId && u.uuid !== userId)
       }));
     },
     addTask(task: Task) {
@@ -85,13 +85,13 @@ export const AppStore = signalStore(
     updateTask(updatedTask: Task) {
       patchState(store, (state) => ({
         tasks: state.tasks.map(t =>
-          t._id === updatedTask._id ? updatedTask : t
+          (t._id === updatedTask._id || t.id === updatedTask.id) ? updatedTask : t
         )
       }));
     },
     deleteTask(taskId: string) {
       patchState(store, (state) => ({
-        tasks: state.tasks.filter(t => t._id !== taskId)
+        tasks: state.tasks.filter(t => t._id !== taskId && t.id !== taskId)
       }));
     },
   }))

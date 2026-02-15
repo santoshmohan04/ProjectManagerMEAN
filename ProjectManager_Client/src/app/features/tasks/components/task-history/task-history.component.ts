@@ -86,7 +86,8 @@ export class TaskHistoryComponent implements OnInit {
 
     this.auditService.getEntityHistory(EntityType.TASK, this.taskUuid()).subscribe({
       next: (response) => {
-        this.auditLogs.set(response.data);
+        const auditLogs = Array.isArray(response.data) ? response.data : [];
+        this.auditLogs.set(auditLogs);
         this.loading.set(false);
       },
       error: (err: any) => {

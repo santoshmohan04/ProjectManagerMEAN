@@ -68,11 +68,15 @@ export class UserslistComponent implements OnInit, AfterViewInit {
   loading = this.appStore.loading;
   error = this.appStore.error;
 
-  // Computed signals
-  dataSource = computed(() => {
-    const users = this.users();
-    const dataSource = new MatTableDataSource(users);
-    dataSource.filterPredicate = (data: User, filter: string) => {
+  // MatTableDataSource instance
+  dataSource = new MatTableDataSource<User>([]);
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
+  constructor() {
+    // Configure filter predicate
+    this.dataSource.filterPredicate = (data: User, filter: string) => {
       const firstName = data.firstName?.toLowerCase() || '';
       const lastName = data.lastName?.toLowerCase() || '';
       const employeeId = data.employeeId?.toString() || '';
@@ -84,35 +88,43 @@ export class UserslistComponent implements OnInit, AfterViewInit {
         email.includes(filter)
       );
     };
-    return dataSource;
-  });
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
-
-  constructor() {
-    // Load initial data
-    this.loadUsers();
-
-    // Effect to handle data source updates
+    // Effect to update dataSource when users change
     effect(() => {
-      const dataSource = this.dataSource();
-      if (this.paginator) {
-        dataSource.paginator = this.paginator;
-      }
-      if (this.sort) {
-        dataSource.sort = this.sort;
-      }
+      const users = this.users();
+      const validUsers = Array.isArray(users) ? users : [];
+      this.dataSource.data = validUsers;
+      
+      // Re-apply paginator after data change to ensure proper connection
+      setTimeout(() => {
+        if (this.paginator) {
+          this.dataSource.paginator = this.paginator;
+        }
+        if (this.sort) {
+          this.dataSource.sort = this.sort;
+        }
+      });
     });
   }
 
-  ngOnInit(): void {}
-
-  ngAfterViewInit() {
-    // Data source is already set up in the effect
+  ngOnInit(): void {
+    // Only load data if not already in store (caching)
+    if (!this.users() || this.users().length === 0) {
+      this.loadUsers();
+    }
   }
 
-  private loadUsers(searchKey?: string, sortKey?: string) {
+  ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
+
+  private loadUsers(searchKey?: string, sortKey?: string, force: boolean = false) {
+    // Skip if data exists and not forced
+    if (!force && !searchKey && !sortKey && this.users() && this.users().length > 0) {
+      return;
+    }
+    
     this.appStore.setLoading(true);
     const params = {
       search: searchKey,
@@ -121,7 +133,8 @@ export class UserslistComponent implements OnInit, AfterViewInit {
     this.userService.getUsersList(params).subscribe({
       next: (response) => {
         if (response.success) {
-          this.appStore.setUsers(response.data);
+          const users = Array.isArray(response.data) ? response.data : [];
+          this.appStore.setUsers(users);
         } else {
           this.appStore.setError(response.message || 'Failed to load users');
           this.alertService.error(response.message || 'Failed to load users');
@@ -138,11 +151,10 @@ export class UserslistComponent implements OnInit, AfterViewInit {
 
   applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value;
-    const dataSource = this.dataSource();
-    dataSource.filter = filterValue.trim().toLowerCase();
+    this.dataSource.filter = filterValue.trim().toLowerCase();
 
-    if (dataSource.paginator) {
-      dataSource.paginator.firstPage();
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
     }
   }
 
@@ -188,7 +200,7 @@ export class UserslistComponent implements OnInit, AfterViewInit {
         this.userService.deleteUser(row.uuid).subscribe({
           next: (response) => {
             if (response.success) {
-              this.loadUsers();
+              this.appStore.deleteUser(row.uuid!);
               this.alertService.success('User deleted successfully');
             } else {
               this.alertService.error(response.message || 'Failed to delete user');

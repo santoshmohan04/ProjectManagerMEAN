@@ -53,7 +53,8 @@ export class RecentActivityComponent implements OnInit {
     this.auditService.getRecentActivity().subscribe({
       next: (response) => {
         // Limit to 50 most recent activities
-        this.activities.set(response.data.slice(0, 50));
+        const activities = Array.isArray(response.data) ? response.data : [];
+        this.activities.set(activities.slice(0, 50));
         this.loading.set(false);
       },
       error: (err: any) => {

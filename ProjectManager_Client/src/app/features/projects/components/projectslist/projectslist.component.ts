@@ -85,10 +85,6 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
-    // Load initial data
-    this.loadProjects();
-    this.loadUsers();
-
     // Configure filter predicate
     this.dataSource.filterPredicate = (data: Project, filter: string) => {
       const assignedUser = this.getAssignedUser(data).toLowerCase();
@@ -119,14 +115,27 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Only load data if not already in store (caching)
+    if (!this.projects() || this.projects().length === 0) {
+      this.loadProjects();
+    }
+    if (!this.users() || this.users().length === 0) {
+      this.loadUsers();
+    }
+  }
 
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
 
-  private loadProjects(searchKey?: string, sortKey?: string) {
+  private loadProjects(searchKey?: string, sortKey?: string, force: boolean = false) {
+    // Skip if data exists and not forced
+    if (!force && !searchKey && !sortKey && this.projects() && this.projects().length > 0) {
+      return;
+    }
+    
     this.appStore.setLoading(true);
     this.projectService.getProjects(searchKey, sortKey).subscribe({
       next: (response) => {
@@ -148,7 +157,12 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
     });
   }
 
-  private loadUsers(searchKey?: string, sortKey?: string) {
+  private loadUsers(searchKey?: string, sortKey?: string, force: boolean = false) {
+    // Skip if data exists and not forced
+    if (!force && !searchKey && !sortKey && this.users() && this.users().length > 0) {
+      return;
+    }
+    
     const params = {
       search: searchKey,
       sort: sortKey,
@@ -156,7 +170,9 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
     this.userService.getUsersList(params).subscribe({
       next: (response: ApiResponse<User[]>) => {
         if (response.success) {
-          this.appStore.setUsers(response.data);
+          // Handle nested data structure
+          const users = Array.isArray(response.data) ? response.data : [];
+          this.appStore.setUsers(users);
         }
       },
       error: (error: any) => {

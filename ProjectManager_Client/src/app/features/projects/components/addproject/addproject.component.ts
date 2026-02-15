@@ -92,7 +92,9 @@ export class AddprojectComponent implements OnInit {
     this.userService.getUsersList().subscribe({
       next: (response: any) => {
         if (response.success) {
-          this.appStore.setUsers(response.data);
+          // Handle nested data structure
+          const users = Array.isArray(response.data) ? response.data : [];
+          this.appStore.setUsers(users);
         }
       },
       error: (error: any) => {

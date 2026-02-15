@@ -35,13 +35,21 @@ export class LoginComponent {
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
   onSubmit(): void {
-    if (this.loginForm.valid) {
-      const credentials = this.loginForm.value;
-      this.authStore.login(credentials);
+    // Mark all fields as touched to show validation errors
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
     }
+
+    if (this.authStore.loading()) {
+      return;
+    }
+
+    const credentials = this.loginForm.value;
+    this.authStore.login(credentials);
   }
 }

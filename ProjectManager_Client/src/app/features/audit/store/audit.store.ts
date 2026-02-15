@@ -136,7 +136,7 @@ export const AuditStore = signalStore(
 
             return auditService.getEntityHistory(entityType, entityId, params).pipe(
               tap((response) => {
-                const logs = response.data || [];
+                const logs = Array.isArray(response.data) ? response.data : [];
                 patchState(store, {
                   entityLogs: logs,
                   entityType,
@@ -184,7 +184,7 @@ export const AuditStore = signalStore(
 
             return auditService.getUserActivity(userId, params).pipe(
               tap((response) => {
-                const logs = response.data || [];
+                const logs = Array.isArray(response.data) ? response.data : [];
                 patchState(store, {
                   userLogs: logs,
                   userId,
@@ -217,7 +217,7 @@ export const AuditStore = signalStore(
             const effectiveLimit = limit || 100;
             return auditService.getRecentActivity(effectiveLimit).pipe(
               tap((response) => {
-                const logs = response.data || [];
+                const logs = Array.isArray(response.data) ? response.data : [];
                 patchState(store, {
                   recentLogs: logs,
                   loading: false,

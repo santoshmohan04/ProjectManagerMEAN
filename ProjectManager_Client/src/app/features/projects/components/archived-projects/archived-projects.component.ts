@@ -55,7 +55,8 @@ export class ArchivedProjectsComponent implements OnInit {
     this.projectService.getProjects().subscribe({
       next: (response) => {
         // Filter projects with COMPLETED or ARCHIVED status
-        const archived = response.data.filter(
+        const projects = Array.isArray(response.data) ? response.data : [];
+        const archived = projects.filter(
           (p: Project) => p.status === 'COMPLETED' || p.status === 'ARCHIVED'
         );
         this.archivedProjects.set(archived);
