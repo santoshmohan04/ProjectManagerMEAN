@@ -1,21 +1,514 @@
-/* Importing Bootstrap SCSS file. */
-@use "bootstrap/scss/bootstrap" as bs;
+/* You can add global styles to this file, and also import other style files */
 
-/* Ensure body takes full width and removes margin */
-body,
-html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+html, body { 
+  height: 100%; 
 }
 
-.alert {
-  padding-top: 1px;
-  padding-left: 2px;
-  padding-bottom: 10px;
-  margin: 0px;
+body { 
+  margin: 0; 
+  font-family: 'Inter', 'Roboto', "Helvetica Neue", sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================================
+   Modern Typography Hierarchy
+   ============================================================================ */
+h1 {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: #333;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #555;
+  margin: 0 0 16px 0;
+}
+
+/* ============================================================================
+   Modern Elevation System
+   ============================================================================ */
+.mat-elevation-z1,
+.mat-mdc-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+.mat-elevation-z2 {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.mat-elevation-z4 {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+.mat-elevation-z8 {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ============================================================================
+   Modern Page Header & Toolbar Pattern (Linear/Vercel/Stripe Style)
+   ============================================================================ */
+
+// Page Header with Title + Subtitle + Actions
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  .page-title-section {
+    flex: 1;
+    
+    h1, .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0;
+      color: #1a1a1a;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .count-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px 10px;
+        background-color: rgba(0, 0, 0, 0.06);
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #666;
+      }
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      margin: 4px 0 0 0;
+      line-height: 1.5;
+    }
+  }
+
+  .page-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+
+    button {
+      font-weight: 500;
+      border-radius: 8px;
+      padding: 0 20px;
+      height: 40px;
+
+      mat-icon {
+        margin-right: 6px;
+      }
+    }
+  }
+}
+
+// Toolbar for Search & Filters
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+// Modern Search Field - Lightweight
+.search-field {
+  max-width: 350px;
+  flex: 1;
+  min-width: 240px;
+
+  .mat-mdc-text-field-wrapper {
+    background-color: #f9fafb !important;
+  }
+
+  .mat-mdc-form-field-focus-overlay {
+    background-color: transparent !important;
+  }
+
+  input {
+    font-size: 14px;
+  }
+
+  mat-icon {
+    color: #9ca3af;
+  }
+}
+
+// Reduce Form Field Height - Modern Feel
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-container-height: 44px;
+  font-size: 14px;
+}
+
+.mat-mdc-text-field-wrapper {
+  padding-top: 0 !important;
+}
+
+// Modern Button Styling
+.mat-mdc-button-base {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em;
+  text-transform: none !important;
+}
+
+.mat-mdc-outlined-button {
+  border: 1.5px solid rgba(0, 0, 0, 0.12) !important;
+}
+
+// Status Chips - Modern SaaS Style
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+
+  &.status-open {
+    background-color: rgba(33, 150, 243, 0.12);
+    color: #1565c0;
+  }
+
+  &.status-in-progress {
+    background-color: rgba(255, 152, 0, 0.12);
+    color: #e65100;
+  }
+
+  &.status-completed {
+    background-color: rgba(76, 175, 80, 0.12);
+    color: #2e7d32;
+  }
+
+  &.status-blocked {
+    background-color: rgba(244, 67, 54, 0.12);
+    color: #c62828;
+  }
+}
+
+// Table Enhancements
+table {
+  .actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  tr.mat-mdc-row:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  // Numeric columns center align
+  th.mat-mdc-header-cell,
+  td.mat-mdc-cell {
+    &.numeric-column {
+      text-align: center;
+    }
+
+    &.date-column {
+      color: #666;
+    }
+  }
+}
+
+/* ============================================================================
+   Dark Mode Styles
+   ============================================================================ */
+.light-mode {
+  background-color: #fafafa;
+  color: #212121;
+}
+
+.dark-mode {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+/* Material Design Dark Mode Overrides */
+.dark-mode {
+  h1, h2, h3 {
+    color: #e0e0e0;
+  }
+
+  .section-title {
+    color: #b0b0b0;
+  }
+
+  .mat-mdc-card {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  // Page Header Dark Mode
+  .page-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+
+    .page-title-section {
+      h1, .page-title {
+        color: #e0e0e0;
+
+        .count-badge {
+          background-color: rgba(255, 255, 255, 0.1);
+          color: #b0b0b0;
+        }
+      }
+
+      .page-subtitle {
+        color: #9ca3af;
+      }
+    }
+  }
+
+  // Search Field Dark Mode
+  .search-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: #2a2a2a !important;
+    }
+
+    mat-icon {
+      color: #6b7280;
+    }
+  }
+
+  // Table Dark Mode
+  table {
+    tr.mat-mdc-row:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    td.date-column {
+      color: #9ca3af;
+    }
+  }
+
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: #2a2a2a;
+    }
+
+    .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+      background-color: #2a2a2a;
+    }
+
+    .mat-mdc-form-field-focus-overlay {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    label, input, textarea {
+      color: #e0e0e0;
+    }
+  }
+
+  .mat-mdc-table {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+
+    .mat-mdc-header-row {
+      background-color: #2a2a2a;
+    }
+
+    .mat-mdc-row:hover {
+      background-color: #2a2a2a;
+    }
+  }
+
+  .mat-mdc-paginator {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  .mat-mdc-select-panel {
+    background-color: #2a2a2a;
+
+    .mat-mdc-option {
+      color: #e0e0e0;
+
+      &:hover {
+        background-color: #333333;
+      }
+    }
+  }
+
+  .mat-mdc-dialog-container {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  .mat-mdc-chip {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+  }
+
+  .mat-mdc-tab-nav-bar,
+  .mat-mdc-tab-header {
+    background-color: #1e1e1e;
+    border-bottom-color: #333333;
+  }
+
+  .mat-expansion-panel {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+}
+
+/* ============================================================================
+   RoleGuard Error Snackbar Styling
+   ============================================================================ */
+.error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+  font-weight: 500 !important;
+
+  .mat-mdc-snack-bar-label {
+    color: white !important;
+  }
+
+  .mat-mdc-button {
+    color: white !important;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+/* ============================================================================
+   Sticky Filter Bar
+   ============================================================================ */
+.sticky-filter {
+  position: sticky;
+  top: 64px; /* Height of toolbar */
+  z-index: 100;
+  background-color: white;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
+}
+
+.dark-mode .sticky-filter {
+  background-color: #1e1e1e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================================================
+   Mobile Responsive Utilities
+   ============================================================================ */
+@media (max-width: 768px) {
+  // Page Header Responsive
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 16px;
+
+    .page-title-section {
+      h1, .page-title {
+        font-size: 20px;
+      }
+
+      .page-subtitle {
+        font-size: 13px;
+      }
+    }
+
+    .page-actions {
+      width: 100%;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  // Toolbar Responsive
+  .toolbar {
+    .toolbar-left {
+      flex-direction: column;
+      width: 100%;
+
+      .search-field,
+      .project-selector {
+        max-width: 100%;
+        width: 100%;
+      }
+    }
+  }
+
+  // Form Fields
+  .mat-mdc-form-field {
+    width: 100%;
+  }
+
+  // Cards
+  .mat-mdc-card {
+    margin: 8px !important;
+  }
+
+  .mat-mdc-card-content {
+    padding: 12px !important;
+  }
+
+  // Tables
+  .mat-mdc-table {
+    font-size: 12px;
+
+    .mat-mdc-header-cell,
+    .mat-mdc-cell {
+      padding: 8px !important;
+    }
+  }
+}
+
+
+/* ============================================================================
+   Smooth Transitions
+   ============================================================================ */
+* {
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }

@@ -1,0 +1,182 @@
+<div class="archived-projects-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <button mat-icon-button (click)="goBack()" matTooltip="Back to Projects">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>
+        <mat-icon>archive</mat-icon>
+        Archived Projects
+      </h1>
+    </div>
+    <p class="subtitle">View and manage completed or archived projects</p>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <mat-card class="table-card">
+      <mat-card-content>
+        <table mat-table>
+          <thead>
+            <tr>
+              @for (col of displayedColumns; track col) {
+                <th><app-skeleton-loader type="text" [width]="80"></app-skeleton-loader></th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of Array(5); track $index) {
+              <tr>
+                @for (col of displayedColumns; track col) {
+                  <td><app-skeleton-loader type="text"></app-skeleton-loader></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Error State -->
+  @else if (error()) {
+    <app-empty-state
+      icon="error"
+      [iconSize]="72"
+      title="Error Loading Projects"
+      [message]="error() || 'An error occurred'"
+      actionLabel="Retry"
+      actionIcon="refresh"
+      (actionClick)="loadArchivedProjects()"
+    ></app-empty-state>
+  }
+
+  <!-- Empty State -->
+  @else if (archivedProjects().length === 0) {
+    <app-empty-state
+      icon="inventory_2"
+      [iconSize]="72"
+      title="No Archived Projects"
+      message="There are no archived or completed projects yet."
+      actionLabel="View All Projects"
+      actionIcon="folder"
+      (actionClick)="goBack()"
+    ></app-empty-state>
+  }
+
+  <!-- Data Table -->
+  @else {
+    <mat-card class="table-card">
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="archivedProjects()" class="projects-table">
+            <!-- Project Name Column -->
+            <ng-container matColumnDef="projectName">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon class="column-icon">folder</mat-icon>
+                Project Name
+              </th>
+              <td mat-cell *matCellDef="let project">
+                <div class="project-name">
+                  <strong>{{ project.Project || project.name }}</strong>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Start Date Column -->
+            <ng-container matColumnDef="startDate">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon class="column-icon">event</mat-icon>
+                Start Date
+              </th>
+              <td mat-cell *matCellDef="let project">
+                {{ formatDate(project.Start_Date || project.startDate) }}
+              </td>
+            </ng-container>
+
+            <!-- End Date Column -->
+            <ng-container matColumnDef="endDate">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon class="column-icon">event</mat-icon>
+                End Date
+              </th>
+              <td mat-cell *matCellDef="let project">
+                {{ formatDate(project.End_Date || project.endDate) }}
+              </td>
+            </ng-container>
+
+            <!-- Priority Column -->
+            <ng-container matColumnDef="priority">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon class="column-icon">flag</mat-icon>
+                Priority
+              </th>
+              <td mat-cell *matCellDef="let project">
+                <span class="priority-badge" [ngClass]="getPriorityColor(project.Priority || project.priority || 0)">
+                  {{ project.Priority || project.priority || 0 }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon class="column-icon">info</mat-icon>
+                Status
+              </th>
+              <td mat-cell *matCellDef="let project">
+                <mat-chip [color]="getStatusChipColor(project.status)" selected>
+                  {{ project.status }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Tasks Column -->
+            <ng-container matColumnDef="tasks">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon class="column-icon">task_alt</mat-icon>
+                Tasks
+              </th>
+              <td mat-cell *matCellDef="let project">
+                <div class="task-count">
+                  <mat-icon class="task-icon">check_circle</mat-icon>
+                  {{ getCompletedTaskCount(project) }} / {{ getTaskCount(project) }}
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let project">
+                <div class="action-buttons">
+                  <button mat-icon-button color="primary" (click)="viewProject(project)" matTooltip="View Details">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button mat-icon-button color="accent" (click)="restoreProject(project)" matTooltip="Restore Project">
+                    <mat-icon>unarchive</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteProject(project)" matTooltip="Delete Project">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+
+        <!-- Summary Footer -->
+        <div class="table-footer">
+          <div class="footer-info">
+            <mat-icon>archive</mat-icon>
+            <span>Total Archived: <strong>{{ archivedProjects().length }}</strong></span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

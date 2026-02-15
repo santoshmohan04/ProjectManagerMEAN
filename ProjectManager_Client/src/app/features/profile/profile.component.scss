@@ -1,0 +1,271 @@
+.profile-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.profile-header {
+  margin-bottom: 24px;
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 28px;
+    font-weight: 500;
+    color: #424242;
+    margin: 0;
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+  }
+}
+
+.dark-mode .profile-header h1 {
+  color: #e0e0e0;
+}
+
+.profile-content {
+  display: grid;
+  gap: 24px;
+}
+
+// Profile Card - Avatar Section
+.profile-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+
+  .profile-avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 16px 0;
+  }
+
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: 600;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .profile-info {
+    flex: 1;
+
+    h2 {
+      margin: 0 0 12px 0;
+      font-size: 28px;
+      font-weight: 500;
+    }
+  }
+}
+
+// Details Card
+.details-card {
+  .card-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  .profile-form {
+    padding-top: 16px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-field {
+    width: 100%;
+  }
+
+  .full-width {
+    width: 100%;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+}
+
+// Security Card
+.security-card {
+  .security-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+
+    .security-info {
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      p {
+        margin: 0;
+        color: #757575;
+        font-size: 14px;
+      }
+    }
+  }
+
+  mat-divider {
+    margin: 16px 0;
+  }
+}
+
+.dark-mode .security-card .security-info p {
+  color: #9e9e9e;
+}
+
+// Stats Card
+.stats-card {
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 24px;
+    padding: 16px 0;
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #667eea;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #424242;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #757575;
+      text-align: center;
+    }
+  }
+}
+
+.dark-mode .stats-card .stat-item {
+  background-color: #2a2a2a;
+
+  .stat-value {
+    color: #e0e0e0;
+  }
+
+  .stat-label {
+    color: #9e9e9e;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 16px;
+  }
+
+  .profile-header h1 {
+    font-size: 24px;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  .profile-card {
+    .profile-avatar-section {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      font-size: 32px;
+    }
+
+    .profile-info h2 {
+      font-size: 22px;
+    }
+  }
+
+  .details-card {
+    .card-title-row {
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
+
+      button {
+        width: 100%;
+      }
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  .security-card .security-item {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .stats-card .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

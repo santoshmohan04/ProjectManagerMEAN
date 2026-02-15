@@ -4,7 +4,7 @@ import {
   AbstractControl,
   ValidationErrors,
 } from '@angular/forms';
-import { Directive, Input } from '@angular/core';
+import { Directive, input, computed, inject } from '@angular/core';
 
 @Directive({
   selector: '[dateCompare]',
@@ -18,11 +18,20 @@ import { Directive, Input } from '@angular/core';
   ],
 })
 export class DateCompareValidatorDirective implements Validator {
-  @Input() compareDate!: string | Date; // Accepts string or Date
-  @Input() operation!: 'less than' | 'greater than'; // Comparison operation
+  // Signal-based inputs
+  compareDate = input.required<string | Date>({ alias: 'dateCompare' });
+  operation = input.required<'less than' | 'greater than'>({ alias: 'operation' });
+
+  // Computed validation logic (though not directly used in validate, for potential future use)
+  private validationLogic = computed(() => ({
+    compareDate: this.compareDate(),
+    operation: this.operation(),
+  }));
 
   validate(control: AbstractControl): ValidationErrors | null {
-    if (!this.compareDate || !this.operation || !control.value) {
+    const logic = this.validationLogic(); // Access computed for consistency
+
+    if (!logic.compareDate || !logic.operation || !control.value) {
       return null;
     }
 
@@ -30,9 +39,9 @@ export class DateCompareValidatorDirective implements Validator {
     const sourceDate =
       control.value instanceof Date ? control.value : new Date(control.value);
     const targetDate =
-      this.compareDate instanceof Date
-        ? this.compareDate
-        : new Date(this.compareDate);
+      logic.compareDate instanceof Date
+        ? logic.compareDate
+        : new Date(logic.compareDate);
 
     // If either date is invalid, skip validation
     if (isNaN(sourceDate.getTime()) || isNaN(targetDate.getTime())) {
@@ -40,18 +49,18 @@ export class DateCompareValidatorDirective implements Validator {
     }
 
     const isValid =
-      this.operation === 'less than'
-        ? sourceDate < targetDate
-        : sourceDate > targetDate;
+      logic.operation === 'less than'
+        ? targetDate >= sourceDate // Prevent endDate < startDate (target >= source)
+        : targetDate <= sourceDate; // For 'greater than' operation
 
     return isValid
       ? null
       : {
           dateCompare: {
             valid: false,
-            operation: this.operation,
+            operation: logic.operation,
             sourceDate: control.value,
-            targetDate: this.compareDate,
+            targetDate: logic.compareDate,
           },
         };
   }

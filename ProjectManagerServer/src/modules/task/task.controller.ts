@@ -95,7 +95,7 @@ export class TaskController {
         limit: limitNum
       });
 
-      successResponse(res, result);
+      successResponse(res, result.data, result.meta);
     } catch (err) {
       errorResponse(res, 'Error fetching tasks', 'FETCH_ERROR');
     }
@@ -115,7 +115,7 @@ export class TaskController {
       }
 
       const result = await this.taskService.getAdvancedTasks(filters, sort, pagination);
-      successResponse(res, result);
+      successResponse(res, result.data, result.meta);
     } catch (err) {
       errorResponse(res, 'Error performing advanced search', 'SEARCH_ERROR');
     }

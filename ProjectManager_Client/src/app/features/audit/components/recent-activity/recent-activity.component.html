@@ -1,0 +1,233 @@
+<div class="recent-activity-container">
+  <mat-card class="header-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>feed</mat-icon>
+        Recent Activity Feed
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="description">
+        View the most recent audit log entries across all entities and users.
+        Monitor system activity and track changes in real-time.
+      </p>
+
+      <!-- Controls -->
+      <div class="controls">
+        <mat-form-field appearance="outline" class="limit-field">
+          <mat-label>Number of Records</mat-label>
+          <mat-select [(ngModel)]="selectedLimit" (ngModelChange)="loadActivity()">
+            @for (limit of limitOptions; track limit) {
+              <mat-option [value]="limit">
+                {{ limit }} records
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="refresh()"
+          [disabled]="store.isLoading()">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading state -->
+  @if (store.isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading recent activity...</p>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (store.hasError()) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon>error</mat-icon>
+          <div class="error-text">
+            <h3>Error Loading Activity</h3>
+            <p>{{ store.error() }}</p>
+          </div>
+          <button mat-raised-button color="primary" (click)="refresh()">
+            <mat-icon>refresh</mat-icon>
+            Retry
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Results -->
+  @if (store.hasRecentLogs() && !store.isLoading()) {
+    <!-- Statistics card -->
+    <mat-card class="stats-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>analytics</mat-icon>
+          Activity Overview
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stats-grid">
+          <div class="stat-item total">
+            <mat-icon>format_list_numbered</mat-icon>
+            <div class="stat-content">
+              <span class="stat-value">{{ getActivityStats().totalLogs }}</span>
+              <span class="stat-label">Total Logs</span>
+            </div>
+          </div>
+
+          <div class="stat-item users">
+            <mat-icon>people</mat-icon>
+            <div class="stat-content">
+              <span class="stat-value">{{ getActivityStats().uniqueUsers }}</span>
+              <span class="stat-label">Active Users</span>
+            </div>
+          </div>
+
+          <div class="stat-mini-grid">
+            <div class="mini-stat">
+              <mat-icon class="icon-create">add_circle</mat-icon>
+              <span class="mini-value">{{ getActivityStats().byAction.CREATE }}</span>
+              <span class="mini-label">Created</span>
+            </div>
+            <div class="mini-stat">
+              <mat-icon class="icon-update">edit</mat-icon>
+              <span class="mini-value">{{ getActivityStats().byAction.UPDATE }}</span>
+              <span class="mini-label">Updated</span>
+            </div>
+            <div class="mini-stat">
+              <mat-icon class="icon-delete">delete</mat-icon>
+              <span class="mini-value">{{ getActivityStats().byAction.DELETE }}</span>
+              <span class="mini-label">Deleted</span>
+            </div>
+          </div>
+
+          <div class="stat-mini-grid">
+            <div class="mini-stat">
+              <mat-icon>work</mat-icon>
+              <span class="mini-value">{{ getActivityStats().byEntity.PROJECT }}</span>
+              <span class="mini-label">Projects</span>
+            </div>
+            <div class="mini-stat">
+              <mat-icon>assignment</mat-icon>
+              <span class="mini-value">{{ getActivityStats().byEntity.TASK }}</span>
+              <span class="mini-label">Tasks</span>
+            </div>
+            <div class="mini-stat">
+              <mat-icon>person</mat-icon>
+              <span class="mini-value">{{ getActivityStats().byEntity.USER }}</span>
+              <span class="mini-label">Users</span>
+            </div>
+          </div>
+        </div>
+
+        @if (getMostRecentTime(); as recentTime) {
+          <div class="last-updated">
+            <mat-icon>schedule</mat-icon>
+            <span>Most recent activity: {{ recentTime | date: 'medium' }}</span>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Filters card -->
+    <mat-card class="filters-card">
+      <mat-card-content>
+        <div class="filters">
+          <div class="filter-label">
+            <mat-icon>filter_list</mat-icon>
+            <strong>Filter Results</strong>
+          </div>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Entity Type</mat-label>
+            <mat-select [(ngModel)]="filterEntityType">
+              @for (type of entityTypes; track type) {
+                <mat-option [value]="type">
+                  {{ type }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Action</mat-label>
+            <mat-select [(ngModel)]="filterAction">
+              @for (action of actions; track action) {
+                <mat-option [value]="action">
+                  {{ action }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          @if (filterEntityType() !== 'ALL' || filterAction() !== 'ALL') {
+            <button mat-stroked-button (click)="clearFilters()">
+              <mat-icon>clear</mat-icon>
+              Clear Filters
+            </button>
+          }
+
+          @if (getActivityStats().filteredCount !== getActivityStats().totalLogs) {
+            <div class="filter-results">
+              Showing {{ getActivityStats().filteredCount }} of {{ getActivityStats().totalLogs }} logs
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Activity logs -->
+    <mat-card class="results-card">
+      <mat-card-header>
+        <mat-card-title>
+          <div class="results-header">
+            <div class="results-title">
+              <mat-icon>history</mat-icon>
+              <span>Activity Timeline</span>
+              <span class="results-count">({{ filteredLogs().length }} records)</span>
+            </div>
+          </div>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (filteredLogs().length === 0) {
+          <div class="no-results">
+            <mat-icon>filter_alt_off</mat-icon>
+            <p>No logs match your current filters</p>
+            <button mat-raised-button color="primary" (click)="clearFilters()">
+              Clear Filters
+            </button>
+          </div>
+        } @else {
+          <!-- Timeline -->
+          <app-audit-timeline
+            [logs]="filteredLogs()">
+          </app-audit-timeline>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Empty state (no data loaded) -->
+  @if (!store.hasRecentLogs() && !store.isLoading() && !store.hasError()) {
+    <mat-card class="empty-state-card">
+      <mat-card-content>
+        <mat-icon>inbox</mat-icon>
+        <p>No recent activity available</p>
+        <button mat-raised-button color="primary" (click)="refresh()">
+          <mat-icon>refresh</mat-icon>
+          Load Activity
+        </button>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

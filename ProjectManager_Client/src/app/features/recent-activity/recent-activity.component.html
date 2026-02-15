@@ -1,0 +1,125 @@
+<div class="recent-activity-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>
+      <mat-icon>history</mat-icon>
+      Recent Activity
+    </h1>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="refreshActivity()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      @if (isAdmin()) {
+        <button mat-raised-button color="accent" (click)="viewFullAudit()">
+          <mat-icon>admin_panel_settings</mat-icon>
+          Full Audit Log
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  @if (!loading() && !error() && activities().length > 0) {
+    <div class="stats-row">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-content">
+            <mat-icon class="stat-icon today">event_note</mat-icon>
+            <div class="stat-info">
+              <div class="stat-value">{{ getActivityStats().today }}</div>
+              <div class="stat-label">Today</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-content">
+            <mat-icon class="stat-icon week">date_range</mat-icon>
+            <div class="stat-info">
+              <div class="stat-value">{{ getActivityStats().thisWeek }}</div>
+              <div class="stat-label">This Week</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-content">
+            <mat-icon class="stat-icon month">calendar_month</mat-icon>
+            <div class="stat-info">
+              <div class="stat-value">{{ getActivityStats().thisMonth }}</div>
+              <div class="stat-label">This Month</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-content">
+            <mat-icon class="stat-icon total">analytics</mat-icon>
+            <div class="stat-info">
+              <div class="stat-value">{{ activities().length }}</div>
+              <div class="stat-label">Total Shown</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <mat-card class="activity-card">
+      <mat-card-content>
+        <div class="loading-state">
+          @for (item of [1, 2, 3, 4, 5]; track $index) {
+            <div class="skeleton-item">
+              <app-skeleton-loader type="circle" [width]="40" [height]="40"></app-skeleton-loader>
+              <div class="skeleton-content">
+                <app-skeleton-loader type="text" [width]="60"></app-skeleton-loader>
+                <app-skeleton-loader type="text" [width]="80"></app-skeleton-loader>
+              </div>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Error State -->
+  @else if (error()) {
+    <app-empty-state
+      icon="error"
+      [iconSize]="72"
+      title="Error Loading Activity"
+      [message]="error() || 'An error occurred'"
+      actionLabel="Retry"
+      actionIcon="refresh"
+      (actionClick)="loadRecentActivity()"
+    ></app-empty-state>
+  }
+
+  <!-- Empty State -->
+  @else if (activities().length === 0) {
+    <app-empty-state
+      icon="history_toggle_off"
+      [iconSize]="72"
+      title="No Recent Activity"
+      message="There are no recent activities to display at this time."
+    ></app-empty-state>
+  }
+
+  <!-- Activity Timeline -->
+  @else {
+    <mat-card class="activity-card">
+      <mat-card-content>
+        <app-audit-timeline [logs]="activities()"></app-audit-timeline>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

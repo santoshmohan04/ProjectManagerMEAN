@@ -12,7 +12,15 @@
   flex-wrap: wrap;
   align-items: center;
   box-sizing: border-box;
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .custom-toolbar {
+  background-color: #1a1a1a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .title {
@@ -24,6 +32,11 @@
   flex: 1 1 auto;
 }
 
+.theme-toggle {
+  color: white;
+  margin-right: 8px;
+}
+
 .menu-button {
   display: none;
   color: white;
@@ -32,12 +45,34 @@
 .nav-links {
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  gap: 4px;
+  align-items: center;
 
   a.nav-link {
     color: white;
     font-size: 14px;
     text-transform: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &.active-link {
+      background-color: rgba(255, 255, 255, 0.2);
+      font-weight: 500;
+    }
   }
 }
 
@@ -45,16 +80,61 @@
   display: none !important;
 }
 
+.mobile-menu {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 8px;
+
+  a.mobile-link {
+    width: 100%;
+    color: white;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    font-size: 16px;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &.active-link {
+      background-color: rgba(255, 255, 255, 0.15);
+      font-weight: 500;
+    }
+  }
+}
+
 /* Mobile styles */
 @media (max-width: 768px) {
+  .custom-toolbar {
+    padding: 0 12px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
   .menu-button {
     display: block;
   }
 
   .nav-links {
-    width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
-    margin-top: 8px;
+    display: none;
+  }
+
+  .mobile-menu {
+    display: flex;
   }
 }

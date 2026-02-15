@@ -1,0 +1,237 @@
+<div class="project-details-container">
+  @if (projectsStore.loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading project details...</p>
+    </div>
+  } @else if (projectsStore.error()) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon color="warn">error</mat-icon>
+          <h3>Error Loading Project</h3>
+          <p>{{ projectsStore.error() }}</p>
+          <button mat-raised-button color="primary" (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon>
+            Back to Projects
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  } @else if (project()) {
+    <!-- Header with Back Button -->
+    <div class="page-header">
+      <button mat-icon-button (click)="goBack()" matTooltip="Back to projects">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Project Details</h1>
+      <div class="header-actions">
+        @if (canEdit()) {
+          <button mat-raised-button color="primary" (click)="onEdit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        }
+        @if (canArchive()) {
+          <button mat-stroked-button color="accent" (click)="onArchive()">
+            <mat-icon>archive</mat-icon>
+            Archive
+          </button>
+          <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="More options">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="onDelete()" class="delete-action">
+              <mat-icon>delete</mat-icon>
+              <span>Delete Project</span>
+            </button>
+          </mat-menu>
+        }
+      </div>
+    </div>
+
+    <!-- Project Summary Card -->
+    <mat-card class="summary-card">
+      <mat-card-header>
+        <mat-card-title>
+          <div class="project-title">
+            <h2>{{ project()!.Project || project()!.name || 'Unnamed Project' }}</h2>
+            <div class="title-badges">
+              @if (project()!.status) {
+                <mat-chip [ngClass]="getStatusClass(project()!.status)">
+                  {{ project()!.status }}
+                </mat-chip>
+              }
+              <mat-chip [ngClass]="getPriorityClass(project()!.Priority || project()!.priority || 0)">
+                Priority: {{ project()!.Priority || project()!.priority || 0 }}
+              </mat-chip>
+            </div>
+          </div>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (project()!.description) {
+          <div class="project-description">
+            <mat-icon>description</mat-icon>
+            <p>{{ project()!.description }}</p>
+          </div>
+        }
+
+        <mat-divider></mat-divider>
+
+        <!-- Project Info Grid -->
+        <div class="info-grid">
+          <div class="info-item">
+            <mat-icon>person</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Manager</span>
+              <span class="info-value">{{ project()!.Manager_ID || project()!.manager || 'Unassigned' }}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <mat-icon>calendar_today</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Start Date</span>
+              <span class="info-value">{{ formatDate(project()!.startDate) }}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <mat-icon>event</mat-icon>
+            <div class="info-content">
+              <span class="info-label">End Date</span>
+              <span class="info-value">{{ formatDate(project()!.endDate) }}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <mat-icon>group</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Created By</span>
+              <span class="info-value">{{ project()!.createdBy || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Tasks Progress Section -->
+        <div class="progress-section">
+          <div class="progress-header">
+            <div class="progress-title">
+              <mat-icon>assignment</mat-icon>
+              <h3>Task Progress</h3>
+            </div>
+            <div class="progress-stats">
+              <span class="completed">{{ project()!.CompletedTasks || 0 }}</span>
+              <span class="separator">/</span>
+              <span class="total">{{ project()!.NoOfTasks || 0 }}</span>
+              <span class="percentage">tasks completed ({{ progress() }}%)</span>
+            </div>
+          </div>
+          
+          <mat-progress-bar
+            mode="determinate"
+            [value]="progress()"
+            [color]="getProgressColor()"
+            class="task-progress-bar"
+          ></mat-progress-bar>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Task List Card -->
+    <mat-card class="tasks-card">
+      <mat-card-header>
+        <mat-card-title>
+          <div class="tasks-header">
+            <div class="tasks-title">
+              <mat-icon>playlist_add_check</mat-icon>
+              <h3>Tasks</h3>
+              <span class="task-count">({{ project()!.NoOfTasks || 0 }})</span>
+            </div>
+            <button mat-raised-button color="primary">
+              <mat-icon>add</mat-icon>
+              Add Task
+            </button>
+          </div>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (!project()!.NoOfTasks || project()!.NoOfTasks === 0) {
+          <div class="empty-tasks">
+            <mat-icon>assignment_late</mat-icon>
+            <p>No tasks found for this project</p>
+            <button mat-raised-button color="primary">
+              <mat-icon>add</mat-icon>
+              Create First Task
+            </button>
+          </div>
+        } @else {
+          <mat-list class="task-list">
+            <!-- Placeholder task items - would be replaced with actual tasks -->
+            @for (task of [1, 2, 3]; track task) {
+              <mat-list-item>
+                <div class="task-item">
+                  <div class="task-info">
+                    <mat-icon matListItemIcon>radio_button_unchecked</mat-icon>
+                    <div class="task-content">
+                      <h4>Sample Task {{ task }}</h4>
+                      <p class="task-meta">
+                        <span>Assigned to: User {{ task }}</span>
+                        <span class="separator">•</span>
+                        <span>Due: Feb {{ 10 + task }}, 2026</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="task-actions">
+                    <mat-chip class="status-chip">In Progress</mat-chip>
+                    <button mat-icon-button [matMenuTriggerFor]="taskMenu">
+                      <mat-icon>more_vert</mat-icon>
+                    </button>
+                    <mat-menu #taskMenu="matMenu">
+                      <button mat-menu-item>
+                        <mat-icon>edit</mat-icon>
+                        <span>Edit</span>
+                      </button>
+                      <button mat-menu-item>
+                        <mat-icon>check_circle</mat-icon>
+                        <span>Mark Complete</span>
+                      </button>
+                      <button mat-menu-item class="delete-action">
+                        <mat-icon>delete</mat-icon>
+                        <span>Delete</span>
+                      </button>
+                    </mat-menu>
+                  </div>
+                </div>
+              </mat-list-item>
+              @if (task < 3) {
+                <mat-divider></mat-divider>
+              }
+            }
+          </mat-list>
+          
+          <div class="task-list-footer">
+            <button mat-button color="primary">View All Tasks</button>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  } @else {
+    <mat-card class="not-found-card">
+      <mat-card-content>
+        <div class="not-found-content">
+          <mat-icon>search_off</mat-icon>
+          <h3>Project Not Found</h3>
+          <p>The project you're looking for doesn't exist or has been removed.</p>
+          <button mat-raised-button color="primary" (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon>
+            Back to Projects
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

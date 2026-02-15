@@ -1,0 +1,67 @@
+<mat-sidenav-container class="app-container">
+  <!-- Side Navigation -->
+  <mat-sidenav
+    #sidenav
+    [opened]="authStore.isSidebarOpen()"
+    [mode]="'side'"
+    class="app-sidenav">
+    <div class="sidenav-header">
+      <mat-icon class="app-logo">work</mat-icon>
+      <h2 class="app-title">Project Manager</h2>
+    </div>
+
+    <mat-nav-list>
+      @for (item of navItems; track item.route) {
+        @if (shouldShowNavItem(item)) {
+          <a mat-list-item [routerLink]="item.route" routerLinkActive="active-link">
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <!-- Main Content -->
+  <mat-sidenav-content>
+    <!-- Top Toolbar -->
+    <mat-toolbar color="primary" class="app-toolbar">
+      <button mat-icon-button (click)="toggleSidebar()" aria-label="Toggle sidebar">
+        <mat-icon>menu</mat-icon>
+      </button>
+      
+      <span class="toolbar-spacer"></span>
+      
+      @if (isAuthenticated()) {
+        <div class="user-section">
+          <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
+            <div class="user-avatar">{{ getUserInitials() }}</div>
+          </button>
+          <span class="user-name">{{ authStore.userFullName() }}</span>
+          <span class="user-role">({{ authStore.user()?.role }})</span>
+          
+          <mat-menu #userMenu="matMenu">
+            <button mat-menu-item [routerLink]="'/profile'">
+              <mat-icon>person</mat-icon>
+              <span>Profile</span>
+            </button>
+            <button mat-menu-item (click)="logout()">
+              <mat-icon>logout</mat-icon>
+              <span>Logout</span>
+            </button>
+          </mat-menu>
+        </div>
+      } @else {
+        <div class="auth-buttons">
+          <button mat-button [routerLink]="'/login'">Login</button>
+          <button mat-raised-button [routerLink]="'/register'">Register</button>
+        </div>
+      }
+    </mat-toolbar>
+
+    <!-- Router Outlet -->
+    <div class="content-area">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

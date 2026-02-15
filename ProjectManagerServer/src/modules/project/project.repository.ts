@@ -87,20 +87,55 @@ export class ProjectRepository {
       .sort(sortObj)
       .skip(skip)
       .limit(limit)
-      .populate('manager', 'firstName lastName email')
-      .populate('createdBy', 'firstName lastName email')
-      .select('-_id -__v') // Exclude internal fields
-      .lean() // Return plain objects
+      .populate('manager', 'uuid firstName lastName email')
+      .populate('createdBy', 'uuid firstName lastName email')
+      .populate({
+        path: 'Tasks',
+        select: 'status',
+      })
       .exec();
 
-    // Transform data to map uuid as id
-    const transformedData = data.map(project => ({
-      id: project.uuid,
-      ...project,
-    }));
+    // Transform data to map uuid as id and extract populated fields
+    const transformedData = data.map(project => {
+      const plainProject = project.toObject({ virtuals: true });
+      
+      // Calculate task counts
+      const tasks = plainProject.Tasks || [];
+      const noOfTasks = tasks.length;
+      const completedTasks = tasks.filter((task: any) => 
+        task.status === 'COMPLETED'
+      ).length;
+      
+      // Extract manager and createdBy uuids (these are populated User objects)
+      const managerUuid = plainProject.manager ? (plainProject.manager as any).uuid : undefined;
+      const createdByUuid = plainProject.createdBy ? (plainProject.createdBy as any).uuid : undefined;
+      
+      return {
+        id: plainProject.uuid,
+        uuid: plainProject.uuid,
+        Project_ID: plainProject.Project_ID,
+        name: plainProject.name,
+        Project: plainProject.name, // Add legacy field for frontend compatibility
+        description: plainProject.description,
+        priority: plainProject.priority,
+        Priority: plainProject.priority, // Add legacy field for frontend compatibility
+        status: plainProject.status,
+        startDate: plainProject.startDate,
+        Start_Date: plainProject.startDate, // Add legacy field for frontend compatibility
+        endDate: plainProject.endDate,
+        End_Date: plainProject.endDate, // Add legacy field for frontend compatibility
+        manager: managerUuid,
+        isArchived: plainProject.isArchived,
+        createdBy: createdByUuid,
+        createdAt: plainProject.createdAt,
+        updatedAt: plainProject.updatedAt,
+        NoOfTasks: noOfTasks,
+        CompletedTasks: completedTasks,
+      };
+    });
 
     return {
-      data: transformedData as IProject[],
+      data: transformedData as unknown as IProject[],
       meta: {
         page,
         limit,

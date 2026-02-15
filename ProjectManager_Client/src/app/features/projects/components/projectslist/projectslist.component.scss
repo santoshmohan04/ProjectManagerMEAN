@@ -1,0 +1,48 @@
+// Styles now use global .page-header, .toolbar, .search-field from styles.scss
+
+.table-container {
+  overflow-x: auto;
+  display: block;
+}
+
+table {
+  width: 100%;
+  min-width: 900px;
+
+  // Row hover effect
+  tr.mat-mdc-row:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  // Numeric columns - center aligned
+  td.mat-mdc-cell:nth-child(2),
+  td.mat-mdc-cell:nth-child(3),
+  td.mat-mdc-cell:nth-child(5),
+  th.mat-mdc-header-cell:nth-child(2),
+  th.mat-mdc-header-cell:nth-child(3),
+  th.mat-mdc-header-cell:nth-child(5) {
+    text-align: center;
+  }
+
+  // Date columns - muted color
+  td.mat-mdc-cell:nth-child(6),
+  td.mat-mdc-cell:nth-child(7) {
+    color: #666;
+  }
+
+  // Actions column
+  .actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  table {
+    font-size: 12px;
+  }
+}

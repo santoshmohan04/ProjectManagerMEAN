@@ -2,15 +2,70 @@
   <span class="title">Project Manager</span>
   <span class="example-spacer"></span>
 
-  <!-- Menu icon only shown on small screens -->
-  <button mat-icon-button class="menu-button" (click)="toggleMenu()" aria-label="Toggle navigation">
-    <mat-icon>menu</mat-icon>
-  </button>
+  @if (isAuthenticated()) {
+    <!-- Desktop links -->
+    <div class="nav-links" [class.hidden]="isMobile">
+      <a mat-button routerLink="/dashboard" routerLinkActive="active-link" class="nav-link">
+        <mat-icon>dashboard</mat-icon>
+        Dashboard
+      </a>
+      <a mat-button routerLink="/projects" routerLinkActive="active-link" class="nav-link">
+        <mat-icon>folder</mat-icon>
+        Projects
+      </a>
+      <a mat-button routerLink="/tasks" routerLinkActive="active-link" class="nav-link">
+        <mat-icon>task</mat-icon>
+        Tasks
+      </a>
+      <a mat-button routerLink="/users" routerLinkActive="active-link" class="nav-link">
+        <mat-icon>people</mat-icon>
+        Users
+      </a>
+      <a mat-button routerLink="/audit" routerLinkActive="active-link" class="nav-link">
+        <mat-icon>history</mat-icon>
+        Audit
+      </a>
+    </div>
 
-  <!-- Desktop links -->
-  <div class="nav-links" [class.hidden]="isMobile && !menuOpen">
-    <a mat-button routerLink="/projects" class="nav-link">Projects</a>
-    <a mat-button routerLink="/tasks" class="nav-link">Tasks</a>
-    <a mat-button routerLink="/users" class="nav-link">Users</a>
-  </div>
+    <!-- Dark mode toggle -->
+    <button 
+      mat-icon-button 
+      (click)="toggleTheme()" 
+      [matTooltip]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
+      class="theme-toggle"
+      aria-label="Toggle theme">
+      <mat-icon>{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+
+    <!-- Mobile menu icon -->
+    <button mat-icon-button class="menu-button" (click)="toggleMenu()" aria-label="Toggle navigation">
+      <mat-icon>{{ menuOpen ? 'close' : 'menu' }}</mat-icon>
+    </button>
+
+    <!-- Mobile menu -->
+    @if (isMobile && menuOpen) {
+      <div class="mobile-menu">
+        <a mat-button routerLink="/dashboard" (click)="toggleMenu()" routerLinkActive="active-link" class="mobile-link">
+          <mat-icon>dashboard</mat-icon>
+          Dashboard
+        </a>
+        <a mat-button routerLink="/projects" (click)="toggleMenu()" routerLinkActive="active-link" class="mobile-link">
+          <mat-icon>folder</mat-icon>
+          Projects
+        </a>
+        <a mat-button routerLink="/tasks" (click)="toggleMenu()" routerLinkActive="active-link" class="mobile-link">
+          <mat-icon>task</mat-icon>
+          Tasks
+        </a>
+        <a mat-button routerLink="/users" (click)="toggleMenu()" routerLinkActive="active-link" class="mobile-link">
+          <mat-icon>people</mat-icon>
+          Users
+        </a>
+        <a mat-button routerLink="/audit" (click)="toggleMenu()" routerLinkActive="active-link" class="mobile-link">
+          <mat-icon>history</mat-icon>
+          Audit
+        </a>
+      </div>
+    }
+  }
 </mat-toolbar>

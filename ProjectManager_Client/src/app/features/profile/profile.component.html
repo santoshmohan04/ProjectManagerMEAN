@@ -1,0 +1,182 @@
+<div class="profile-container">
+  <!-- Header -->
+  <div class="profile-header">
+    <h1>
+      <mat-icon>person</mat-icon>
+      My Profile
+    </h1>
+  </div>
+
+  @if (!isAuthenticated()) {
+    <app-empty-state
+      icon="person_off"
+      title="Not authenticated"
+      message="Please log in to view your profile."
+      actionLabel="Go to Login"
+      actionIcon="login"
+    ></app-empty-state>
+  } @else {
+    <div class="profile-content">
+      <!-- Profile Card -->
+      <mat-card class="profile-card">
+        <mat-card-content>
+          <div class="profile-avatar-section">
+            <div class="profile-avatar">
+              {{ userInitials() }}
+            </div>
+            <div class="profile-info">
+              <h2>{{ userFullName() }}</h2>
+              <mat-chip [color]="roleBadgeColor()" selected>
+                <mat-icon>badge</mat-icon>
+                {{ roleBadge() }}
+              </mat-chip>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Details Card -->
+      <mat-card class="details-card">
+        <mat-card-header>
+          <mat-card-title>
+            <div class="card-title-row">
+              <span>
+                <mat-icon>info</mat-icon>
+                Personal Information
+              </span>
+              @if (!isEditMode) {
+                <button mat-raised-button color="primary" (click)="toggleEditMode()">
+                  <mat-icon>edit</mat-icon>
+                  Edit
+                </button>
+              }
+            </div>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="profileForm" class="profile-form">
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>First Name</mat-label>
+                <input matInput formControlName="firstName">
+                <mat-icon matPrefix>person</mat-icon>
+                @if (profileForm.get('firstName')?.hasError('required')) {
+                  <mat-error>First name is required</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Last Name</mat-label>
+                <input matInput formControlName="lastName">
+                <mat-icon matPrefix>person</mat-icon>
+                @if (profileForm.get('lastName')?.hasError('required')) {
+                  <mat-error>Last name is required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Email</mat-label>
+              <input matInput formControlName="email" type="email">
+              <mat-icon matPrefix>email</mat-icon>
+              @if (profileForm.get('email')?.hasError('required')) {
+                <mat-error>Email is required</mat-error>
+              }
+              @if (profileForm.get('email')?.hasError('email')) {
+                <mat-error>Invalid email format</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Employee ID</mat-label>
+              <input matInput formControlName="employeeId">
+              <mat-icon matPrefix>badge</mat-icon>
+            </mat-form-field>
+
+            @if (isEditMode) {
+              <div class="form-actions">
+                <button mat-raised-button color="primary" (click)="saveProfile()" [disabled]="!profileForm.valid">
+                  <mat-icon>save</mat-icon>
+                  Save Changes
+                </button>
+                <button mat-button (click)="cancelEdit()">
+                  <mat-icon>close</mat-icon>
+                  Cancel
+                </button>
+              </div>
+            }
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Security Card -->
+      <mat-card class="security-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>security</mat-icon>
+            Security Settings
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="security-item">
+            <div class="security-info">
+              <h3>Password</h3>
+              <p>Change your password to keep your account secure</p>
+            </div>
+            <button mat-raised-button color="accent" (click)="changePassword()">
+              <mat-icon>lock</mat-icon>
+              Change Password
+            </button>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="security-item">
+            <div class="security-info">
+              <h3>Account Status</h3>
+              <p>Your account is currently active</p>
+            </div>
+            <mat-chip color="accent" selected>
+              <mat-icon>check_circle</mat-icon>
+              Active
+            </mat-chip>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Stats Card -->
+      <mat-card class="stats-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>analytics</mat-icon>
+            Quick Stats
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <mat-icon>task_alt</mat-icon>
+              <div class="stat-value">-</div>
+              <div class="stat-label">My Tasks</div>
+            </div>
+            <div class="stat-item">
+              <mat-icon>folder</mat-icon>
+              <div class="stat-value">-</div>
+              <div class="stat-label">Projects</div>
+            </div>
+            <div class="stat-item">
+              <mat-icon>check_circle</mat-icon>
+              <div class="stat-value">-</div>
+              <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-item">
+              <mat-icon>schedule</mat-icon>
+              <div class="stat-value">-</div>
+              <div class="stat-label">In Progress</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</div>

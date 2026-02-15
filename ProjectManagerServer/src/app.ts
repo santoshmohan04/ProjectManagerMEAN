@@ -52,13 +52,13 @@ app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 // Data sanitization against NoSQL query injection
 app.use((req, res, next) => {
   if (req.body) {
-    req.body = mongoSanitize(req.body);
+    mongoSanitize(req.body);
   }
   if (req.query) {
-    req.query = mongoSanitize(req.query);
+    mongoSanitize(req.query);
   }
   if (req.params) {
-    req.params = mongoSanitize(req.params);
+    mongoSanitize(req.params);
   }
   next();
 });

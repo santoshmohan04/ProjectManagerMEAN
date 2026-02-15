@@ -1,0 +1,275 @@
+<div class="user-activity-container">
+  <mat-card class="header-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>person_search</mat-icon>
+        User Activity Log
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="description">
+        View all audit log entries for actions performed by a specific user.
+        Enter the user ID to see their complete activity history across all entities.
+      </p>
+
+      <!-- Search form -->
+      <form class="search-form" (ngSubmit)="loadActivity()">
+        <mat-form-field appearance="outline" class="user-id-field">
+          <mat-label>User ID (MongoDB ObjectId or UUID)</mat-label>
+          <input
+            matInput
+            [(ngModel)]="userId"
+            name="userId"
+            placeholder="Enter user ID"
+            required />
+          <mat-icon matSuffix>badge</mat-icon>
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="!userId().trim() || store.isLoading()">
+          <mat-icon>search</mat-icon>
+          Load Activity
+        </button>
+
+        @if (store.hasUserLogs()) {
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="clearResults()">
+            <mat-icon>clear</mat-icon>
+            Clear
+          </button>
+        }
+      </form>
+
+      <!-- Date range filter -->
+      @if (store.userId()) {
+        <div class="date-filter">
+          <mat-form-field appearance="outline" class="date-field">
+            <mat-label>Start Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="startPicker"
+              [(ngModel)]="startDate"
+              placeholder="From date" />
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="date-field">
+            <mat-label>End Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="endPicker"
+              [(ngModel)]="endDate"
+              placeholder="To date" />
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="applyDateFilter()"
+            [disabled]="!startDate() && !endDate()">
+            <mat-icon>filter_alt</mat-icon>
+            Apply Filter
+          </button>
+
+          @if (store.hasDateFilter()) {
+            <button
+              mat-stroked-button
+              (click)="clearDateFilter()">
+              <mat-icon>clear</mat-icon>
+              Clear Filter
+            </button>
+          }
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading state -->
+  @if (store.isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading user activity...</p>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (store.hasError()) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon>error</mat-icon>
+          <div class="error-text">
+            <h3>Error Loading Activity</h3>
+            <p>{{ store.error() }}</p>
+          </div>
+          <button mat-raised-button color="primary" (click)="refresh()">
+            <mat-icon>refresh</mat-icon>
+            Retry
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Results -->
+  @if (store.hasUserLogs() && !store.isLoading()) {
+    <!-- User info card -->
+    @if (getUserInfo(); as userInfo) {
+      <mat-card class="user-info-card">
+        <mat-card-content>
+          <div class="user-profile">
+            <div class="user-avatar">
+              <mat-icon>account_circle</mat-icon>
+            </div>
+            <div class="user-details">
+              <h2>{{ userInfo.firstName }} {{ userInfo.lastName }}</h2>
+              <p class="user-email">{{ userInfo.email }}</p>
+              <p class="user-id">User ID: {{ store.userId() }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Statistics card -->
+    <mat-card class="stats-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>analytics</mat-icon>
+          Activity Statistics
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stats-grid">
+          <div class="stat-item total">
+            <mat-icon>format_list_numbered</mat-icon>
+            <div class="stat-content">
+              <span class="stat-value">{{ getActivityStats().totalActions }}</span>
+              <span class="stat-label">Total Actions</span>
+            </div>
+          </div>
+
+          <div class="stat-group">
+            <h4>By Action Type</h4>
+            <div class="stat-chips">
+              <mat-chip class="chip-success">
+                CREATE
+                <span class="chip-count">{{ getActivityStats().byAction.CREATE }}</span>
+              </mat-chip>
+              <mat-chip class="chip-primary">
+                UPDATE
+                <span class="chip-count">{{ getActivityStats().byAction.UPDATE }}</span>
+              </mat-chip>
+              <mat-chip class="chip-warn">
+                DELETE
+                <span class="chip-count">{{ getActivityStats().byAction.DELETE }}</span>
+              </mat-chip>
+            </div>
+          </div>
+
+          <div class="stat-group">
+            <h4>By Entity Type</h4>
+            <div class="stat-chips">
+              <mat-chip class="chip-entity">
+                <mat-icon>work</mat-icon>
+                PROJECTS
+                <span class="chip-count">{{ getActivityStats().byEntity.PROJECT }}</span>
+              </mat-chip>
+              <mat-chip class="chip-entity">
+                <mat-icon>assignment</mat-icon>
+                TASKS
+                <span class="chip-count">{{ getActivityStats().byEntity.TASK }}</span>
+              </mat-chip>
+              <mat-chip class="chip-entity">
+                <mat-icon>person</mat-icon>
+                USERS
+                <span class="chip-count">{{ getActivityStats().byEntity.USER }}</span>
+              </mat-chip>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Activity logs -->
+    <mat-card class="results-card">
+      <mat-card-header>
+        <mat-card-title>
+          <div class="results-header">
+            <div class="results-title">
+              <mat-icon>history</mat-icon>
+              <span>Activity Timeline</span>
+              <span class="results-count">({{ store.userLogs().length }} records)</span>
+            </div>
+            <button
+              mat-icon-button
+              (click)="refresh()"
+              matTooltip="Refresh">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </div>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (store.hasDateFilter()) {
+          <div class="filter-notice">
+            <mat-icon>filter_alt</mat-icon>
+            <span>Date filter is active</span>
+          </div>
+        }
+
+        <!-- Timeline -->
+        <app-audit-timeline
+          [logs]="store.userLogs()"
+          [showUserInfo]="false">
+        </app-audit-timeline>
+
+        <!-- Pagination -->
+        @if (store.userLogs().length > 0) {
+          <div class="pagination-controls">
+            <button
+              mat-button
+              (click)="previousPage()"
+              [disabled]="store.pagination().currentPage === 1">
+              <mat-icon>chevron_left</mat-icon>
+              Previous
+            </button>
+
+            <span class="page-info">
+              Page {{ store.pagination().currentPage }}
+              @if (store.pagination().hasMore) {
+                <span>(more available)</span>
+              }
+            </span>
+
+            <button
+              mat-button
+              (click)="nextPage()"
+              [disabled]="!store.pagination().hasMore">
+              Next
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Empty state -->
+  @if (!store.hasUserLogs() && !store.isLoading() && !store.hasError() && store.userId()) {
+    <mat-card class="empty-state-card">
+      <mat-card-content>
+        <mat-icon>info</mat-icon>
+        <p>No activity logs found for this user</p>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

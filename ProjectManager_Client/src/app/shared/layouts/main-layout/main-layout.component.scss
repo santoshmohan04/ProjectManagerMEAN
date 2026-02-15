@@ -1,0 +1,183 @@
+// App Shell Container
+.app-container {
+  height: 100vh;
+  width: 100%;
+}
+
+// Side Navigation
+.app-sidenav {
+  width: 260px;
+  background-color: #263238;
+  color: #ffffff;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+
+  .sidenav-header {
+    display: flex;
+    align-items: center;
+    padding: 20px 16px;
+    background-color: #1a2327;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+    .app-logo {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      margin-right: 12px;
+      color: #4fc3f7;
+    }
+
+    .app-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: #ffffff;
+    }
+  }
+
+  mat-nav-list {
+    padding-top: 8px;
+
+    a {
+      color: rgba(255, 255, 255, 0.87) !important;
+      margin: 4px 8px;
+      border-radius: 8px;
+      transition: all 0.2s ease-in-out;
+      position: relative;
+      border-left: 4px solid transparent;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        transform: translateX(2px);
+      }
+
+      mat-icon {
+        color: rgba(255, 255, 255, 0.7) !important;
+        margin-right: 16px;
+        transition: color 0.2s ease-in-out;
+      }
+
+      .mdc-list-item__primary-text {
+        color: rgba(255, 255, 255, 0.87) !important;
+      }
+
+      &.active-link {
+        background-color: rgba(79, 195, 247, 0.12) !important;
+        border-left-color: #4fc3f7 !important;
+        color: #ffffff !important;
+
+        mat-icon {
+          color: #4fc3f7 !important;
+        }
+
+        .mdc-list-item__primary-text {
+          color: #ffffff !important;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+}
+
+// Main Content
+mat-sidenav-content {
+  background-color: #f5f5f5;
+}
+
+// Top Toolbar
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .toolbar-spacer {
+    flex: 1 1 auto;
+  }
+
+  .user-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      color: white;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .user-role {
+      font-size: 12px;
+      opacity: 0.8;
+      text-transform: uppercase;
+    }
+
+    button {
+      margin-left: 8px;
+    }
+  }
+
+  .auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    button {
+      color: white;
+    }
+
+    button[mat-raised-button] {
+      background-color: rgba(255, 255, 255, 0.2);
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+      }
+    }
+  }
+}
+
+// Content Area
+.content-area {
+  padding: 32px;
+  min-height: calc(100vh - 64px);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .app-sidenav {
+    width: 100%;
+  }
+
+  .content-area {
+    padding: 16px;
+  }
+
+  .user-section {
+    .user-name,
+    .user-role {
+      display: none;
+    }
+  }
+
+  .auth-buttons {
+    gap: 8px;
+
+    button {
+      font-size: 13px;
+      padding: 0 12px;
+    }
+  }
+}

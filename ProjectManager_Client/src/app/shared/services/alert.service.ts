@@ -1,65 +1,39 @@
 import { Injectable } from '@angular/core';
-import { Router, NavigationStart } from '@angular/router';
-
-import { ToastrService } from 'ngx-toastr';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable()
 export class AlertService {
-  private keepAfterRouteChange = false;
+  constructor(private snackBar: MatSnackBar) {}
 
-  constructor(private router: Router, private toastr: ToastrService) {
-    router.events.subscribe((event) => {
-      if (event instanceof NavigationStart) {
-        if (this.keepAfterRouteChange) {
-          this.keepAfterRouteChange = false;
-        } else {
-          this.toastr.clear();
-        }
-      }
+  success(message: string, title?: string, duration = 3000) {
+    const displayMessage = title ? `${title}: ${message}` : message;
+    this.snackBar.open(displayMessage, 'Close', {
+      duration,
+      panelClass: ['snackbar-success']
     });
   }
 
-  success(
-    message: string,
-    title: string,
-    timeout: number,
-    keepAfterRouteChange = false
-  ) {
-    this.keepAfterRouteChange = keepAfterRouteChange;
-    this.toastr.success(message, title, { timeOut: timeout });
+  error(message: string, title?: string, duration = 5000) {
+    const displayMessage = title ? `${title}: ${message}` : message;
+    this.snackBar.open(displayMessage, 'Close', {
+      duration,
+      panelClass: ['snackbar-error']
+    });
   }
 
-  error(
-    message: string,
-    title: string,
-    timeout: number,
-    keepAfterRouteChange = false
-  ) {
-    this.keepAfterRouteChange = keepAfterRouteChange;
-    this.toastr.error(message, title, { timeOut: timeout });
+  info(message: string, title?: string, duration = 3000) {
+    const displayMessage = title ? `${title}: ${message}` : message;
+    this.snackBar.open(displayMessage, 'Close', {
+      duration,
+      panelClass: ['snackbar-info']
+    });
   }
 
-  info(
-    message: string,
-    title: string,
-    timeout: number,
-    keepAfterRouteChange = false
-  ) {
-    this.keepAfterRouteChange = keepAfterRouteChange;
-    this.toastr.info(message, title, { timeOut: timeout });
-  }
-
-  warn(
-    message: string,
-    title: string,
-    timeout: number,
-    keepAfterRouteChange = false
-  ) {
-    this.keepAfterRouteChange = keepAfterRouteChange;
-    this.toastr.warning(message, title, { timeOut: timeout });
-  }
-
-  clear() {
-    this.toastr.clear();
+  warning(message: string, title?: string, duration = 4000) {
+    const displayMessage = title ? `${title}: ${message}` : message;
+    this.snackBar.open(displayMessage, 'Close', {
+      duration,
+      panelClass: ['snackbar-warning']
+    });
   }
 }
