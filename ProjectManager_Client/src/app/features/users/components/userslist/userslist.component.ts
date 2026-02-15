@@ -67,6 +67,7 @@ export class UserslistComponent implements OnInit, AfterViewInit {
   users = this.appStore.users;
   loading = this.appStore.loading;
   error = this.appStore.error;
+  userCount = computed(() => this.users()?.length || 0);
 
   // MatTableDataSource instance
   dataSource = new MatTableDataSource<User>([]);
@@ -262,5 +263,11 @@ export class UserslistComponent implements OnInit, AfterViewInit {
         }
       });
     }
+  }
+
+  getUserInitials(user: User): string {
+    const firstName = user?.firstName || '';
+    const lastName = user?.lastName || '';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   }
 }

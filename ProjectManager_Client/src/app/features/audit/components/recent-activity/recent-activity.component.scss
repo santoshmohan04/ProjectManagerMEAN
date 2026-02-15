@@ -6,6 +6,8 @@
 
 .header-card {
   margin-bottom: 2rem;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  background-color: #fff;
 
   mat-card-header {
     margin-bottom: 1rem;
@@ -44,10 +46,13 @@
 
   button {
     margin-top: 8px;
-    height: 40px;
+    height: 44px;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 0 20px;
+    font-size: 15px;
+    font-weight: 500;
   }
 }
 

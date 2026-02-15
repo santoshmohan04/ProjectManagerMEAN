@@ -80,6 +80,7 @@ export class TasklistComponent implements OnInit, AfterViewInit {
   tasks = this.appStore.tasks;
   users = this.appStore.users;
   projects = this.appStore.projects;
+  taskCount = computed(() => this.tasks()?.length || 0);
 
   // MatTableDataSource instance
   dataSource = new MatTableDataSource<Task>([]);
@@ -286,6 +287,26 @@ export class TasklistComponent implements OnInit, AfterViewInit {
     }
 
     if (action === 'edit') {
+    }
+  }
+
+  getStatusClass(status: string): string {
+    if (!status) return 'open';
+    
+    const normalizedStatus = status.toLowerCase().replace(/\s+/g, '-');
+    
+    switch (normalizedStatus) {
+      case 'open':
+        return 'open';
+      case 'in_progress':
+      case 'in-progress':
+        return 'in-progress';
+      case 'completed':
+        return 'completed';
+      case 'blocked':
+        return 'blocked';
+      default:
+        return 'open';
     }
   }
 }

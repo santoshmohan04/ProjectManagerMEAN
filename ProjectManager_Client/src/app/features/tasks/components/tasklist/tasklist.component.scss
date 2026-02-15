@@ -1,9 +1,93 @@
-.project-form {
-  min-width: 100px;
-  max-width: 500px;
-  width: 100%;
+// Styles now use global .page-header, .toolbar, .search-field from styles.scss
+
+.project-selector {
+  width: 280px;
+  min-width: 240px;
 }
 
-.project-full-width {
+.description-cell {
+  span {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 350px;
+  }
+}
+
+table {
+  .actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+}
+
+table {
   width: 100%;
+  
+  // Row hover effect
+  tr.mat-mdc-row:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  // Description column truncation
+  td.mat-mdc-cell:nth-child(2) {
+    max-width: 350px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // Date columns - muted color
+  td.mat-mdc-cell:nth-child(4),
+  td.mat-mdc-cell:nth-child(5) {
+    color: #666;
+  }
+
+  // Center align priority
+  td.mat-mdc-cell:nth-child(3),
+  th.mat-mdc-header-cell:nth-child(3) {
+    text-align: center;
+  }
+
+  // Actions column
+  .actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+}
+
+// Status Chips
+.status-chip {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.status-open {
+    background-color: rgba(33, 150, 243, 0.12);
+    color: #1976d2;
+  }
+
+  &.status-in-progress {
+    background-color: rgba(255, 152, 0, 0.12);
+    color: #f57c00;
+  }
+
+  &.status-completed {
+    background-color: rgba(76, 175, 80, 0.12);
+    color: #388e3c;
+  }
+
+  &.status-blocked {
+    background-color: rgba(244, 67, 54, 0.12);
+    color: #d32f2f;
+  }
 }

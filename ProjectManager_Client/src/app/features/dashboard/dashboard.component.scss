@@ -107,10 +107,12 @@
 // Metric Cards
 .metric-card {
   transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  background-color: #fff;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
   }
 
   mat-card-content {
@@ -155,7 +157,7 @@
     }
   }
 
-  // Color variations
+  // Color variations with softer gradients
   &.metric-primary .metric-icon {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }
@@ -169,7 +171,7 @@
   }
 
   &.metric-warn .metric-icon {
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%);
   }
 
   &.metric-error .metric-icon {
@@ -189,6 +191,9 @@
 }
 
 .chart-card {
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  background-color: #fff;
+
   mat-card-header {
     margin-bottom: 24px;
 

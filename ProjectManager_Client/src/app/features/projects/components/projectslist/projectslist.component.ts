@@ -77,6 +77,7 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
   users = this.appStore.users;
   loading = this.appStore.loading;
   error = this.appStore.error;
+  projectCount = computed(() => this.projects()?.length || 0);
 
   // MatTableDataSource instance
   dataSource = new MatTableDataSource<Project>([]);

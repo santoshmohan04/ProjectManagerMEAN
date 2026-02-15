@@ -1,5 +1,5 @@
 .timeline-container {
-  padding: 1rem;
+  padding: 1.5rem 1rem;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -34,7 +34,7 @@
 .timeline-item {
   position: relative;
   padding-left: 3rem;
-  padding-bottom: 2rem;
+  padding-bottom: 2.5rem;
 
   &:last-child {
     padding-bottom: 0;
@@ -97,10 +97,12 @@
 .timeline-card {
   margin-left: 0.5rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  background-color: #fff;
 
   &:hover {
     transform: translateX(4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
   }
 }
 
