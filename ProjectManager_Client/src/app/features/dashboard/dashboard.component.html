@@ -21,23 +21,64 @@
     </div>
   </div>
 
-  <!-- Loading State -->
+  <!-- Loading State with Skeleton Loaders -->
   @if (store.isLoading()) {
-    <div class="loading-container">
-      <mat-spinner></mat-spinner>
-      <p>Loading dashboard data...</p>
+    <div class="dashboard-content">
+      <!-- Skeleton for Project Metrics -->
+      <section class="metrics-section">
+        <h2>Projects Overview</h2>
+        <div class="metrics-grid">
+          @for (i of [1, 2, 3]; track i) {
+            <mat-card class="metric-card">
+              <mat-card-content>
+                <app-skeleton-loader type="card" [height]="100"></app-skeleton-loader>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      </section>
+
+      <!-- Skeleton for Task Metrics -->
+      <section class="metrics-section">
+        <h2>Tasks Overview</h2>
+        <div class="metrics-grid">
+          @for (i of [1, 2, 3]; track i) {
+            <mat-card class="metric-card">
+              <mat-card-content>
+                <app-skeleton-loader type="card" [height]="100"></app-skeleton-loader>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      </section>
+
+      <!-- Skeleton for Charts -->
+      <div class="charts-row">
+        <mat-card class="chart-card">
+          <mat-card-content>
+            <app-skeleton-loader type="rect" [height]="300"></app-skeleton-loader>
+          </mat-card-content>
+        </mat-card>
+        <mat-card class="chart-card">
+          <mat-card-content>
+            <app-skeleton-loader type="rect" [height]="300"></app-skeleton-loader>
+          </mat-card-content>
+        </mat-card>
+      </div>
     </div>
   }
 
   <!-- Error State -->
   @if (store.hasError()) {
-    <div class="error-container">
-      <mat-icon color="warn">error</mat-icon>
-      <p>{{ store.error() }}</p>
-      <button mat-raised-button color="primary" (click)="refreshDashboard()">
-        Try Again
-      </button>
-    </div>
+    <app-empty-state
+      icon="error"
+      [iconSize]="64"
+      title="Unable to load dashboard"
+      [message]="store.error() || 'An error occurred while loading dashboard data.'"
+      actionLabel="Try Again"
+      actionIcon="refresh"
+      (actionClick)="refreshDashboard()">
+    </app-empty-state>
   }
 
   <!-- Dashboard Content -->
@@ -120,10 +161,12 @@
                 </div>
               </div>
             } @else {
-              <div class="no-data">
-                <mat-icon>bar_chart</mat-icon>
-                <p>No task data available</p>
-              </div>
+              <app-empty-state
+                icon="bar_chart"
+                [iconSize]="48"
+                title="No task data"
+                message="Task statistics will appear here once tasks are created."
+              ></app-empty-state>
             }
           </mat-card-content>
         </mat-card>

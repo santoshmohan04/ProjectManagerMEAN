@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { SkeletonLoaderComponent } from '@shared/skeleton-loader/skeleton-loader.component';
+import { EmptyStateComponent } from '@shared/empty-state/empty-state.component';
 
 import { DashboardStore } from './store/dashboard.store';
 
@@ -17,9 +18,10 @@ import { DashboardStore } from './store/dashboard.store';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule,
     MatChipsModule,
     MatTooltipModule,
+    SkeletonLoaderComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']

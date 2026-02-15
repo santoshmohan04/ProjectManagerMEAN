@@ -1,0 +1,144 @@
+<div class="timeline-container">
+  @if (logs.length === 0) {
+    <div class="empty-state">
+      <mat-icon>history</mat-icon>
+      <p>No audit logs found</p>
+    </div>
+  } @else {
+    <div class="timeline">
+      @for (log of logs; track log.uuid) {
+        <div class="timeline-item">
+          <!-- Timeline line connector -->
+          <div class="timeline-line"></div>
+
+          <!-- Timeline icon -->
+          <div class="timeline-icon" [class]="'timeline-icon-' + getActionColor(log.action)">
+            <mat-icon>{{ getActionIcon(log.action) }}</mat-icon>
+          </div>
+
+          <!-- Timeline content -->
+          <mat-card class="timeline-card">
+            <mat-card-header>
+              <div class="timeline-header">
+                <div class="timeline-header-left">
+                  <!-- Action chip -->
+                  <mat-chip-set>
+                    <mat-chip [class]="'chip-' + getActionColor(log.action)">
+                      {{ log.action }}
+                    </mat-chip>
+                  </mat-chip-set>
+
+                  <!-- Entity info -->
+                  @if (showEntityInfo) {
+                    <div class="entity-info">
+                      <mat-icon class="entity-icon">{{ getEntityIcon(log.entityType) }}</mat-icon>
+                      <span class="entity-type">{{ log.entityType }}</span>
+                      <span class="entity-id" [matTooltip]="log.entityId">
+                        ID: {{ log.entityId.substring(0, 8) }}...
+                      </span>
+                    </div>
+                  }
+                </div>
+
+                <div class="timeline-header-right">
+                  <!-- Time -->
+                  <span class="timestamp" [matTooltip]="formatDate(log.timestamp)">
+                    {{ getRelativeTime(log.timestamp) }}
+                  </span>
+                </div>
+              </div>
+            </mat-card-header>
+
+            <mat-card-content>
+              <!-- User info -->
+              @if (showUserInfo && log.performedBy) {
+                <div class="user-info">
+                  <mat-icon>person</mat-icon>
+                  <span class="user-name">{{ getUserName(log) }}</span>
+                  <span class="user-email">{{ log.performedBy.email }}</span>
+                </div>
+              }
+
+              <!-- Changes section -->
+              @if (hasChanges(log)) {
+                <div class="changes-section">
+                  <button
+                    mat-button
+                    class="toggle-changes-btn"
+                    (click)="toggleExpanded(log.uuid)">
+                    <mat-icon>{{ isExpanded(log.uuid) ? 'expand_less' : 'expand_more' }}</mat-icon>
+                    {{ isExpanded(log.uuid) ? 'Hide' : 'Show' }} Changes
+                    @if (!isExpanded(log.uuid) && log.action === AuditAction.UPDATE) {
+                      <span class="changed-count">
+                        ({{ getChangedFields(log).length }} field{{ getChangedFields(log).length !== 1 ? 's' : '' }} changed)
+                      </span>
+                    }
+                  </button>
+
+                  @if (isExpanded(log.uuid)) {
+                    <div class="changes-detail">
+                      @if (log.action === AuditAction.CREATE) {
+                        <!-- Show created data -->
+                        <div class="value-section after-value">
+                          <h4>Created Data</h4>
+                          <pre>{{ formatValue(log.changes.after) }}</pre>
+                        </div>
+                      } @else if (log.action === AuditAction.DELETE) {
+                        <!-- Show deleted data -->
+                        <div class="value-section before-value">
+                          <h4>Deleted Data</h4>
+                          <pre>{{ formatValue(log.changes.before) }}</pre>
+                        </div>
+                      } @else if (log.action === AuditAction.UPDATE) {
+                        <!-- Show field-by-field changes -->
+                        <div class="field-changes">
+                          @for (field of getChangedFields(log); track field) {
+                            <div class="field-change">
+                              <div class="field-name">
+                                <mat-icon>label</mat-icon>
+                                <strong>{{ field }}</strong>
+                              </div>
+                              <div class="field-values">
+                                <div class="value-section before-value">
+                                  <h5>Before</h5>
+                                  <pre>{{ formatValue(getFieldValue(log, field, 'before')) }}</pre>
+                                </div>
+                                <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                                <div class="value-section after-value">
+                                  <h5>After</h5>
+                                  <pre>{{ formatValue(getFieldValue(log, field, 'after')) }}</pre>
+                                </div>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Additional metadata -->
+              @if (log.ipAddress || log.userAgent) {
+                <div class="metadata">
+                  @if (log.ipAddress) {
+                    <div class="metadata-item">
+                      <mat-icon>public</mat-icon>
+                      <span>{{ log.ipAddress }}</span>
+                    </div>
+                  }
+                  @if (log.userAgent) {
+                    <div class="metadata-item" [matTooltip]="log.userAgent">
+                      <mat-icon>devices</mat-icon>
+                      <span class="metadata-truncate">{{ log.userAgent }}</span>
+                    </div>
+                  }
+                </div>
+              }
+            </mat-card-content>
+          </mat-card>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,21 +1,42 @@
 <div class="container py-2">
   <h3>Users List</h3>
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <mat-form-field class="filter-input">
-      <mat-label>Filter</mat-label>
-      <input
-        matInput
-        (keyup)="applyFilter($event)"
-        placeholder="Ex. Mia"
-        #input
-      />
-    </mat-form-field>
-    <button mat-raised-button color="primary" (click)="addUser()">
-      Add User
-    </button>
+  
+  <!-- Sticky Filter Bar -->
+  <div class="sticky-filter">
+    <div class="filter-bar">
+      <mat-form-field class="filter-input">
+        <mat-label>Filter</mat-label>
+        <input
+          matInput
+          (keyup)="applyFilter($event)"
+          placeholder="Search users..."
+          #input
+        />
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="addUser()">
+        <mat-icon>add</mat-icon>
+        Add User
+      </button>
+    </div>
   </div>
 
-  <div class="table-container">
+  <!-- Loading State with Skeleton -->
+  @if (loading()) {
+    <div class="table-container">
+      <mat-card>
+        <mat-card-content>
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <app-skeleton-loader type="table-row" [height]="48" [columns]="6"></app-skeleton-loader>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+
+  <!-- Table Content -->
+  @if (!loading()) {
+    <div class="table-container">
     <table mat-table [dataSource]="dataSource()" class="mat-elevation-z8" matSort>
       <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
@@ -70,15 +91,27 @@
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-
       <tr class="mat-row" *matNoDataRow>
         @if(input.value){
-        <td class="mat-cell" colspan="6">
-          No data matching the filter "{{ input.value }}"
-        </td>
+          <td class="mat-cell" colspan="6">
+            <app-empty-state
+              icon="search_off"
+              [iconSize]="48"
+              title="No matches found"
+              [message]="'No users match the filter: ' + input.value"
+            ></app-empty-state>
+          </td>
         } @else {
-          <td class="mat-cell text-center" colspan="6">
-            No users available. Please add a user.
+          <td class="mat-cell" colspan="6">
+            <app-empty-state
+              icon="person_off"
+              [iconSize]="56"
+              title="No users yet"
+              message="Start by adding users to your team."
+              actionLabel="Add User"
+              actionIcon="add"
+              (actionClick)="addUser()"
+            ></app-empty-state>
           </td>
         }
       </tr>
@@ -89,5 +122,6 @@
       showFirstLastButtons
       aria-label="Select page of users"
     ></mat-paginator>
-  </div>
+    </div>
+  }
 </div>

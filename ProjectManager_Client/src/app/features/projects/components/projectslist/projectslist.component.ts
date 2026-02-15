@@ -13,6 +13,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatCardModule } from '@angular/material/card';
 import { Project } from '../../models/project';
 import { AlertService } from '@shared/services/alert.service';
 import { MatIconModule } from '@angular/material/icon';
@@ -29,6 +30,8 @@ import { ProjectService } from '../../services/project.service';
 import { UserService } from '@features/users/services/user.service';
 import { filterByText } from '@shared/utils/filter-utils';
 import { getInitials } from '@shared/utils/string-utils';
+import { SkeletonLoaderComponent } from '@shared/skeleton-loader/skeleton-loader.component';
+import { EmptyStateComponent } from '@shared/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-projectslist',
@@ -36,12 +39,15 @@ import { getInitials } from '@shared/utils/string-utils';
     CommonModule,
     MatFormFieldModule,
     MatInputModule,
+    MatCardModule,
     MatTableModule,
     MatSortModule,
     MatPaginatorModule,
     MatIconModule,
     MatButtonModule,
     MatDialogModule,
+    SkeletonLoaderComponent,
+    EmptyStateComponent,
   ],
   standalone: true,
   providers: [AlertService],

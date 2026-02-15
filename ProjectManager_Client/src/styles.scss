@@ -1,4 +1,174 @@
 /* You can add global styles to this file, and also import other style files */
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html, body { 
+  height: 100%; 
+}
+
+body { 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* ============================================================================
+   Dark Mode Styles
+   ============================================================================ */
+.light-mode {
+  background-color: #fafafa;
+  color: #212121;
+}
+
+.dark-mode {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+/* Material Design Dark Mode Overrides */
+.dark-mode {
+  .mat-mdc-card {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: #2a2a2a;
+    }
+
+    .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+      background-color: #2a2a2a;
+    }
+
+    .mat-mdc-form-field-focus-overlay {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    label, input, textarea {
+      color: #e0e0e0;
+    }
+  }
+
+  .mat-mdc-table {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+
+    .mat-mdc-header-row {
+      background-color: #2a2a2a;
+    }
+
+    .mat-mdc-row:hover {
+      background-color: #2a2a2a;
+    }
+  }
+
+  .mat-mdc-paginator {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  .mat-mdc-select-panel {
+    background-color: #2a2a2a;
+
+    .mat-mdc-option {
+      color: #e0e0e0;
+
+      &:hover {
+        background-color: #333333;
+      }
+    }
+  }
+
+  .mat-mdc-dialog-container {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  .mat-mdc-chip {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+  }
+
+  .mat-mdc-tab-nav-bar,
+  .mat-mdc-tab-header {
+    background-color: #1e1e1e;
+    border-bottom-color: #333333;
+  }
+
+  .mat-expansion-panel {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+}
+
+/* ============================================================================
+   RoleGuard Error Snackbar Styling
+   ============================================================================ */
+.error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+  font-weight: 500 !important;
+
+  .mat-mdc-snack-bar-label {
+    color: white !important;
+  }
+
+  .mat-mdc-button {
+    color: white !important;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+/* ============================================================================
+   Sticky Filter Bar
+   ============================================================================ */
+.sticky-filter {
+  position: sticky;
+  top: 64px; /* Height of toolbar */
+  z-index: 100;
+  background-color: white;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+}
+
+.dark-mode .sticky-filter {
+  background-color: #1e1e1e;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================================================
+   Mobile Responsive Utilities
+   ============================================================================ */
+@media (max-width: 768px) {
+  .sticky-filter {
+    top: 56px;
+    padding: 12px;
+  }
+
+  .mat-mdc-card {
+    margin: 8px !important;
+  }
+
+  .mat-mdc-card-content {
+    padding: 12px !important;
+  }
+
+  .mat-mdc-table {
+    font-size: 12px;
+
+    .mat-mdc-header-cell,
+    .mat-mdc-cell {
+      padding: 8px !important;
+    }
+  }
+}
+
+/* ============================================================================
+   Smooth Transitions
+   ============================================================================ */
+* {
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}

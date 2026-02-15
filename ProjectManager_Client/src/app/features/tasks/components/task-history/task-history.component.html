@@ -1,0 +1,166 @@
+<div class="task-history-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <button mat-icon-button (click)="goBack()" matTooltip="Back to Tasks">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>
+        <mat-icon>history</mat-icon>
+        Task History
+      </h1>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="refreshHistory()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      <button mat-raised-button color="accent" (click)="viewTaskDetails()">
+        <mat-icon>visibility</mat-icon>
+        View Task
+      </button>
+    </div>
+  </div>
+
+  <!-- Task Info Card -->
+  @if (taskLoading()) {
+    <mat-card class="task-info-card">
+      <mat-card-content>
+        <div class="task-skeleton">
+          <app-skeleton-loader type="text" [width]="60"></app-skeleton-loader>
+          <app-skeleton-loader type="text" [width]="80"></app-skeleton-loader>
+          <app-skeleton-loader type="text" [width]="40"></app-skeleton-loader>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  } @else if (taskError()) {
+    <mat-card class="task-info-card error">
+      <mat-card-content>
+        <div class="error-message">
+          <mat-icon>error</mat-icon>
+          <span>{{ taskError() }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  } @else if (task()) {
+    <mat-card class="task-info-card">
+      <mat-card-content>
+        <div class="task-details">
+          <div class="task-header-row">
+            <div class="task-name">
+              <mat-icon>task_alt</mat-icon>
+              <h2>{{ task()!.Title }}</h2>
+            </div>
+            <div class="task-badges">
+              <mat-chip [color]="getStatusChipColor(task()!.Status)" selected>
+                {{ task()!.Status }}
+              </mat-chip>
+              <span class="priority-badge" [ngClass]="getPriorityColor(task()!.Priority)">
+                <mat-icon>flag</mat-icon>
+                Priority {{ task()!.Priority }}
+              </span>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="task-meta">
+            <div class="meta-item">
+              <mat-icon>person</mat-icon>
+              <span class="meta-label">Assignee:</span>
+              <span class="meta-value">
+                {{ task()!.User?.First_Name }} {{ task()!.User?.Last_Name }}
+              </span>
+            </div>
+
+            <div class="meta-item">
+              <mat-icon>folder</mat-icon>
+              <span class="meta-label">Project:</span>
+              <span class="meta-value">{{ task()!.Project?.Project || task()!.Project?.name || 'N/A' }}</span>
+            </div>
+
+            <div class="meta-item">
+              <mat-icon>event</mat-icon>
+              <span class="meta-label">Start:</span>
+              <span class="meta-value">{{ formatDate(task()!.Start_Date) }}</span>
+            </div>
+
+            <div class="meta-item">
+              <mat-icon>event</mat-icon>
+              <span class="meta-label">End:</span>
+              <span class="meta-value">{{ formatDate(task()!.End_Date) }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- History Timeline -->
+  <mat-card class="history-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>timeline</mat-icon>
+        Change History
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- Loading State -->
+      @if (loading()) {
+        <div class="loading-state">
+          @for (item of [1, 2, 3, 4]; track $index) {
+            <div class="skeleton-item">
+              <app-skeleton-loader type="circle" [width]="40" [height]="40"></app-skeleton-loader>
+              <div class="skeleton-content">
+                <app-skeleton-loader type="text" [width]="60"></app-skeleton-loader>
+                <app-skeleton-loader type="text" [width]="80"></app-skeleton-loader>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Error State -->
+      @else if (error()) {
+        <app-empty-state
+          icon="error"
+          [iconSize]="64"
+          title="Error Loading History"
+          [message]="error() || 'An error occurred'"
+          actionLabel="Retry"
+          actionIcon="refresh"
+          (actionClick)="loadTaskHistory()"
+        ></app-empty-state>
+      }
+
+      <!-- Empty State -->
+      @else if (auditLogs().length === 0) {
+        <app-empty-state
+          icon="history_toggle_off"
+          [iconSize]="64"
+          title="No History Available"
+          message="There are no recorded changes for this task yet."
+        ></app-empty-state>
+      }
+
+      <!-- Timeline -->
+      @else {
+        <app-audit-timeline [logs]="auditLogs()"></app-audit-timeline>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Summary Footer -->
+  @if (!loading() && !error() && auditLogs().length > 0) {
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <mat-icon>info</mat-icon>
+          <span>
+            Total changes recorded: <strong>{{ auditLogs().length }}</strong>
+          </span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

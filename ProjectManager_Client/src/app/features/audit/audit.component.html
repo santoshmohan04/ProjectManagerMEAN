@@ -1,8 +1,49 @@
 <div class="audit-container">
-  <h1>Audit Log</h1>
-  <mat-card>
+  <mat-card class="audit-header-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>security</mat-icon>
+        <span>Audit System</span>
+      </mat-card-title>
+    </mat-card-header>
     <mat-card-content>
-      <p>Audit log will be displayed here...</p>
+      <p class="audit-description">
+        Track and monitor all system activities, changes, and user actions across the application.
+      </p>
     </mat-card-content>
   </mat-card>
+
+  <nav mat-tab-nav-bar class="audit-nav">
+    <a
+      mat-tab-link
+      routerLink="/audit/recent"
+      routerLinkActive
+      #recentLink="routerLinkActive"
+      [active]="recentLink.isActive">
+      <mat-icon>feed</mat-icon>
+      Recent Activity
+    </a>
+    <a
+      mat-tab-link
+      routerLink="/audit/entity"
+      routerLinkActive
+      #entityLink="routerLinkActive"
+      [active]="entityLink.isActive">
+      <mat-icon>history</mat-icon>
+      Entity History
+    </a>
+    <a
+      mat-tab-link
+      routerLink="/audit/user"
+      routerLinkActive
+      #userLink="routerLinkActive"
+      [active]="userLink.isActive">
+      <mat-icon>person_search</mat-icon>
+      User Activity
+    </a>
+  </nav>
+
+  <div class="audit-content">
+    <router-outlet></router-outlet>
+  </div>
 </div>

@@ -1,0 +1,218 @@
+<div class="entity-history-container">
+  <mat-card class="header-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>history</mat-icon>
+        Entity History
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="description">
+        View the complete audit history for a specific entity (project, task, or user).
+        Enter the entity type and ID to see all changes over time.
+      </p>
+
+      <!-- Search form -->
+      <form class="search-form" (ngSubmit)="loadHistory()">
+        <mat-form-field appearance="outline" class="entity-type-field">
+          <mat-label>Entity Type</mat-label>
+          <mat-select [(ngModel)]="selectedEntityType" name="entityType">
+            @for (type of entityTypes; track type) {
+              <mat-option [value]="type">
+                {{ type }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="entity-id-field">
+          <mat-label>Entity ID (UUID)</mat-label>
+          <input
+            matInput
+            [(ngModel)]="entityId"
+            name="entityId"
+            placeholder="Enter entity UUID"
+            required />
+          <mat-icon matSuffix>fingerprint</mat-icon>
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="!entityId().trim() || store.isLoading()">
+          <mat-icon>search</mat-icon>
+          Load History
+        </button>
+
+        @if (store.hasEntityLogs()) {
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="clearResults()">
+            <mat-icon>clear</mat-icon>
+            Clear
+          </button>
+        }
+      </form>
+
+      <!-- Date range filter -->
+      @if (store.entityType() && store.entityId()) {
+        <div class="date-filter">
+          <mat-form-field appearance="outline" class="date-field">
+            <mat-label>Start Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="startPicker"
+              [(ngModel)]="startDate"
+              placeholder="From date" />
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="date-field">
+            <mat-label>End Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="endPicker"
+              [(ngModel)]="endDate"
+              placeholder="To date" />
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="applyDateFilter()"
+            [disabled]="!startDate() && !endDate()">
+            <mat-icon>filter_alt</mat-icon>
+            Apply Filter
+          </button>
+
+          @if (store.hasDateFilter()) {
+            <button
+              mat-stroked-button
+              (click)="clearDateFilter()">
+              <mat-icon>clear</mat-icon>
+              Clear Filter
+            </button>
+          }
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading state -->
+  @if (store.isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading audit history...</p>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (store.hasError()) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon>error</mat-icon>
+          <div class="error-text">
+            <h3>Error Loading History</h3>
+            <p>{{ store.error() }}</p>
+          </div>
+          <button mat-raised-button color="primary" (click)="refresh()">
+            <mat-icon>refresh</mat-icon>
+            Retry
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Results -->
+  @if (store.hasEntityLogs() && !store.isLoading()) {
+    <mat-card class="results-card">
+      <mat-card-header>
+        <mat-card-title>
+          <div class="results-header">
+            <div class="results-title">
+              <mat-icon>assignment</mat-icon>
+              <span>Audit Logs</span>
+              <span class="results-count">({{ store.entityLogs().length }} records)</span>
+            </div>
+            <button
+              mat-icon-button
+              (click)="refresh()"
+              matTooltip="Refresh">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </div>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- Entity info summary -->
+        <div class="entity-summary">
+          <div class="summary-item">
+            <strong>Entity Type:</strong>
+            <span>{{ store.entityType() }}</span>
+          </div>
+          <div class="summary-item">
+            <strong>Entity ID:</strong>
+            <span class="entity-id-mono">{{ store.entityId() }}</span>
+          </div>
+          @if (store.hasDateFilter()) {
+            <div class="summary-item filter-active">
+              <mat-icon>filter_alt</mat-icon>
+              <span>Date filter active</span>
+            </div>
+          }
+        </div>
+
+        <!-- Timeline -->
+        <app-audit-timeline
+          [logs]="store.entityLogs()"
+          [showEntityInfo]="false">
+        </app-audit-timeline>
+
+        <!-- Pagination -->
+        @if (store.entityLogs().length > 0) {
+          <div class="pagination-controls">
+            <button
+              mat-button
+              (click)="previousPage()"
+              [disabled]="store.pagination().currentPage === 1">
+              <mat-icon>chevron_left</mat-icon>
+              Previous
+            </button>
+
+            <span class="page-info">
+              Page {{ store.pagination().currentPage }}
+              @if (store.pagination().hasMore) {
+                <span>(more available)</span>
+              }
+            </span>
+
+            <button
+              mat-button
+              (click)="nextPage()"
+              [disabled]="!store.pagination().hasMore">
+              Next
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Empty state (when form filled but no results yet) -->
+  @if (!store.hasEntityLogs() && !store.isLoading() && !store.hasError() && store.entityId()) {
+    <mat-card class="empty-state-card">
+      <mat-card-content>
+        <mat-icon>info</mat-icon>
+        <p>No audit logs found for this entity</p>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

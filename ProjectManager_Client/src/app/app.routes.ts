@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './shared/guards/auth.guard';
+import { roleGuard } from './shared/guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -41,7 +42,8 @@ export const routes: Routes = [
   },
   {
     path: 'users',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN'] },
     loadComponent: () =>
       import('./features/users/components/userslist/userslist.component').then(
         (m) => m.UserslistComponent
@@ -64,11 +66,72 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'audit',
+    path: 'task/:uuid/history',
     canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/tasks/components/task-history/task-history.component').then(
+        (m) => m.TaskHistoryComponent
+      ),
+  },
+  {
+    path: 'profile',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/profile/profile.component').then(
+        (m) => m.ProfileComponent
+      ),
+  },
+  {
+    path: 'archived-projects',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/projects/components/archived-projects/archived-projects.component').then(
+        (m) => m.ArchivedProjectsComponent
+      ),
+  },
+  {
+    path: 'recent-activity',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/recent-activity/recent-activity.component').then(
+        (m) => m.RecentActivityComponent
+      ),
+  },
+  {
+    path: 'audit',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN'] },
     loadComponent: () =>
       import('./features/audit/audit.component').then(
         (m) => m.AuditComponent
       ),
+    children: [
+      {
+        path: '',
+        redirectTo: 'recent',
+        pathMatch: 'full',
+      },
+      {
+        path: 'recent',
+        loadComponent: () =>
+          import('./features/audit/components/recent-activity/recent-activity.component').then(
+            (m) => m.RecentActivityComponent
+          ),
+      },
+      {
+        path: 'entity',
+        loadComponent: () =>
+          import('./features/audit/components/entity-history/entity-history.component').then(
+            (m) => m.EntityHistoryComponent
+          ),
+      },
+      {
+        path: 'user',
+        loadComponent: () =>
+          import('./features/audit/components/user-activity/user-activity.component').then(
+            (m) => m.UserActivityComponent
+          ),
+      },
+    ],
   },
 ];

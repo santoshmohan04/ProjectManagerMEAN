@@ -1,8 +1,92 @@
 .audit-container {
-  padding: 20px;
+  padding: 1.5rem;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
-h1 {
-  margin-bottom: 24px;
-  color: #333;
+.audit-header-card {
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+
+  mat-card-header {
+    margin-bottom: 0.5rem;
+  }
+
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.8rem;
+    color: white;
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  .audit-description {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    opacity: 0.95;
+  }
+}
+
+.audit-nav {
+  margin-bottom: 2rem;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    min-width: 160px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+.audit-content {
+  min-height: 400px;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .audit-container {
+    padding: 1rem;
+  }
+
+  .audit-header-card mat-card-title {
+    font-size: 1.5rem;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  .audit-nav a {
+    min-width: auto;
+    flex: 1;
+    justify-content: center;
+    font-size: 0.85rem;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
 }

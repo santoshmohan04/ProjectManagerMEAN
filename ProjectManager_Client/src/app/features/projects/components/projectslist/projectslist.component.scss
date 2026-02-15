@@ -1,7 +1,29 @@
+.sticky-filter {
+  position: sticky;
+  top: 64px;
+  z-index: 100;
+  background-color: white;
+  padding: 16px;
+  margin: -16px -16px 16px -16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .sticky-filter {
+  background-color: #1e1e1e;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.filter-bar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .filter-input {
-  min-width: 150px;
+  flex: 1;
+  min-width: 200px;
   max-width: 500px;
-  width: 100%;
 }
 
 .table-container {
@@ -11,6 +33,31 @@
 
 table {
   width: 100%;
-  min-width: 600px; /* adjust depending on your columns */
+  min-width: 900px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .sticky-filter {
+    top: 56px;
+    padding: 12px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .filter-input {
+    max-width: 100%;
+  }
+
+  table {
+    font-size: 12px;
+  }
 }
 

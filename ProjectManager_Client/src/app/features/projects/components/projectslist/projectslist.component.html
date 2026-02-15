@@ -1,22 +1,41 @@
 <div class="container py-2">
-    <h3>Projects List</h3>
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <mat-form-field class="filter-input">
-      <mat-label>Filter</mat-label>
-      <input
-        matInput
-        (keyup)="applyFilter($event)"
-        placeholder="Ex. Mia"
-        #input
-      />
-    </mat-form-field>
-    <button mat-raised-button color="primary" (click)="addProject()">
-      Add Project
-    </button>
+  <h3>Projects List</h3>
+  
+  <!-- Sticky Filter Bar -->
+  <div class="sticky-filter">
+    <div class="filter-bar">
+      <mat-form-field class="filter-input">
+        <mat-label>Filter</mat-label>
+        <input
+          matInput
+          (keyup)="applyFilter($event)"
+          placeholder="Search projects..."
+          #input
+        />
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="addProject()">
+        <mat-icon>add</mat-icon>
+        Add Project
+      </button>
+    </div>
   </div>
+  <!-- Loading State with Skeleton -->
+  @if (loading()) {
+    <div class="table-container">
+      <mat-card>
+        <mat-card-content>
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <app-skeleton-loader type="table-row" [height]="48" [columns]="9"></app-skeleton-loader>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
 
-
-  <div class="table-container">
+  <!-- Table Content -->
+  @if (!loading()) {
+    <div class="table-container">
     <table mat-table [dataSource]="dataSource()" class="mat-elevation-z8" matSort>
       <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
@@ -89,12 +108,25 @@
 
       <tr class="mat-row" *matNoDataRow>
         @if(input.value){
-        <td class="mat-cell" colspan="6">
-          No data matching the filter "{{ input.value }}"
-        </td>
+          <td class="mat-cell" colspan="9">
+            <app-empty-state
+              icon="search_off"
+              [iconSize]="48"
+              title="No matches found"
+              [message]="'No projects match the filter: ' + input.value"
+            ></app-empty-state>
+          </td>
         } @else {
-          <td class="mat-cell text-center" colspan="6">
-            No projects available. Please add a project.
+          <td class="mat-cell" colspan="9">
+            <app-empty-state
+              icon="folder_off"
+              [iconSize]="56"
+              title="No projects yet"
+              message="Start by creating your first project to track tasks and progress."
+              actionLabel="Add Project"
+              actionIcon="add"
+              (actionClick)="addProject()"
+            ></app-empty-state>
           </td>
         }
       </tr>
@@ -104,5 +136,6 @@
       showFirstLastButtons
       aria-label="Select page of users"
     ></mat-paginator>
-  </div>
+    </div>
+  }
 </div>

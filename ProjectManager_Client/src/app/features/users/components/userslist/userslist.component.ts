@@ -16,6 +16,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatCardModule } from '@angular/material/card';
 import { AlertService } from '@shared/services/alert.service';
 import { User } from '../../models/user';
 import { ApiResponse } from '@shared/models/shared';
@@ -23,6 +24,8 @@ import { AppStore } from '@core/app.store';
 import { UserService } from '../../services/user.service';
 import { AdduserComponent } from '../adduser/adduser.component';
 import { ConfirmationDialogComponent } from '@shared/confirmation-dialog/confirmation-dialog.component';
+import { SkeletonLoaderComponent } from '@shared/skeleton-loader/skeleton-loader.component';
+import { EmptyStateComponent } from '@shared/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-userslist',
@@ -30,12 +33,15 @@ import { ConfirmationDialogComponent } from '@shared/confirmation-dialog/confirm
     CommonModule,
     MatFormFieldModule,
     MatInputModule,
+    MatCardModule,
     MatTableModule,
     MatSortModule,
     MatPaginatorModule,
     MatIconModule,
     MatButtonModule,
     MatDialogModule,
+    SkeletonLoaderComponent,
+    EmptyStateComponent,
   ],
   standalone: true,
   providers: [AlertService],
