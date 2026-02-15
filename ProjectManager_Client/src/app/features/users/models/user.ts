@@ -8,19 +8,25 @@ export interface User {
   uuid?: string;
   _id?: string;
   User_ID?: number;
-  First_Name: string;
-  Last_Name: string;
-  Full_Name?: string;
-  Employee_ID: number;
+  // Backend fields (camelCase)
+  firstName: string;
+  lastName: string;
+  employeeId?: string;
   email?: string;
   role?: UserRole;
   isActive?: boolean;
   lastLogin?: Date;
   createdAt?: Date;
   updatedAt?: Date;
-  // Legacy fields for backward compatibility
+  // Computed/Legacy fields
+  fullName?: string;
+  First_Name?: string;
+  Last_Name?: string;
+  Full_Name?: string;
+  Employee_ID?: number | string;
   Project_ID?: number;
   Task_ID?: number;
+  Project?: any;
 }
 
 export interface UserPayload {

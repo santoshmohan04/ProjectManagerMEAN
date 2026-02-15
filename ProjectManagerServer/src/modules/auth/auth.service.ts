@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { User, IUser } from '../../models/user.model.js';
-import { config } from '../../config/env.js';
+import { JWTUtils } from '../../utils/jwt.utils.js';
 
 export interface LoginRequest {
   email: string;
@@ -14,13 +13,6 @@ export interface AuthResponse {
 }
 
 export class AuthService {
-  private jwtSecret: string;
-  private jwtExpiresIn: string;
-
-  constructor() {
-    this.jwtSecret = config.jwtSecret;
-    this.jwtExpiresIn = config.jwtExpiresIn;
-  }
 
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     // Find user by email
@@ -43,16 +35,12 @@ export class AuthService {
     // Update last login
     await user.updateLastLogin();
 
-    // Generate JWT token
-    const token = jwt.sign(
-      {
-        userId: user.uuid,
-        email: user.email,
-        role: user.role
-      },
-      this.jwtSecret,
-      { expiresIn: this.jwtExpiresIn } as any
-    );
+    // Generate JWT token using JWTUtils
+    const token = JWTUtils.generateAccessToken({
+      userId: user.uuid,
+      email: user.email,
+      role: user.role
+    });
 
     // Return user data and token
     return {
@@ -87,16 +75,12 @@ export class AuthService {
 
     await newUser.save();
 
-    // Generate token
-    const token = jwt.sign(
-      {
-        userId: newUser.uuid,
-        email: newUser.email,
-        role: newUser.role
-      },
-      this.jwtSecret,
-      { expiresIn: this.jwtExpiresIn } as any
-    );
+    // Generate token using JWTUtils
+    const token = JWTUtils.generateAccessToken({
+      userId: newUser.uuid,
+      email: newUser.email,
+      role: newUser.role
+    });
 
     return {
       user: {

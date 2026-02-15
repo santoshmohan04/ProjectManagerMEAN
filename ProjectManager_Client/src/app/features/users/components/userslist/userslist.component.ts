@@ -73,13 +73,15 @@ export class UserslistComponent implements OnInit, AfterViewInit {
     const users = this.users();
     const dataSource = new MatTableDataSource(users);
     dataSource.filterPredicate = (data: User, filter: string) => {
-      const firstName = data.First_Name?.toLowerCase() || '';
-      const lastName = data.Last_Name?.toLowerCase() || '';
-      const employeeId = data.Employee_ID?.toString() || '';
+      const firstName = data.firstName?.toLowerCase() || '';
+      const lastName = data.lastName?.toLowerCase() || '';
+      const employeeId = data.employeeId?.toString() || '';
+      const email = data.email?.toLowerCase() || '';
       return (
         firstName.includes(filter) ||
         lastName.includes(filter) ||
-        employeeId.includes(filter)
+        employeeId.includes(filter) ||
+        email.includes(filter)
       );
     };
     return dataSource;
@@ -173,20 +175,20 @@ export class UserslistComponent implements OnInit, AfterViewInit {
   }
 
   deleteUser(row: User) {
-    if (row._id === undefined) return;
+    if (!row.uuid) return;
     const dialogRef = this.dialogService.open(ConfirmationDialogComponent, {
       data: {
         title: 'Delete User',
-        content: `Are you sure you want to delete user ${row.First_Name} ${row.Last_Name}?`,
+        content: `Are you sure you want to delete user ${row.firstName} ${row.lastName}?`,
       },
     });
 
     dialogRef.afterClosed().subscribe((result: any) => {
-      if (result === true && row._id !== undefined) {
-        this.userService.deleteUser(row._id).subscribe({
+      if (result === true && row.uuid) {
+        this.userService.deleteUser(row.uuid).subscribe({
           next: (response) => {
             if (response.success) {
-              this.appStore.deleteUser(row._id!);
+              this.loadUsers();
               this.alertService.success('User deleted successfully');
             } else {
               this.alertService.error(response.message || 'Failed to delete user');

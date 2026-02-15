@@ -93,7 +93,7 @@ projectSchema.index({ name: 'text' });
 projectSchema.virtual('Tasks', {
   ref: 'Task',
   localField: '_id',
-  foreignField: 'Project',
+  foreignField: 'project', // Changed from 'Project' to 'project' to match Task model
 });
 
 // Virtual for number of tasks

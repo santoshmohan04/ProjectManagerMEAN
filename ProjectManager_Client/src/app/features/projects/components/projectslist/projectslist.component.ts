@@ -56,7 +56,6 @@ import { EmptyStateComponent } from '@shared/empty-state/empty-state.component';
 })
 export class ProjectslistComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [
-    'id',
     'name',
     'tasks',
     'completed',
@@ -79,23 +78,8 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
   loading = this.appStore.loading;
   error = this.appStore.error;
 
-  // Computed signals
-  dataSource = computed(() => {
-    const projects = this.projects();
-    const dataSource = new MatTableDataSource(projects);
-    dataSource.filterPredicate = (data: unknown, filter: string) => {
-      const project = data as Project;
-      const assignedUser = this.getAssignedUser(project).toLowerCase();
-      const projectName = project.Project?.toLowerCase() || '';
-      const priority = (project.Priority ?? '').toString();
-      return (
-        projectName.includes(filter) ||
-        assignedUser.includes(filter) ||
-        priority.includes(filter)
-      );
-    };
-    return dataSource;
-  });
+  // MatTableDataSource instance
+  dataSource = new MatTableDataSource<Project>([]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -105,22 +89,41 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
     this.loadProjects();
     this.loadUsers();
 
-    // Effect to handle data source updates
+    // Configure filter predicate
+    this.dataSource.filterPredicate = (data: Project, filter: string) => {
+      const assignedUser = this.getAssignedUser(data).toLowerCase();
+      const projectName = (data.name || data.Project || '').toLowerCase();
+      const priority = (data.priority || data.Priority || '').toString();
+      return (
+        projectName.includes(filter) ||
+        assignedUser.includes(filter) ||
+        priority.includes(filter)
+      );
+    };
+
+    // Effect to update dataSource when projects change
     effect(() => {
-      const dataSource = this.dataSource();
-      if (this.paginator) {
-        dataSource.paginator = this.paginator;
-      }
-      if (this.sort) {
-        dataSource.sort = this.sort;
-      }
+      const projects = this.projects();
+      const validProjects = Array.isArray(projects) ? projects : [];
+      this.dataSource.data = validProjects;
+      
+      // Re-apply paginator after data change to ensure proper connection
+      setTimeout(() => {
+        if (this.paginator) {
+          this.dataSource.paginator = this.paginator;
+        }
+        if (this.sort) {
+          this.dataSource.sort = this.sort;
+        }
+      });
     });
   }
 
   ngOnInit(): void {}
 
   ngAfterViewInit() {
-    // Data source is already set up in the effect
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
   }
 
   private loadProjects(searchKey?: string, sortKey?: string) {
@@ -128,7 +131,9 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
     this.projectService.getProjects(searchKey, sortKey).subscribe({
       next: (response) => {
         if (response.success) {
-          this.appStore.setProjects(response.data);
+          // response.data is now the project array, response.meta has pagination info
+          const projects = Array.isArray(response.data) ? response.data : [];
+          this.appStore.setProjects(projects);
         } else {
           this.appStore.setError(response.message || 'Failed to load projects');
           this.alertService.error(response.message || 'Failed to load projects');
@@ -162,11 +167,10 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    const dataSource = this.dataSource();
-    dataSource.filter = filterValue.trim().toLowerCase();
+    this.dataSource.filter = filterValue.trim().toLowerCase();
 
-    if (dataSource.paginator) {
-      dataSource.paginator.firstPage();
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
     }
   }
 
@@ -272,11 +276,19 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
 
   getAssignedUser(row: Project): string {
     const users = this.users();
-    if (!users || !row?.Manager_ID) return 'N/A';
-    const user = users.find((u) => u.User_ID === row?.Manager_ID);
+    const managerId = row?.manager || row?.Manager_ID;
+    if (!users || !managerId) return 'N/A';
+    
+    // Match by uuid (primary), _id (ObjectId string), or User_ID
+    const user = users.find((u) => 
+      u.uuid === managerId || 
+      u._id === managerId || 
+      u.User_ID === managerId
+    );
+    
     if (!user) return 'N/A';
 
-    const fullName = user.Full_Name || `${user.First_Name} ${user.Last_Name}`;
+    const fullName = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim();
     return `${getInitials(fullName)} (${fullName})`;
   }
 }

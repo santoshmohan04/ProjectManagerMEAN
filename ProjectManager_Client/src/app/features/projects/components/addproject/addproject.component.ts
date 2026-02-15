@@ -106,23 +106,22 @@ export class AddprojectComponent implements OnInit {
     if (typeof value === 'string') {
       filterValue = value.toLowerCase();
     } else if (value && typeof value === 'object') {
-      filterValue = value.Full_Name
-        ? value.Full_Name.toLowerCase()
-        : `${value.First_Name} ${value.Last_Name}`.toLowerCase();
+      filterValue = value.fullName
+        ? value.fullName.toLowerCase()
+        : `${value.firstName || ''} ${value.lastName || ''}`.toLowerCase();
     }
 
     return this.usersList.filter(
       (option) =>
-        option.First_Name.toLowerCase().includes(filterValue) ||
-        option.Last_Name.toLowerCase().includes(filterValue) ||
-        (option.Full_Name &&
-          option.Full_Name.toLowerCase().includes(filterValue)) ||
-        option.Employee_ID.toString().includes(filterValue)
+        option.firstName?.toLowerCase().includes(filterValue) ||
+        option.lastName?.toLowerCase().includes(filterValue) ||
+        option.fullName?.toLowerCase().includes(filterValue) ||
+        option.employeeId?.toString().includes(filterValue)
     );
   }
 
   displayUserFn(user: any): string {
-    return user && user.Full_Name ? user.Full_Name : '';
+    return user && user.fullName ? user.fullName : user && user.firstName ? `${user.firstName} ${user.lastName}` : '';
   }
 
   createForm() {

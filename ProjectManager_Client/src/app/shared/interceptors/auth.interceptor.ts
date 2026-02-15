@@ -16,7 +16,12 @@ import { environment } from '../../../environments/environment';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authStore = inject(AuthStore);
   const http = inject(HttpClient);
-  const token = authStore.accessToken();
+  
+  // Get token from store, fallback to localStorage if not available yet
+  let token = authStore.accessToken();
+  if (!token) {
+    token = localStorage.getItem('auth_token');
+  }
 
   // Skip adding token for auth endpoints
   const isAuthEndpoint = req.url.includes('/auth/login') || 
@@ -36,12 +41,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       // Handle 401 Unauthorized errors
-      if (error.status === 401 && !isAuthEndpoint && token) {
-        // Attempt token refresh and retry
-        return handleTokenRefresh(authStore, http, req, next);
+      // Note: Token refresh is disabled until backend implements /auth/refresh endpoint
+      // For now, just pass through the error without forcing logout
+      if (error.status === 401 && !isAuthEndpoint) {
+        console.warn('401 Unauthorized - Token may be invalid or expired');
+        // TODO: Implement token refresh when backend supports it
+        // return handleTokenRefresh(authStore, http, req, next);
       }
 
-      // For other errors, just throw them
+      // For all errors, just throw them (don't force logout)
       return throwError(() => error);
     })
   );

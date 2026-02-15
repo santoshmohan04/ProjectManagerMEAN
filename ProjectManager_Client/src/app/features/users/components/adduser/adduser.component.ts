@@ -63,9 +63,9 @@ export class AdduserComponent implements OnInit, OnDestroy {
 
     if (this.data && this.data.edit && this.data.userdetails) {
       this.userForm.patchValue({
-        firstname: this.data.userdetails.First_Name,
-        lastname: this.data.userdetails.Last_Name,
-        employeeid: this.data.userdetails.Employee_ID,
+        firstname: this.data.userdetails.firstName || this.data.userdetails.First_Name,
+        lastname: this.data.userdetails.lastName || this.data.userdetails.Last_Name,
+        employeeid: this.data.userdetails.employeeId || this.data.userdetails.Employee_ID,
       });
     }
   }

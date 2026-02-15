@@ -60,3 +60,28 @@ table {
     font-size: 12px;
   }
 }
+
+// Role Badge Styles
+.role-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+
+  &.role-admin {
+    background-color: #f44336;
+    color: white;
+  }
+
+  &.role-manager {
+    background-color: #ff9800;
+    color: white;
+  }
+
+  &.role-user {
+    background-color: #4caf50;
+    color: white;
+  }
+}

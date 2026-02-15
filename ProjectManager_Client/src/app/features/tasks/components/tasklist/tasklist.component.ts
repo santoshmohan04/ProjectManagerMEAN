@@ -79,7 +79,17 @@ export class TasklistComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private readonly dialogService: MatDialog) {}
+  constructor(private readonly dialogService: MatDialog) {
+    // Set paginator and sort when dataSource changes
+    // effect() must be called in constructor (injection context)
+    effect(() => {
+      const ds = this.dataSource();
+      if (ds && this.paginator && this.sort) {
+        ds.paginator = this.paginator;
+        ds.sort = this.sort;
+      }
+    });
+  }
 
   ngOnInit(): void {
     // Load data using signals
@@ -114,6 +124,11 @@ export class TasklistComponent implements OnInit, AfterViewInit {
 
   private _filter(value: string | Project): Project[] {
     const projects = this.projects();
+    // Add null check to prevent "filter is not a function" error
+    if (!projects || !Array.isArray(projects)) {
+      return [];
+    }
+    
     let filterValue = '';
     if (typeof value === 'string') {
       filterValue = value.toLowerCase();
@@ -127,14 +142,7 @@ export class TasklistComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // Set paginator and sort when dataSource changes
-    effect(() => {
-      const ds = this.dataSource();
-      if (ds && this.paginator && this.sort) {
-        ds.paginator = this.paginator;
-        ds.sort = this.sort;
-      }
-    });
+    // Paginator and sort setup moved to constructor effect
   }
 
   displayProjectFn(project: Project): string {

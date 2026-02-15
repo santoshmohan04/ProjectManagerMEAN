@@ -38,7 +38,7 @@
     padding-top: 8px;
 
     a {
-      color: rgba(255, 255, 255, 0.87);
+      color: rgba(255, 255, 255, 0.87) !important;
       margin: 4px 8px;
       border-radius: 8px;
       transition: all 0.2s ease-in-out;
@@ -48,16 +48,24 @@
       }
 
       mat-icon {
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(255, 255, 255, 0.7) !important;
         margin-right: 16px;
       }
 
+      .mdc-list-item__primary-text {
+        color: rgba(255, 255, 255, 0.87) !important;
+      }
+
       &.active-link {
-        background-color: #4fc3f7;
-        color: #ffffff;
+        background-color: #4fc3f7 !important;
+        color: #ffffff !important;
 
         mat-icon {
-          color: #ffffff;
+          color: #ffffff !important;
+        }
+
+        .mdc-list-item__primary-text {
+          color: #ffffff !important;
         }
       }
     }

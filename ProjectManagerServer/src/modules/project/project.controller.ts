@@ -13,7 +13,7 @@ export class ProjectController {
   async getProjects(req: Request, res: Response): Promise<void> {
     try {
       const result = await this.projectService.getProjects(req.query as any);
-      successResponse(res, result);
+      successResponse(res, result.data, result.meta);
     } catch (err) {
       errorResponse(res, 'Error fetching projects', 'FETCH_ERROR');
     }

@@ -13,7 +13,7 @@
     </mat-card-content>
   </mat-card>
 
-  <nav mat-tab-nav-bar class="audit-nav">
+  <nav mat-tab-nav-bar [tabPanel]="tabPanel" class="audit-nav">
     <a
       mat-tab-link
       routerLink="/audit/recent"
@@ -43,7 +43,7 @@
     </a>
   </nav>
 
-  <div class="audit-content">
+  <mat-tab-nav-panel #tabPanel class="audit-content">
     <router-outlet></router-outlet>
-  </div>
+  </mat-tab-nav-panel>
 </div>
