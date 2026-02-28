@@ -186,6 +186,67 @@ const taskController = new TaskController();
  *       403:
  *         description: Forbidden - insufficient permissions
  */
+
+/**
+ * @swagger
+ * /tasks/my-tasks:
+ *   get:
+ *     summary: Get tasks assigned to the authenticated user
+ *     tags: [Tasks]
+ *     description: Returns a paginated list of tasks assigned to the current user with optional filtering and sorting.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of items per page
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *         description: Sort field and order (e.g., "title:asc", "priority:desc")
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Filter by task status
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *         description: Filter by priority (JSON object or number)
+ *       - in: query
+ *         name: project
+ *         schema:
+ *           type: string
+ *         description: Filter by project UUID
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search in title and description
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved my tasks
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/my-tasks', authenticate, taskController.getMyTasks.bind(taskController));
+
 router.get('/', authorizeRoles('ADMIN', 'MANAGER', 'USER'), taskController.getTasksWithFilters.bind(taskController));
 
 /**

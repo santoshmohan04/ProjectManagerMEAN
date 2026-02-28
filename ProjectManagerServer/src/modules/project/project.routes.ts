@@ -153,7 +153,64 @@ const projectController = new ProjectController();
  *       403:
  *         description: Forbidden - insufficient permissions
  */
-router.get('/', authorizeRoles('ADMIN', 'MANAGER'), projectController.getProjects.bind(projectController));
+
+/**
+ * @swagger
+ * /projects/my-projects:
+ *   get:
+ *     summary: Get projects managed by the authenticated user
+ *     tags: [Projects]
+ *     description: Returns a paginated list of projects where the current user is the manager.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of items per page
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *         description: Sort field and order (e.g., "name:asc", "priority:desc")
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [PLANNING, ACTIVE, COMPLETED, ARCHIVED]
+ *         description: Filter by project status
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 10
+ *         description: Filter by priority
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search in project name and description
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved my projects
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/my-projects', authenticate, projectController.getMyProjects.bind(projectController));
+
+router.get('/', authorizeRoles('ADMIN', 'MANAGER', 'USER'), projectController.getProjects.bind(projectController));
 
 /**
  * @swagger

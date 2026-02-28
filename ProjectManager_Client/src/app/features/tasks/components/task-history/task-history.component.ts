@@ -110,7 +110,8 @@ export class TaskHistoryComponent implements OnInit {
     this.router.navigate(['/tasks', this.taskUuid()]);
   }
 
-  getStatusChipColor(status: string): string {
+  getStatusChipColor(status: string | undefined): string {
+    if (!status) return 'primary';
     switch (status) {
       case 'Completed': return 'accent';
       case 'In Progress': return 'primary';
@@ -119,7 +120,8 @@ export class TaskHistoryComponent implements OnInit {
     }
   }
 
-  getPriorityColor(priority: number): string {
+  getPriorityColor(priority: number | undefined): string {
+    if (priority === undefined || priority === null) return 'low-priority';
     if (priority >= 7) return 'high-priority';
     if (priority >= 4) return 'medium-priority';
     return 'low-priority';

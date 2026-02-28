@@ -231,8 +231,8 @@ export const DashboardStore = signalStore(
   // Lifecycle hooks
   withHooks({
     onInit(store) {
-      // Auto-load overview on initialization
-      store.loadOverview();
+      // Dashboard data will be loaded by the component
+      // No auto-initialization to prevent unauthorized API calls
     },
     onDestroy() {
       // Cleanup if needed

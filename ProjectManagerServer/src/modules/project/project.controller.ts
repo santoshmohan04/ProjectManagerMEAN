@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ProjectService } from './project.service.js';
 import { successResponse, errorResponse } from '../../utils/response.js';
 import { EntityType } from '../../models/audit.model.js';
+import { User } from '../../models/user.model.js';
 
 export class ProjectController {
   private projectService: ProjectService;
@@ -12,10 +13,49 @@ export class ProjectController {
 
   async getProjects(req: Request, res: Response): Promise<void> {
     try {
-      const result = await this.projectService.getProjects(req.query as any);
+      // For USER role, automatically filter to projects where they are the manager or member
+      const userRole = req.user?.role;
+      const userId = req.user?.userId;
+      
+      let queryParams = req.query as any;
+      
+      // If user is USER role, only show their projects (managed by them)
+      if (userRole === 'USER' && userId) {
+        // Convert UUID to ObjectId by looking up the user
+        const user = await User.findOne({ uuid: userId });
+        if (user) {
+          queryParams = { ...queryParams, manager: user._id };
+        }
+      }
+      
+      const result = await this.projectService.getProjects(queryParams);
       successResponse(res, result.data, result.meta);
     } catch (err) {
       errorResponse(res, 'Error fetching projects', 'FETCH_ERROR');
+    }
+  }
+
+  async getMyProjects(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      
+      if (!userId) {
+        return errorResponse(res, 'User not authenticated', 'UNAUTHORIZED', 401);
+      }
+
+      // Convert UUID to ObjectId by looking up the user
+      const user = await User.findOne({ uuid: userId });
+      if (!user) {
+        return errorResponse(res, 'User not found', 'NOT_FOUND', 404);
+      }
+
+      // Get query params but always filter by current user as manager
+      const queryParams = { ...req.query, manager: user._id } as any;
+      
+      const result = await this.projectService.getProjects(queryParams);
+      successResponse(res, result.data, result.meta);
+    } catch (err) {
+      errorResponse(res, 'Error fetching my projects', 'FETCH_ERROR');
     }
   }
 

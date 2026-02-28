@@ -47,6 +47,8 @@ export const routes: Routes = [
       },
       {
         path: 'projects',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'MANAGER', 'USER'] },
         loadComponent: () =>
           import('./features/projects/components/projectslist/projectslist.component').then(
             (m) => m.ProjectslistComponent
@@ -63,6 +65,8 @@ export const routes: Routes = [
       },
       {
         path: 'tasks',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'MANAGER'] },
         loadComponent: () =>
           import('./features/tasks/components/tasklist/tasklist.component').then(
             (m) => m.TasklistComponent
@@ -91,6 +95,8 @@ export const routes: Routes = [
       },
       {
         path: 'archived-projects',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'MANAGER', 'USER'] },
         loadComponent: () =>
           import('./features/projects/components/archived-projects/archived-projects.component').then(
             (m) => m.ArchivedProjectsComponent

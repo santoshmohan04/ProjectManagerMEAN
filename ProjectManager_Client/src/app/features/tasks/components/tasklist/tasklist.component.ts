@@ -27,6 +27,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Task } from '../../models/task';
 import { AppStore } from '@core/app.store';
+import { AuthStore } from '@core/auth.store';
 import { ConfirmationDialogComponent } from '@shared/confirmation-dialog/confirmation-dialog.component';
 import { AlertService } from '@shared/services/alert.service';
 import { AddtaskComponent } from '../addtask/addtask.component';
@@ -72,6 +73,7 @@ export class TasklistComponent implements OnInit, AfterViewInit {
 
   // Signals
   private readonly appStore = inject(AppStore);
+  private readonly authStore = inject(AuthStore);
   private readonly taskService = inject(TaskService);
   private readonly projectService = inject(ProjectService);
   private readonly userService = inject(UserService);
@@ -115,8 +117,13 @@ export class TasklistComponent implements OnInit, AfterViewInit {
     if (!this.projects() || this.projects().length === 0) {
       this.loadProjects();
     }
-    if (!this.users() || this.users().length === 0) {
-      this.loadUsers();
+    
+    // Only load users for ADMIN and MANAGER roles
+    const userRole = this.authStore.user()?.role;
+    if (userRole !== 'USER') {
+      if (!this.users() || this.users().length === 0) {
+        this.loadUsers();
+      }
     }
     
     this.filteredOptions = this.selectedproject.valueChanges.pipe(
@@ -132,7 +139,14 @@ export class TasklistComponent implements OnInit, AfterViewInit {
     }
     
     this.appStore.setLoading(true);
-    this.taskService.getTasksList().subscribe({
+    
+    // Check user role and use appropriate API
+    const userRole = this.authStore.user()?.role;
+    const taskObservable = userRole === 'USER' 
+      ? this.taskService.getMyTasks() 
+      : this.taskService.getTasksList();
+    
+    taskObservable.subscribe({
       next: (response) => {
         if (response.success) {
           // Handle nested data structure - response.data might be array or contain nested data
@@ -160,7 +174,13 @@ export class TasklistComponent implements OnInit, AfterViewInit {
       return;
     }
     
-    this.projectService.getProjects().subscribe({
+    // Check user role and use appropriate API
+    const userRole = this.authStore.user()?.role;
+    const projectObservable = userRole === 'USER' 
+      ? this.projectService.getMyProjects() 
+      : this.projectService.getProjects();
+    
+    projectObservable.subscribe({
       next: (response) => {
         if (response.success) {
           // Handle nested data structure
@@ -279,14 +299,114 @@ export class TasklistComponent implements OnInit, AfterViewInit {
   }
 
   onSubmit(
-    data: { firstname: string; lastname: string; employeeid: string },
+    data: any,
     action: 'add' | 'edit',
     task?: Task
   ) {
     if (action === 'add') {
+      // Transform form data to match API expectations
+      const taskData: any = {
+        title: data.title,
+        description: data.description || '',
+        priority: data.priority || 0,
+        status: 'OPEN', // Default status for new tasks
+      };
+
+      // Add optional fields if they exist
+      if (data.startdate) {
+        taskData.startDate = data.startdate;
+      }
+      if (data.enddate) {
+        taskData.dueDate = data.enddate;
+      }
+      
+      // Handle project - extract ID from object or use as is
+      if (data.project) {
+        taskData.project = typeof data.project === 'object' 
+          ? (data.project._id || data.project.id || data.project.uuid)
+          : data.project;
+      }
+      
+      // Handle parent task - extract ID from object or use as is
+      if (data.parenttask) {
+        taskData.parent = typeof data.parenttask === 'object'
+          ? (data.parenttask._id || data.parenttask.id || data.parenttask.uuid)
+          : data.parenttask;
+      }
+      
+      // Handle assigned user - extract ID from object or use as is
+      if (data.user) {
+        taskData.assignedTo = typeof data.user === 'object'
+          ? (data.user._id || data.user.id || data.user.uuid)
+          : data.user;
+      }
+
+      this.taskService.addTask(taskData).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.alertService.success('Task created successfully');
+            this.loadTasks(true); // Reload tasks
+          } else {
+            this.alertService.error(response.message || 'Failed to create task');
+          }
+        },
+        error: (error) => {
+          console.error('Error creating task:', error);
+          this.alertService.error('Failed to create task');
+        },
+      });
     }
 
     if (action === 'edit') {
+      // TODO: Implement edit functionality
+      if (!task || !task.id) return;
+      
+      const taskData: any = {
+        title: data.title,
+        description: data.description || '',
+        priority: data.priority || 0,
+      };
+
+      // Add optional fields if they exist
+      if (data.startdate) {
+        taskData.startDate = data.startdate;
+      }
+      if (data.enddate) {
+        taskData.dueDate = data.enddate;
+      }
+      
+      if (data.project) {
+        taskData.project = typeof data.project === 'object' 
+          ? (data.project._id || data.project.id || data.project.uuid)
+          : data.project;
+      }
+      
+      if (data.parenttask) {
+        taskData.parent = typeof data.parenttask === 'object'
+          ? (data.parenttask._id || data.parenttask.id || data.parenttask.uuid)
+          : data.parenttask;
+      }
+      
+      if (data.user) {
+        taskData.assignedTo = typeof data.user === 'object'
+          ? (data.user._id || data.user.id || data.user.uuid)
+          : data.user;
+      }
+
+      this.taskService.editTask(taskData, task.id).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.alertService.success('Task updated successfully');
+            this.loadTasks(true); // Reload tasks
+          } else {
+            this.alertService.error(response.message || 'Failed to update task');
+          }
+        },
+        error: (error) => {
+          console.error('Error updating task:', error);
+          this.alertService.error('Failed to update task');
+        },
+      });
     }
   }
 

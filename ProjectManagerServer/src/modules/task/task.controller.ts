@@ -4,6 +4,7 @@ import { TaskSearchFilters, TaskSort, TaskPagination } from './task.repository.j
 import { successResponse, errorResponse } from '../../utils/response.js';
 import { EntityType } from '../../models/audit.model.js';
 import { ITask, TaskStatus } from '../../models/task.model.js';
+import { User } from '../../models/user.model.js';
 
 export class TaskController {
   private taskService: TaskService;
@@ -36,6 +37,10 @@ export class TaskController {
         search?: string;
       };
 
+      // For USER role, automatically filter to only their assigned tasks
+      const userRole = req.user?.role;
+      const userId = req.user?.userId;
+      
       // Parse pagination
       const pageNum = Math.max(1, parseInt(String(page || '1'), 10));
       const limitNum = Math.min(100, Math.max(1, parseInt(String(limit || '10'), 10)));
@@ -54,6 +59,18 @@ export class TaskController {
 
       // Build filters
       const filters: TaskSearchFilters = {};
+
+      // If user is USER role, only show their tasks
+      if (userRole === 'USER' && userId) {
+        // Convert UUID to ObjectId by looking up the user
+        const user = await User.findOne({ uuid: userId });
+        if (user) {
+          filters.assignedTo = user._id as any;
+        }
+      } else if (assignedTo) {
+        // For ADMIN/MANAGER, allow assignedTo filter
+        filters.assignedTo = assignedTo;
+      }
 
       // Status filter (can be array)
       if (status) {
@@ -82,7 +99,6 @@ export class TaskController {
 
       // Other filters
       if (project) filters.projectId = project;
-      if (assignedTo) filters.assignedTo = assignedTo;
       if (parentTask) filters.parentId = parentTask;
       if (search) filters.search = search;
 
@@ -98,6 +114,98 @@ export class TaskController {
       successResponse(res, result.data, result.meta);
     } catch (err) {
       errorResponse(res, 'Error fetching tasks', 'FETCH_ERROR');
+    }
+  }
+
+  async getMyTasks(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      
+      if (!userId) {
+        return errorResponse(res, 'User not authenticated', 'UNAUTHORIZED', 401);
+      }
+
+      const {
+        page = 1,
+        limit = 10,
+        sort,
+        status,
+        priority,
+        project,
+        search
+      } = req.query as {
+        page?: string;
+        limit?: string;
+        sort?: string;
+        status?: string | string[];
+        priority?: string;
+        project?: string;
+        search?: string;
+      };
+
+      // Parse pagination
+      const pageNum = Math.max(1, parseInt(String(page || '1'), 10));
+      const limitNum = Math.min(100, Math.max(1, parseInt(String(limit || '10'), 10)));
+
+      // Parse sort
+      let sortConfig: TaskSort | undefined;
+      if (sort) {
+        const sortMatch = sort.match(/^([a-zA-Z_]+):(asc|desc)$/);
+        if (sortMatch) {
+          sortConfig = {
+            field: sortMatch[1],
+            order: sortMatch[2] as 'asc' | 'desc'
+          };
+        }
+      }
+
+      // Convert UUID to ObjectId by looking up the user
+      const user = await User.findOne({ uuid: userId });
+      if (!user) {
+        return errorResponse(res, 'User not found', 'NOT_FOUND', 404);
+      }
+
+      // Build filters - always filter by assignedTo = current user
+      const filters: TaskSearchFilters = {
+        assignedTo: user._id as any
+      };
+
+      // Status filter (can be array)
+      if (status) {
+        const statusArray = Array.isArray(status) ? status : [status];
+        filters.status = statusArray as TaskStatus[];
+      }
+
+      // Priority filter
+      if (priority) {
+        try {
+          const priorityObj = JSON.parse(priority);
+          if (priorityObj.min !== undefined || priorityObj.max !== undefined) {
+            filters.priority = {
+              min: priorityObj.min ?? 1,
+              max: priorityObj.max ?? 5
+            };
+          }
+        } catch (e) {
+          const priorityNum = parseInt(priority, 10);
+          if (!isNaN(priorityNum)) {
+            filters.priority = { min: priorityNum, max: priorityNum };
+          }
+        }
+      }
+
+      // Other filters
+      if (project) filters.projectId = project;
+      if (search) filters.search = search;
+
+      const result = await this.taskService.getAdvancedTasks(filters, sortConfig, {
+        page: pageNum,
+        limit: limitNum
+      });
+
+      successResponse(res, result.data, result.meta);
+    } catch (err) {
+      errorResponse(res, 'Error fetching my tasks', 'FETCH_ERROR');
     }
   }
 
@@ -136,7 +244,34 @@ export class TaskController {
 
   async createTask(req: Request, res: Response): Promise<void> {
     try {
-      const task = await this.taskService.createTask(req.body);
+      const userId = req.user?.userId;
+      
+      if (!userId) {
+        return errorResponse(res, 'User not authenticated', 'UNAUTHORIZED', 401);
+      }
+
+      // Get user's ObjectId from UUID
+      const user = await User.findOne({ uuid: userId });
+      if (!user) {
+        return errorResponse(res, 'User not found', 'NOT_FOUND', 404);
+      }
+
+      // Validate required fields
+      if (!req.body.title) {
+        return errorResponse(res, 'Title is required', 'VALIDATION_ERROR', 400);
+      }
+
+      if (!req.body.project) {
+        return errorResponse(res, 'Project is required', 'VALIDATION_ERROR', 400);
+      }
+
+      // Prepare task data with createdBy
+      const taskData = {
+        ...req.body,
+        createdBy: user._id,
+      };
+
+      const task = await this.taskService.createTask(taskData);
 
       // Log the creation
       if ((req as any).audit) {
@@ -145,6 +280,7 @@ export class TaskController {
 
       successResponse(res, task, undefined, 'Task created successfully', 201);
     } catch (err) {
+      console.error('Error creating task:', err);
       errorResponse(res, 'Error creating task', 'CREATE_ERROR');
     }
   }

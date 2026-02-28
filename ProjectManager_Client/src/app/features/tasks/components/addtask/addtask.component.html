@@ -1,118 +1,170 @@
-<h2 mat-dialog-title>{{ data.title }}</h2>
-<mat-dialog-content class="container">
-  <form [formGroup]="taskForm" class="d-flex flex-column gap-3">
-    <mat-form-field appearance="outline" class="mt-2">
-      <mat-label>Task Title</mat-label>
-      <input matInput type="text" formControlName="title" />
-    </mat-form-field>
+<div class="dialog-header">
+  <h2 mat-dialog-title>{{ data.title }}</h2>
+</div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Task Description</mat-label>
-      <input matInput type="text" formControlName="description" />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Set Start and End Date</mat-label>
-      <mat-date-range-input [rangePicker]="rangePicker">
-        <input
-          matStartDate
-          placeholder="Start date"
-          formControlName="startdate"
-        />
-        <input matEndDate placeholder="End date" formControlName="enddate" />
-      </mat-date-range-input>
-      <mat-hint>MM/DD/YYYY - MM/DD/YYYY</mat-hint>
-      <mat-datepicker-toggle
-        matIconSuffix
-        [for]="rangePicker"
-      ></mat-datepicker-toggle>
-      <mat-date-range-picker #rangePicker>
-        <mat-date-range-picker-actions>
-          <button matButton matDateRangePickerCancel>Cancel</button>
-          <button matButton="elevated" matDateRangePickerApply>Apply</button>
-        </mat-date-range-picker-actions>
-      </mat-date-range-picker>
-    </mat-form-field>
-
-    <div>
-      <label class="d-block mb-2 w-100">Priority</label>
-      <mat-slider
-        [max]="max"
-        [min]="min"
-        [step]="step"
-        [discrete]="thumbLabel"
-        class="w-90"
-      >
-        <input matSliderThumb formControlName="priority" />
-      </mat-slider>
+<mat-dialog-content>
+  <form [formGroup]="taskForm" class="task-form">
+    <!-- Task Title & Description Row -->
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Task Title</mat-label>
+        <input matInput type="text" formControlName="title" placeholder="Enter task title" />
+        <mat-icon matPrefix>title</mat-icon>
+        @if (taskForm.get('title')?.hasError('required') && taskForm.get('title')?.touched) {
+          <mat-error>Task title is required</mat-error>
+        }
+      </mat-form-field>
     </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Parent Task</mat-label>
-      <input
-        type="text"
-        placeholder="Pick one"
-        aria-label="Parent Task"
-        matInput
-        formControlName="parenttask"
-        [matAutocomplete]="auto"
-      />
-      <mat-autocomplete #auto="matAutocomplete">
-        @for (task of data.tasklist; track task) {
-        <mat-option [value]="task">
-          {{ task?.Title }}
-        </mat-option>
-        }
-      </mat-autocomplete>
-    </mat-form-field>
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Task Description</mat-label>
+        <textarea 
+          matInput 
+          formControlName="description" 
+          placeholder="Enter task description"
+          rows="3"
+        ></textarea>
+        <mat-icon matPrefix>description</mat-icon>
+      </mat-form-field>
+    </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Project</mat-label>
-      <input
-        type="text"
-        placeholder="Select Project"
-        aria-label="Project"
-        matInput
-        formControlName="project"
-        [matAutocomplete]="auto"
-      />
-      <mat-autocomplete #auto="matAutocomplete">
-        @for (project of data.projectlist; track project) {
-        <mat-option [value]="project">
-          {{ project?.Project }}
-        </mat-option>
-        }
-      </mat-autocomplete>
-    </mat-form-field>
+    <!-- Date Range -->
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Start and End Date</mat-label>
+        <mat-date-range-input [rangePicker]="rangePicker">
+          <input
+            matStartDate
+            placeholder="Start date"
+            formControlName="startdate"
+          />
+          <input matEndDate placeholder="End date" formControlName="enddate" />
+        </mat-date-range-input>
+        <mat-icon matPrefix>calendar_today</mat-icon>
+        <mat-hint>Select date range for the task</mat-hint>
+        <mat-datepicker-toggle
+          matIconSuffix
+          [for]="rangePicker"
+        ></mat-datepicker-toggle>
+        <mat-date-range-picker #rangePicker>
+          <mat-date-range-picker-actions>
+            <button mat-button matDateRangePickerCancel>Cancel</button>
+            <button mat-flat-button color="primary" matDateRangePickerApply>Apply</button>
+          </mat-date-range-picker-actions>
+        </mat-date-range-picker>
+      </mat-form-field>
+    </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>User</mat-label>
-      <input
-        type="text"
-        placeholder="Pick one"
-        aria-label="Manager"
-        matInput
-        formControlName="user"
-        [matAutocomplete]="auto"
-      />
-      <mat-autocomplete #auto="matAutocomplete">
-        @for (user of data.userlist; track user) {
-        <mat-option [value]="user">
-          {{ user?.First_Name }} {{ user?.Last_Name }}
-        </mat-option>
+    <!-- Priority Slider -->
+    <div class="form-row">
+      <div class="priority-field">
+        <label class="field-label">
+          <mat-icon class="label-icon">priority_high</mat-icon>
+          Priority: <span class="priority-value">{{ taskForm.get('priority')?.value }}</span>
+        </label>
+        <mat-slider
+          [max]="max"
+          [min]="min"
+          [step]="step"
+          [discrete]="thumbLabel"
+          class="priority-slider"
+        >
+          <input matSliderThumb formControlName="priority" />
+        </mat-slider>
+        <div class="priority-labels">
+          <span>Low (0)</span>
+          <span>High (10)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Parent Task & Project Row -->
+    <div class="form-row two-columns">
+      <mat-form-field appearance="outline" class="form-field">
+        <mat-label>Parent Task</mat-label>
+        <input
+          type="text"
+          placeholder="Select parent task (optional)"
+          aria-label="Parent Task"
+          matInput
+          formControlName="parenttask"
+          [matAutocomplete]="autoParent"
+        />
+        <mat-icon matPrefix>account_tree</mat-icon>
+        <mat-autocomplete #autoParent="matAutocomplete">
+          @for (task of data.tasklist; track task) {
+          <mat-option [value]="task">
+            {{ task?.Title }}
+          </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field">
+        <mat-label>Project *</mat-label>
+        <input
+          type="text"
+          placeholder="Select project (required)"
+          aria-label="Project"
+          matInput
+          formControlName="project"
+          [matAutocomplete]="autoProject"
+        />
+        <mat-icon matPrefix>folder</mat-icon>
+        <mat-autocomplete #autoProject="matAutocomplete">
+          @for (project of data.projectlist; track project) {
+          <mat-option [value]="project">
+            {{ project?.Project }}
+          </mat-option>
+          }
+        </mat-autocomplete>
+        @if (taskForm.get('project')?.hasError('required') && taskForm.get('project')?.touched) {
+          <mat-error>Project is required</mat-error>
         }
-      </mat-autocomplete>
-    </mat-form-field>
+      </mat-form-field>
+    </div>
+
+    <!-- Assigned User - Only for ADMIN -->
+    @if (isAdmin()) {
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field full-width">
+          <mat-label>Assigned User</mat-label>
+          <input
+            type="text"
+            placeholder="Select user to assign"
+            aria-label="Assigned User"
+            matInput
+            formControlName="user"
+            [matAutocomplete]="autoUser"
+          />
+          <mat-icon matPrefix>person</mat-icon>
+          <mat-autocomplete #autoUser="matAutocomplete">
+            @for (user of data.userlist; track user) {
+            <mat-option [value]="user">
+              {{ user?.First_Name }} {{ user?.Last_Name }}
+            </mat-option>
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+      </div>
+    }
   </form>
 </mat-dialog-content>
-<mat-dialog-actions>
-  <button mat-button mat-dialog-close type="button">Close</button>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close type="button" class="cancel-btn">
+    <mat-icon>close</mat-icon>
+    Close
+  </button>
   <button
-    mat-raised-button
+    mat-flat-button
     color="primary"
     [mat-dialog-close]="taskForm.value"
     [disabled]="taskForm.invalid"
+    class="submit-btn"
   >
+    <mat-icon>check</mat-icon>
     Submit
   </button>
 </mat-dialog-actions>

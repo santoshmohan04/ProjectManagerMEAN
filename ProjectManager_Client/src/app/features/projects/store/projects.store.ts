@@ -473,8 +473,8 @@ export const ProjectsStore = signalStore(
   // Auto-load projects on initialization
   withHooks({
     onInit(store) {
-      // Load first page of projects
-      store.loadProjects({ page: 1, limit: 10 });
+      // Projects are loaded on-demand by components
+      // No auto-initialization to prevent unauthorized API calls
     },
   })
 );

@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
 import { ProjectService } from '@features/projects/services/project.service';
 import { Project, ProjectStatus } from '@features/projects/models/project';
+import { AuthStore } from '@core/auth.store';
 import { SkeletonLoaderComponent } from '@shared/skeleton-loader/skeleton-loader.component';
 import { EmptyStateComponent } from '@shared/empty-state/empty-state.component';
 
@@ -31,6 +32,7 @@ import { EmptyStateComponent } from '@shared/empty-state/empty-state.component';
 })
 export class ArchivedProjectsComponent implements OnInit {
   private projectService = inject(ProjectService);
+  private authStore = inject(AuthStore);
   private router = inject(Router);
 
   // State signals
@@ -50,9 +52,15 @@ export class ArchivedProjectsComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
+    // Check user role and use appropriate API
+    const userRole = this.authStore.user()?.role;
+    const projectObservable = userRole === 'USER' 
+      ? this.projectService.getMyProjects() 
+      : this.projectService.getProjects();
+
     // TODO: Update ProjectService to support status filtering
     // For now, load all projects and filter on frontend
-    this.projectService.getProjects().subscribe({
+    projectObservable.subscribe({
       next: (response) => {
         // Filter projects with COMPLETED or ARCHIVED status
         const projects = Array.isArray(response.data) ? response.data : [];

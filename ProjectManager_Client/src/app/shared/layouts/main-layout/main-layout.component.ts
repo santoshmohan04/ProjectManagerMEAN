@@ -38,7 +38,7 @@ export class MainLayoutComponent {
 
   navItems: NavItem[] = [
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard', roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.USER] },
-    { label: 'Projects', icon: 'work', route: '/projects', roles: [UserRole.MANAGER, UserRole.ADMIN] },
+    { label: 'Projects', icon: 'work', route: '/projects', roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.USER] },
     { label: 'Tasks', icon: 'task', route: '/tasks', roles: [UserRole.MANAGER, UserRole.ADMIN] },
     { label: 'My Tasks', icon: 'assignment', route: '/my-tasks', roles: [UserRole.USER] },
     { label: 'Users', icon: 'people', route: '/users', roles: [UserRole.ADMIN] },

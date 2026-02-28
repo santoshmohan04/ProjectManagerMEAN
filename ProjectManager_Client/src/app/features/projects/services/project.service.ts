@@ -29,6 +29,21 @@ export class ProjectService {
     return this.http.get<ApiResponse<Project[]>>(uri, { params: params });
   }
 
+  getMyProjects(
+    searchKey?: string,
+    sortKey?: string
+  ): Observable<ApiResponse<Project[]>> {
+    let params = new HttpParams();
+
+    if (searchKey) params = params.append('searchKey', searchKey);
+
+    if (sortKey) params = params.append('sortKey', sortKey);
+
+    const uri = `${this.baseUri}/projects/my-projects`;
+
+    return this.http.get<ApiResponse<Project[]>>(uri, { params: params });
+  }
+
   getProject(projectId: string): Observable<ApiResponse<Project>> {
     const uri = `${this.baseUri}${environment.endpoint_project_get}/${projectId}`;
 

@@ -4,6 +4,7 @@ import {
   OnDestroy,
   OnInit,
   inject,
+  computed,
 } from '@angular/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
@@ -16,6 +17,7 @@ import {
 } from '@angular/forms';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -31,6 +33,7 @@ import {
 import { Observable } from 'rxjs';
 import { User } from '@features/users/models/user';
 import { priorityRangeValidator } from '@shared/validators/custom-validators';
+import { AuthStore } from '@core/auth.store';
 
 @Component({
   selector: 'app-addtask',
@@ -44,6 +47,7 @@ import { priorityRangeValidator } from '@shared/validators/custom-validators';
     MatAutocompleteModule,
     MatInputModule,
     MatButtonModule,
+    MatIconModule,
     MatDialogTitle,
     MatDialogContent,
     MatDialogActions,
@@ -59,11 +63,16 @@ import { priorityRangeValidator } from '@shared/validators/custom-validators';
 export class AddtaskComponent implements OnInit, OnDestroy {
   taskForm!: FormGroup;
   data = inject(MAT_DIALOG_DATA);
+  private readonly authStore = inject(AuthStore);
+  
   max = 10;
   min = 0;
   step = 1;
   thumbLabel = true;
   filteredOptions: Observable<User[]> | undefined;
+  
+  // Check if user is ADMIN
+  isAdmin = computed(() => this.authStore.user()?.role === 'ADMIN');
 
   constructor(private readonly formbuilder: FormBuilder) {}
 
@@ -79,7 +88,7 @@ export class AddtaskComponent implements OnInit, OnDestroy {
       enddate: [null],
       priority: [0, [Validators.required, priorityRangeValidator()]],
       parenttask: [null],
-      project: [null],
+      project: [null, Validators.required],
       user: [null],
     });
   }

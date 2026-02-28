@@ -46,6 +46,21 @@ export class TaskService implements ITaskService {
     return this.http.get<ApiResponse<Task[]>>(uri, { params: params });
   }
 
+  getMyTasks(
+    projectId?: string,
+    sortKey?: string
+  ): Observable<ApiResponse<Task[]>> {
+    let params = new HttpParams();
+
+    if (projectId) params = params.append('projectId', projectId.toString());
+
+    if (sortKey) params = params.append('sortKey', sortKey);
+
+    const uri = `${this.baseUri}/tasks/my-tasks`;
+
+    return this.http.get<ApiResponse<Task[]>>(uri, { params: params });
+  }
+
   addTask(newTask: Task): Observable<ApiResponse<Task>> {
     const uri = `${this.baseUri}${environment.endpoint_task_add}`;
 

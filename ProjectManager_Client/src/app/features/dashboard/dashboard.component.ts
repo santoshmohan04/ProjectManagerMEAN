@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,8 +26,13 @@ import { DashboardStore } from './store/dashboard.store';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   readonly store = inject(DashboardStore);
+
+  ngOnInit(): void {
+    // Load dashboard data when component initializes
+    this.store.loadOverview();
+  }
 
   // Metric card configurations
   readonly projectMetrics = computed(() => {

@@ -26,6 +26,7 @@ import { FormGroup } from '@angular/forms';
 import { User } from '@features/users/models/user';
 import { ApiResponse } from '@shared/models/shared';
 import { AppStore } from '@core/app.store';
+import { AuthStore } from '@core/auth.store';
 import { ProjectService } from '../../services/project.service';
 import { UserService } from '@features/users/services/user.service';
 import { filterByText } from '@shared/utils/filter-utils';
@@ -55,18 +56,13 @@ import { EmptyStateComponent } from '@shared/empty-state/empty-state.component';
   styleUrl: './projectslist.component.scss',
 })
 export class ProjectslistComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = [
-    'name',
-    'tasks',
-    'completed',
-    'user',
-    'priority',
-    'startDate',
-    'endDate',
-    'actions',
-  ];
+  displayedColumns = signal<string[]>([]);
+  private readonly baseColumns = ['name', 'tasks', 'completed'];
+  private readonly userColumn = ['user'];
+  private readonly endColumns = ['priority', 'startDate', 'endDate', 'actions'];
 
   private readonly appStore = inject(AppStore);
+  private readonly authStore = inject(AuthStore);
   private readonly projectService = inject(ProjectService);
   private readonly userService = inject(UserService);
   private readonly dialogService = inject(MatDialog);
@@ -86,6 +82,16 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
+    // Set columns based on user role
+    const userRole = this.authStore.user()?.role;
+    if (userRole === 'USER') {
+      // Exclude the 'user' column for USER role
+      this.displayedColumns.set([...this.baseColumns, ...this.endColumns]);
+    } else {
+      // Include all columns for ADMIN and MANAGER
+      this.displayedColumns.set([...this.baseColumns, ...this.userColumn, ...this.endColumns]);
+    }
+
     // Configure filter predicate
     this.dataSource.filterPredicate = (data: Project, filter: string) => {
       const assignedUser = this.getAssignedUser(data).toLowerCase();
@@ -103,7 +109,7 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
       const projects = this.projects();
       const validProjects = Array.isArray(projects) ? projects : [];
       this.dataSource.data = validProjects;
-      
+
       // Re-apply paginator after data change to ensure proper connection
       setTimeout(() => {
         if (this.paginator) {
@@ -121,8 +127,13 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
     if (!this.projects() || this.projects().length === 0) {
       this.loadProjects();
     }
-    if (!this.users() || this.users().length === 0) {
-      this.loadUsers();
+    
+    // Only load users for ADMIN and MANAGER roles
+    const userRole = this.authStore.user()?.role;
+    if (userRole !== 'USER') {
+      if (!this.users() || this.users().length === 0) {
+        this.loadUsers();
+      }
     }
   }
 
@@ -131,14 +142,32 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
     this.dataSource.sort = this.sort;
   }
 
-  private loadProjects(searchKey?: string, sortKey?: string, force: boolean = false) {
+  private loadProjects(
+    searchKey?: string,
+    sortKey?: string,
+    force: boolean = false,
+  ) {
     // Skip if data exists and not forced
-    if (!force && !searchKey && !sortKey && this.projects() && this.projects().length > 0) {
+    if (
+      !force &&
+      !searchKey &&
+      !sortKey &&
+      this.projects() &&
+      this.projects().length > 0
+    ) {
       return;
     }
-    
+
     this.appStore.setLoading(true);
-    this.projectService.getProjects(searchKey, sortKey).subscribe({
+
+    // Check user role and use appropriate API
+    const userRole = this.authStore.user()?.role;
+    const projectObservable =
+      userRole === 'USER'
+        ? this.projectService.getMyProjects(searchKey, sortKey)
+        : this.projectService.getProjects(searchKey, sortKey);
+
+    projectObservable.subscribe({
       next: (response) => {
         if (response.success) {
           // response.data is now the project array, response.meta has pagination info
@@ -146,7 +175,9 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
           this.appStore.setProjects(projects);
         } else {
           this.appStore.setError(response.message || 'Failed to load projects');
-          this.alertService.error(response.message || 'Failed to load projects');
+          this.alertService.error(
+            response.message || 'Failed to load projects',
+          );
         }
         this.appStore.setLoading(false);
       },
@@ -154,16 +185,26 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
         this.appStore.setError('Failed to load projects');
         this.alertService.error('Failed to load projects');
         this.appStore.setLoading(false);
-      }
+      },
     });
   }
 
-  private loadUsers(searchKey?: string, sortKey?: string, force: boolean = false) {
+  private loadUsers(
+    searchKey?: string,
+    sortKey?: string,
+    force: boolean = false,
+  ) {
     // Skip if data exists and not forced
-    if (!force && !searchKey && !sortKey && this.users() && this.users().length > 0) {
+    if (
+      !force &&
+      !searchKey &&
+      !sortKey &&
+      this.users() &&
+      this.users().length > 0
+    ) {
       return;
     }
-    
+
     const params = {
       search: searchKey,
       sort: sortKey,
@@ -178,7 +219,7 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
       },
       error: (error: any) => {
         this.alertService.error('Failed to load users');
-      }
+      },
     });
   }
 
@@ -219,12 +260,14 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
               this.appStore.deleteProject(row._id);
               this.alertService.success('Project deleted successfully');
             } else {
-              this.alertService.error(response.message || 'Failed to delete project');
+              this.alertService.error(
+                response.message || 'Failed to delete project',
+              );
             }
           },
           error: (error) => {
             this.alertService.error('Failed to delete project');
-          }
+          },
         });
       }
     });
@@ -261,19 +304,23 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
     };
 
     if (action === 'edit' && formValues.projectId) {
-      this.projectService.editProject(projectPayload, formValues.projectId).subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.appStore.updateProject(response.data);
-            this.alertService.success('Project updated successfully');
-          } else {
-            this.alertService.error(response.message || 'Failed to update project');
-          }
-        },
-        error: (error) => {
-          this.alertService.error('Failed to update project');
-        }
-      });
+      this.projectService
+        .editProject(projectPayload, formValues.projectId)
+        .subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.appStore.updateProject(response.data);
+              this.alertService.success('Project updated successfully');
+            } else {
+              this.alertService.error(
+                response.message || 'Failed to update project',
+              );
+            }
+          },
+          error: (error) => {
+            this.alertService.error('Failed to update project');
+          },
+        });
     } else {
       this.projectService.addProject(projectPayload).subscribe({
         next: (response) => {
@@ -281,12 +328,14 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
             this.appStore.addProject(response.data);
             this.alertService.success('Project added successfully');
           } else {
-            this.alertService.error(response.message || 'Failed to add project');
+            this.alertService.error(
+              response.message || 'Failed to add project',
+            );
           }
         },
         error: (error) => {
           this.alertService.error('Failed to add project');
-        }
+        },
       });
     }
   }
@@ -295,17 +344,17 @@ export class ProjectslistComponent implements OnInit, AfterViewInit {
     const users = this.users();
     const managerId = row?.manager || row?.Manager_ID;
     if (!users || !managerId) return 'N/A';
-    
+
     // Match by uuid (primary), _id (ObjectId string), or User_ID
-    const user = users.find((u) => 
-      u.uuid === managerId || 
-      u._id === managerId || 
-      u.User_ID === managerId
+    const user = users.find(
+      (u) =>
+        u.uuid === managerId || u._id === managerId || u.User_ID === managerId,
     );
-    
+
     if (!user) return 'N/A';
 
-    const fullName = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    const fullName =
+      user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim();
     return `${getInitials(fullName)} (${fullName})`;
   }
 }
