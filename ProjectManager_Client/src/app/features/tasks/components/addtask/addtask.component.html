@@ -33,7 +33,7 @@
     <div class="form-row">
       <mat-form-field appearance="outline" class="form-field full-width">
         <mat-label>Start and End Date</mat-label>
-        <mat-date-range-input [rangePicker]="rangePicker">
+        <mat-date-range-input [rangePicker]="rangePicker" [min]="minDate">
           <input
             matStartDate
             placeholder="Start date"
@@ -47,7 +47,7 @@
           matIconSuffix
           [for]="rangePicker"
         ></mat-datepicker-toggle>
-        <mat-date-range-picker #rangePicker>
+        <mat-date-range-picker #rangePicker [startAt]="minDate">
           <mat-date-range-picker-actions>
             <button mat-button matDateRangePickerCancel>Cancel</button>
             <button mat-flat-button color="primary" matDateRangePickerApply>Apply</button>
@@ -102,10 +102,10 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field">
-        <mat-label>Project *</mat-label>
+        <mat-label>Project</mat-label>
         <input
           type="text"
-          placeholder="Select project (required)"
+          placeholder="Select project (optional)"
           aria-label="Project"
           matInput
           formControlName="project"
@@ -119,9 +119,6 @@
           </mat-option>
           }
         </mat-autocomplete>
-        @if (taskForm.get('project')?.hasError('required') && taskForm.get('project')?.touched) {
-          <mat-error>Project is required</mat-error>
-        }
       </mat-form-field>
     </div>
 

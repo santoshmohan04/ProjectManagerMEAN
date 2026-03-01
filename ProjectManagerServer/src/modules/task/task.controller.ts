@@ -165,10 +165,14 @@ export class TaskController {
         return errorResponse(res, 'User not found', 'NOT_FOUND', 404);
       }
 
+      console.log('User for my-tasks:', { userId, userObjectId: user._id });
+
       // Build filters - always filter by assignedTo = current user
       const filters: TaskSearchFilters = {
         assignedTo: user._id as any
       };
+
+      console.log('My-tasks filters:', filters);
 
       // Status filter (can be array)
       if (status) {
@@ -261,17 +265,31 @@ export class TaskController {
         return errorResponse(res, 'Title is required', 'VALIDATION_ERROR', 400);
       }
 
-      if (!req.body.project) {
-        return errorResponse(res, 'Project is required', 'VALIDATION_ERROR', 400);
-      }
-
       // Prepare task data with createdBy
       const taskData = {
         ...req.body,
         createdBy: user._id,
       };
 
+      // Auto-assign to creator if no assignedTo is provided
+      // This ensures tasks show up in "my-tasks" for the creator
+      if (!taskData.assignedTo) {
+        taskData.assignedTo = user._id;
+      }
+
+      console.log('Creating task with data:', { 
+        title: taskData.title, 
+        assignedTo: taskData.assignedTo,
+        createdBy: taskData.createdBy 
+      });
+
       const task = await this.taskService.createTask(taskData);
+
+      console.log('Created task:', { 
+        uuid: task.uuid, 
+        assignedTo: task.assignedTo,
+        createdBy: task.createdBy 
+      });
 
       // Log the creation
       if ((req as any).audit) {

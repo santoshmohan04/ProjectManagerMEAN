@@ -8,7 +8,7 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Set Start and End Date</mat-label>
-      <mat-date-range-input [rangePicker]="rangePicker">
+      <mat-date-range-input [rangePicker]="rangePicker" [min]="minDate">
         <input
           matStartDate
           placeholder="Start date"
@@ -21,7 +21,7 @@
         matIconSuffix
         [for]="rangePicker"
       ></mat-datepicker-toggle>
-      <mat-date-range-picker #rangePicker>
+      <mat-date-range-picker #rangePicker [startAt]="minDate">
         <mat-date-range-picker-actions>
           <button matButton matDateRangePickerCancel>Cancel</button>
           <button matButton="elevated" matDateRangePickerApply>Apply</button>

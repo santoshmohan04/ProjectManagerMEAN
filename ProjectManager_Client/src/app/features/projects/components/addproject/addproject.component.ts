@@ -53,6 +53,7 @@ export class AddprojectComponent implements OnInit {
   min = 0;
   step = 1;
   thumbLabel = true;
+  minDate = new Date(); // Prevent selecting past dates
   usersList: User[] = [];
   filteredOptions: Observable<User[]> | undefined;
   private readonly appStore = inject(AppStore);

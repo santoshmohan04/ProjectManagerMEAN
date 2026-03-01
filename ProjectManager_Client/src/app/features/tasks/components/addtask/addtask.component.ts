@@ -69,6 +69,7 @@ export class AddtaskComponent implements OnInit, OnDestroy {
   min = 0;
   step = 1;
   thumbLabel = true;
+  minDate = new Date(); // Prevent selecting past dates
   filteredOptions: Observable<User[]> | undefined;
   
   // Check if user is ADMIN
@@ -88,7 +89,7 @@ export class AddtaskComponent implements OnInit, OnDestroy {
       enddate: [null],
       priority: [0, [Validators.required, priorityRangeValidator()]],
       parenttask: [null],
-      project: [null, Validators.required],
+      project: [null],
       user: [null],
     });
   }

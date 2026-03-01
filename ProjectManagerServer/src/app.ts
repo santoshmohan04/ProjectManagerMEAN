@@ -51,14 +51,26 @@ app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
 // Data sanitization against NoSQL query injection
 app.use((req, res, next) => {
+  // Sanitize body (can be reassigned)
   if (req.body) {
-    mongoSanitize(req.body);
+    req.body = mongoSanitize(req.body);
   }
+  // For query and params, sanitize individual values since they're read-only
   if (req.query) {
-    mongoSanitize(req.query);
+    Object.keys(req.query).forEach(key => {
+      const value = req.query[key];
+      if (value !== undefined) {
+        (req.query as any)[key] = mongoSanitize(value);
+      }
+    });
   }
   if (req.params) {
-    mongoSanitize(req.params);
+    Object.keys(req.params).forEach(key => {
+      const value = req.params[key];
+      if (value !== undefined) {
+        req.params[key] = mongoSanitize(value);
+      }
+    });
   }
   next();
 });

@@ -78,7 +78,10 @@ export class TaskRepository {
 
     // Assigned to filter
     if (filters.assignedTo) {
-      matchConditions.assignedTo = filters.assignedTo;
+      // Ensure proper ObjectId conversion
+      matchConditions.assignedTo = typeof filters.assignedTo === 'string'
+        ? new mongoose.Types.ObjectId(filters.assignedTo)
+        : filters.assignedTo;
     }
 
     // Project ID filter
